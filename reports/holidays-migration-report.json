@@ -1,0 +1,638 @@
+{
+  "timestamp": "2025-11-27T09:30:31.627Z",
+  "duration": 292,
+  "baseURL": "http://localhost:3000",
+  "summary": {
+    "infrastructure": "7/7",
+    "integration": "3/3",
+    "parallel": "0/0",
+    "overall": "✅ 通過"
+  },
+  "details": {
+    "infrastructure": {
+      "routes/index.js 存在": {
+        "status": "✅ 通過",
+        "result": true
+      },
+      "routes/handlers/holidayHandler.js 存在": {
+        "status": "✅ 通過",
+        "result": true
+      },
+      "routes/holidays.js 存在": {
+        "status": "✅ 通過",
+        "result": true
+      },
+      "routes/middleware/auth.js 存在": {
+        "status": "✅ 通過",
+        "result": true
+      },
+      "routes/middleware/errorHandler.js 存在": {
+        "status": "✅ 通過",
+        "result": true
+      },
+      "routes/validators/requestValidator.js 存在": {
+        "status": "✅ 通過",
+        "result": true
+      },
+      "tests/routes/holidays-parallel-test.js 存在": {
+        "status": "✅ 通過",
+        "result": true
+      }
+    },
+    "integration": {
+      "V2 健康檢查端點": {
+        "status": "✅ 通過",
+        "actualStatus": 200,
+        "expectedStatus": 200,
+        "responseTime": "N/A"
+      },
+      "V2 路由統計端點": {
+        "status": "✅ 通過",
+        "actualStatus": 200,
+        "expectedStatus": 200,
+        "responseTime": "N/A"
+      },
+      "V1 Holidays 端點（基準）": {
+        "status": "✅ 通過",
+        "actualStatus": 200,
+        "expectedStatus": 200,
+        "responseTime": "N/A"
+      }
+    },
+    "parallel": [
+      {
+        "name": "取得所有假期資料",
+        "iterations": [
+          {
+            "iteration": 1,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 500,
+              "message": "Request failed with status code 500",
+              "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Internal Server Error</pre>\n</body>\n</html>\n"
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": {
+            "type": "HTTP_ERROR",
+            "status": 500,
+            "message": "Request failed with status code 500",
+            "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Internal Server Error</pre>\n</body>\n</html>\n"
+          }
+        }
+      },
+      {
+        "name": "取得假期同步狀態",
+        "iterations": [
+          {
+            "iteration": 1,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 500,
+              "message": "Request failed with status code 500",
+              "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Internal Server Error</pre>\n</body>\n</html>\n"
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": {
+            "type": "HTTP_ERROR",
+            "status": 500,
+            "message": "Request failed with status code 500",
+            "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Internal Server Error</pre>\n</body>\n</html>\n"
+          }
+        }
+      },
+      {
+        "name": "檢查指定日期是否為假日",
+        "iterations": [
+          {
+            "iteration": 1,
+            "duration": 72,
+            "v1": {
+              "status": 200,
+              "data": {
+                "success": true,
+                "date": "2025-01-01",
+                "isHoliday": true,
+                "holiday": {
+                  "date": "2025-01-01",
+                  "name": "中華民國開國紀念日",
+                  "type": "national",
+                  "year": "2025",
+                  "category": "放假之紀念日及節日",
+                  "description": "全國各機關學校放假一日。"
+                }
+              },
+              "responseTime": "N/A"
+            },
+            "v2": {
+              "status": 200,
+              "data": {
+                "success": true,
+                "date": "2025-01-01",
+                "isHoliday": true,
+                "holiday": {
+                  "date": "2025-01-01",
+                  "name": "中華民國開國紀念日",
+                  "type": "national",
+                  "year": "2025",
+                  "category": "放假之紀念日及節日",
+                  "description": "全國各機關學校放假一日。"
+                }
+              },
+              "responseTime": "N/A"
+            },
+            "comparison": {
+              "statusMatch": true,
+              "identical": true,
+              "differences": []
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": null
+        }
+      },
+      {
+        "name": "取得指定月份的假日",
+        "iterations": [
+          {
+            "iteration": 1,
+            "duration": 32,
+            "v1": {
+              "status": 200,
+              "data": {
+                "success": true,
+                "year": 2025,
+                "month": 1,
+                "holidays": [
+                  {
+                    "date": "2025-01-01",
+                    "name": "中華民國開國紀念日",
+                    "type": "national",
+                    "year": "2025",
+                    "category": "放假之紀念日及節日",
+                    "description": "全國各機關學校放假一日。"
+                  },
+                  {
+                    "date": "2025-01-28",
+                    "name": "農曆除夕",
+                    "type": "lunar",
+                    "year": "2025",
+                    "category": "放假之紀念日及節日",
+                    "description": ""
+                  },
+                  {
+                    "date": "2025-01-29",
+                    "name": "春節",
+                    "type": "lunar",
+                    "year": "2025",
+                    "category": "放假之紀念日及節日",
+                    "description": ""
+                  },
+                  {
+                    "date": "2025-01-30",
+                    "name": "春節",
+                    "type": "lunar",
+                    "year": "2025",
+                    "category": "放假之紀念日及節日",
+                    "description": ""
+                  },
+                  {
+                    "date": "2025-01-31",
+                    "name": "春節",
+                    "type": "lunar",
+                    "year": "2025",
+                    "category": "放假之紀念日及節日",
+                    "description": ""
+                  }
+                ],
+                "count": 5
+              },
+              "responseTime": "N/A"
+            },
+            "v2": {
+              "status": 200,
+              "data": {
+                "success": true,
+                "year": 2025,
+                "month": 1,
+                "holidays": [
+                  {
+                    "date": "2025-01-01",
+                    "name": "中華民國開國紀念日",
+                    "type": "national",
+                    "year": "2025",
+                    "category": "放假之紀念日及節日",
+                    "description": "全國各機關學校放假一日。"
+                  },
+                  {
+                    "date": "2025-01-28",
+                    "name": "農曆除夕",
+                    "type": "lunar",
+                    "year": "2025",
+                    "category": "放假之紀念日及節日",
+                    "description": ""
+                  },
+                  {
+                    "date": "2025-01-29",
+                    "name": "春節",
+                    "type": "lunar",
+                    "year": "2025",
+                    "category": "放假之紀念日及節日",
+                    "description": ""
+                  },
+                  {
+                    "date": "2025-01-30",
+                    "name": "春節",
+                    "type": "lunar",
+                    "year": "2025",
+                    "category": "放假之紀念日及節日",
+                    "description": ""
+                  },
+                  {
+                    "date": "2025-01-31",
+                    "name": "春節",
+                    "type": "lunar",
+                    "year": "2025",
+                    "category": "放假之紀念日及節日",
+                    "description": ""
+                  }
+                ],
+                "count": 5
+              },
+              "responseTime": "N/A"
+            },
+            "comparison": {
+              "statusMatch": true,
+              "identical": true,
+              "differences": []
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": null
+        }
+      },
+      {
+        "name": "無效日期格式",
+        "iterations": [
+          {
+            "iteration": 1,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 400,
+              "message": "路徑參數驗證失敗",
+              "data": {
+                "success": false,
+                "error": "路徑參數驗證失敗",
+                "details": {
+                  "fieldErrors": [
+                    "date: 請輸入有效的日期格式 (YYYY-MM-DD)"
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": {
+            "type": "HTTP_ERROR",
+            "status": 400,
+            "message": "路徑參數驗證失敗",
+            "data": {
+              "success": false,
+              "error": "路徑參數驗證失敗",
+              "details": {
+                "fieldErrors": [
+                  "date: 請輸入有效的日期格式 (YYYY-MM-DD)"
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "無效年份",
+        "iterations": [
+          {
+            "iteration": 1,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 400,
+              "message": "無效的年份或月份",
+              "data": {
+                "success": false,
+                "error": "無效的年份或月份"
+              }
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": {
+            "type": "HTTP_ERROR",
+            "status": 400,
+            "message": "無效的年份或月份",
+            "data": {
+              "success": false,
+              "error": "無效的年份或月份"
+            }
+          }
+        }
+      },
+      {
+        "name": "無效月份",
+        "iterations": [
+          {
+            "iteration": 1,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 400,
+              "message": "無效的年份或月份",
+              "data": {
+                "success": false,
+                "error": "無效的年份或月份"
+              }
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": {
+            "type": "HTTP_ERROR",
+            "status": 400,
+            "message": "無效的年份或月份",
+            "data": {
+              "success": false,
+              "error": "無效的年份或月份"
+            }
+          }
+        }
+      },
+      {
+        "name": "負數月份",
+        "iterations": [
+          {
+            "iteration": 1,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 400,
+              "message": "無效的年份或月份",
+              "data": {
+                "success": false,
+                "error": "無效的年份或月份"
+              }
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": {
+            "type": "HTTP_ERROR",
+            "status": 400,
+            "message": "無效的年份或月份",
+            "data": {
+              "success": false,
+              "error": "無效的年份或月份"
+            }
+          }
+        }
+      },
+      {
+        "name": "未認證觸發同步",
+        "iterations": [
+          {
+            "iteration": 1,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 401,
+              "message": "Request failed with status code 401",
+              "data": {
+                "success": false,
+                "message": "未授權 - 缺少 Bearer Token"
+              }
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": {
+            "type": "HTTP_ERROR",
+            "status": 401,
+            "message": "Request failed with status code 401",
+            "data": {
+              "success": false,
+              "message": "未授權 - 缺少 Bearer Token"
+            }
+          }
+        }
+      },
+      {
+        "name": "無效 token 觸發同步",
+        "iterations": [
+          {
+            "iteration": 1,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 401,
+              "message": "Request failed with status code 401",
+              "data": {
+                "success": false,
+                "message": "Token 無效 - 格式錯誤"
+              }
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": {
+            "type": "HTTP_ERROR",
+            "status": 401,
+            "message": "Request failed with status code 401",
+            "data": {
+              "success": false,
+              "message": "Token 無效 - 格式錯誤"
+            }
+          }
+        }
+      },
+      {
+        "name": "正確認證觸發同步",
+        "iterations": [
+          {
+            "iteration": 1,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 401,
+              "message": "Request failed with status code 401",
+              "data": {
+                "success": false,
+                "message": "Token 無效 - 已過期或不存在"
+              }
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": {
+            "type": "HTTP_ERROR",
+            "status": 401,
+            "message": "Request failed with status code 401",
+            "data": {
+              "success": false,
+              "message": "Token 無效 - 已過期或不存在"
+            }
+          }
+        }
+      },
+      {
+        "name": "不存在的端點",
+        "iterations": [
+          {
+            "iteration": 1,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 404,
+              "message": "Request failed with status code 404",
+              "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /api/holidays/nonexistent</pre>\n</body>\n</html>\n"
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": {
+            "type": "HTTP_ERROR",
+            "status": 404,
+            "message": "Request failed with status code 404",
+            "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /api/holidays/nonexistent</pre>\n</body>\n</html>\n"
+          }
+        }
+      },
+      {
+        "name": "錯誤的 HTTP 方法",
+        "iterations": [
+          {
+            "iteration": 1,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 404,
+              "message": "Request failed with status code 404",
+              "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot DELETE /api/holidays</pre>\n</body>\n</html>\n"
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": {
+            "type": "HTTP_ERROR",
+            "status": 404,
+            "message": "Request failed with status code 404",
+            "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot DELETE /api/holidays</pre>\n</body>\n</html>\n"
+          }
+        }
+      },
+      {
+        "name": "效能比較 - 取得所有假期",
+        "iterations": [
+          {
+            "iteration": 1,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 500,
+              "message": "Request failed with status code 500",
+              "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Internal Server Error</pre>\n</body>\n</html>\n"
+            }
+          },
+          {
+            "iteration": 2,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 500,
+              "message": "Request failed with status code 500",
+              "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Internal Server Error</pre>\n</body>\n</html>\n"
+            }
+          },
+          {
+            "iteration": 3,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 500,
+              "message": "Request failed with status code 500",
+              "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Internal Server Error</pre>\n</body>\n</html>\n"
+            }
+          },
+          {
+            "iteration": 4,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 500,
+              "message": "Request failed with status code 500",
+              "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Internal Server Error</pre>\n</body>\n</html>\n"
+            }
+          },
+          {
+            "iteration": 5,
+            "error": {
+              "type": "HTTP_ERROR",
+              "status": 500,
+              "message": "Request failed with status code 500",
+              "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Internal Server Error</pre>\n</body>\n</html>\n"
+            }
+          }
+        ],
+        "summary": {
+          "identical": true,
+          "statusMatch": true,
+          "performanceDelta": 0,
+          "error": {
+            "type": "HTTP_ERROR",
+            "status": 500,
+            "message": "Request failed with status code 500",
+            "data": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Internal Server Error</pre>\n</body>\n</html>\n"
+          },
+          "avgDuration": 0
+        }
+      }
+    ],
+    "summary": {}
+  },
+  "recommendations": [
+    "✅ 所有測試通過，可以安全啟用 holidays v2 模組",
+    "🚀 建議設置環境變數：ENABLE_HOLIDAYS_V2=true",
+    "🚀 建議設置環境變數：USE_ROUTES_PHASE2=true"
+  ]
+}

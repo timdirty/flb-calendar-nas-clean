@@ -1,0 +1,954 @@
+
+適用於 NAS/Docker 的企業級可擴展媒體管理架構
+
+
+第 0 部分：執行摘要與核心架構原則
+
+查詢驗證與核心挑戰
+使用者旨在於自有的 NAS/Docker 環境中，複製 LINE 或 Google Photos 1 等大型服務的媒體處理效能——特別是實現「快速上傳」、「即時縮圖預覽」與「高效率編輯下載」。此目標雖然宏大，但透過正確的架構規劃是完全可行的。
+關鍵在於理解，在一個簡單的單體系統 (Monolithic System) 中，「快速上傳」、「快速預覽」和「高效編輯」這三個需求是相互衝突的：
+快速上傳：要求伺服器以最低延遲接收檔案，理想情況是僅將原始檔案寫入儲存 3，然後立即回傳「200 OK」確認。
+快速預覽：要求使用者打開應用程式時，縮圖（甚至是多種尺寸的縮圖）必須已經存在且可供讀取 3。
+效能衝突：如果在上傳請求的 期間 處理縮圖（例如，調整大小、轉碼），則上傳本身將變得緩慢且耗時。如果等到上傳 之後 才處理，縮圖又無法立即顯示。
+企業級解決方案：解耦與異步
+大型企業（如 Google 1、Instagram 4）解決此一核心衝突的唯一方法是採用「解耦 (Decoupled)」的「異步 (Asynchronous)」事件驅動微服務架構 (Microservices Architecture) 5。
+本報告提出的架構並非過度設計，而是為了滿足使用者所提出的全部需求所必需的功能性架構。
+NAS 限制的和解：MinIO 儲存方案
+使用者的核心限制（「東西直接存在 NAS 裡」）與企業級需求（「可擴展的物件儲存」）需要進行和解。
+反面模式 (Anti-Pattern)：我們 絕不 會使用傳統的 POSIX 檔案系統掛載（例如 docker run -v /nas/photos:/app/photos）來讓應用程式直接存取 7。這種做法缺乏 API 控制、難以擴展，且效能低下 8。
+企業級模式：我們將在 Docker 中部署 MinIO 9。MinIO 是一個開源、高效能、與 S3 API 相容的物件儲存伺服器。
+最終和解：我們將設定 MinIO 容器，使其 使用 NAS 上的檔案系統作為其後端儲存 11。系統中的所有其他服務（API、處理中繼站）都將透過標準 S3 API 與 MinIO 進行通訊，而不是直接存取檔案系統。這是本架構的核心，也是不可妥協的設計決策 8。
+
+第 1 部分：核心架構藍圖：微服務生態系統
+
+本系統並非單一應用程式，而是一個由多個小型、獨立、專注的服務組成的生態系統 5。這種微服務架構，被 Google 1 和 Instagram 4 等巨頭採用，提供了卓越的可擴展性、彈性和可維護性 6。
+
+系統架構高階圖
+
+（圖示說明：顯示使用者客戶端、Nginx、API 伺服器、MinIO、PostgreSQL 和 RabbitMQ，以及其間的請求和事件流程。客戶端上傳流程指向 MinIO，API 處理元數據，RabbitMQ 觸發後端 Worker。）
+
+微服務組件總覽
+
+下表如同本計畫的「物料清單 (Bill of Materials)」，定義了最終 docker-compose 檔案中每個服務的角色、技術選型和職責。
+
+服務名稱 (Service Name)
+關鍵技術
+建議 Docker 映像
+主要角色與職責
+cache-proxy
+Nginx
+nginx:latest
+公共入口、反向代理、API 閘道、縮圖與靜態資源的高速快取 [12, 13]。
+api-server
+FastAPI (Python)
+python:3.11-slim
+核心 API 伺服器。處理所有元數據 CRUD、使用者身份驗證、協調上傳工作流程（產生預簽章 URL）[14]。
+database
+PostgreSQL
+postgres:16-alpine
+系統的「單一事實來源 (Source of Truth)」。儲存所有使用者資料、相簿結構、以及媒體檔案的元數據 15。
+storage
+MinIO
+minio/minio
+S3 相容的物件儲存。儲存所有原始檔案、生成的縮圖、以及影片轉碼後的切片 9。
+broker
+RabbitMQ
+rabbitmq:3-management
+訊息中介層。將 API 伺服器（生產者）與後端處理（消費者）解耦，實現異步處理 [16, 17]。
+image-worker
+Python + libvips
+custom-worker-image
+圖片處理中繼站。從 RabbitMQ 獲取任務，下載原始圖片，生成多尺寸 WebP 縮圖 18。
+video-worker
+Python + FFmpeg
+custom-worker-image
+影片處理中繼站。從 RabbitMQ 獲取任務，提取影片縮圖，並執行 HLS/DASH 適應性比特率轉碼 [19]。
+
+
+第 2 部分：儲存基礎：Docker 上的 MinIO (NAS 解決方案)
+
+
+為什麼不該直接掛載 NAS 檔案系統
+
+許多開發者會直覺地使用 Docker 的 -v 參數將 NAS 資料夾（如 /mnt/nas/photos）直接掛載到 API 容器中。這在企業架構中是一個嚴重錯誤。
+直接的 POSIX 檔案系統存取是一種反面模式 7。它將您的應用程式與底層儲存緊密耦合，使其難以擴展。更重要的是，它缺乏現代儲存系統提供的豐富 API 功能，例如自定義元數據、版本控制、生命週期管理和精細的存取控制 20。
+
+企業級方案：物件儲存 (Object Storage)
+
+現代大型應用程式（包括 LINE 和 Google Photos）都基於物件儲存 1。在物件儲存中，檔案不再是「檔案」，而是「物件」。每個物件包含三個部分：資料（檔案本身）、唯一的識別碼 (Key) 和豐富的元數據 (Metadata) 20。
+
+「混合型」實施：MinIO on NAS
+
+我們將部署 MinIO 9，這是一個 S3 相容的物件儲存伺服器。它在 Docker 中運行，並使用您 NAS 的檔案系統作為其後端持久化儲存。
+具體實現（關鍵和解點）：
+您在 NAS 上建立一個專用資料夾（例如：/mnt/nas/minio-data）。
+在 docker-compose.yml 中，您啟動 MinIO 服務，並將該資料夾掛載到 MinIO 容器的 /data 目錄 10。
+MinIO 伺服器啟動後，會在 http://minio:9000 上提供 S3 API。
+系統中所有其他 Docker 服務（api-server, image-worker, video-worker）都 只會 透過 S3 SDK 和 http://minio:9000 這個內部網路地址來與 MinIO 溝通。
+此架構完美結合了兩種模式的優點：您獲得了 NAS 的資料持久性與 RAID 保護，同時也擁有了企業級 S3 API 的靈活性、可擴展性和強大功能 8。
+初始設定：
+部署後，使用 MinIO 客戶端 (mc) 建立所需的儲存桶 (Buckets)：
+originals：儲存所有使用者上傳的原始、未經修改的檔案。設定為 完全私有。
+thumbnails：儲存由 Worker 生成的所有縮圖（例如 .webp 格式）。可設定為 唯讀。
+hls-streams：儲存影片轉碼後的 .m3u8 播放清單和 .ts 媒體切片。
+
+第 3 部分：單一事實來源：PostgreSQL 與 JSONB 元數據綱要
+
+
+儲存什麼，不儲存什麼
+
+選擇 PostgreSQL 15 作為元數據資料庫。這裡必須釐清一個關鍵原則：
+錯誤的做法：將圖片或影片的二進位資料 (BLOB/bytea) 直接儲存在資料庫中 24。這會導致資料庫極度膨脹、備份困難、效能急遽下降 27。
+正確的做法：資料庫 只儲存元數據。實際的檔案資料（物件）儲存在 MinIO 中。資料庫中只儲存指向 MinIO 物件的引用（storage_key）。
+
+綱要設計：彈性取代僵化
+
+傳統的 SQL 綱要設計會試圖為所有可能的元數據建立欄位（例如 camera_model, iso, shutter_speed, duration）。這種綱要是僵化的，每當需要添加新類型的元數據時，都需要執行成本高昂的資料庫遷移 (Migration)。這是一種「破壞性變更」28。
+
+JSONB 解決方案：非結構化資料的中樞
+
+我們將仿效 Google Photos 1 的模型，將所有「媒體特定」和「產品特定」的元數據儲存在一個靈活的欄位中。PostgreSQL 的 JSONB 資料類型是此需求的完美解答 30。
+JSONB 以高效的二進位格式儲存 JSON，並且支援 索引，查詢速度極快。
+JSONB 作為非同步通訊中樞：
+在本架構中，單一的 metadata JSONB 欄位將成為所有微服務之間非同步通訊的狀態機 31。
+API 伺服器 (上傳時)：在 media_items 表中建立一筆記錄，metadata 欄位寫入 {"processing_status": "pending"}。
+Image Worker (處理完成)：找到該記錄，更新 metadata 欄位，合併入 {"processing_status": "complete", "exif": {...}, "thumbnails": {"200w": "path/to/thumb.webp",...}}。
+Video Worker (轉碼完成)：再次更新該記錄，合併入 {"hls_manifest": "path/to/master.m3u8"}。
+編輯 API (使用者編輯)：追加編輯歷史 {"edit_history": [{"op": "crop",...}]}。
+所有服務都圍繞這個 JSONB 欄位協同工作，各自更新其負責的部分，而無需直接通訊或鎖定 30。
+
+核心資料庫綱要 (SQL Schema)
+
+以下是實現此系統所需的最小化、高效率的 SQL 綱要。
+Table: users
+
+SQL
+
+
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username TEXT UNIQUE NOT NULL,
+    hashed_password TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT (now())
+);
+
+
+Table: albums
+
+SQL
+
+
+CREATE TABLE albums (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT (now())
+);
+
+
+Table: media_items
+
+SQL
+
+
+CREATE TABLE media_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    
+    -- MinIO 儲存資訊
+    storage_bucket VARCHAR(64) NOT NULL, -- e.g., 'originals'
+    storage_key TEXT NOT NULL,       -- e.g., 'user-uuid/media-uuid.jpg'
+    
+    -- 基礎元數據
+    original_filename TEXT NOT NULL,
+    media_type VARCHAR(16) NOT NULL, -- 'image' or 'video'
+    file_size_bytes BIGINT NOT NULL,
+    
+    -- 核心：JSONB 元數據欄位
+    metadata JSONB DEFAULT '{}'::jsonb,
+    
+    created_at TIMESTAMPTZ DEFAULT (now()),
+    updated_at TIMESTAMPTZ DEFAULT (now())
+);
+
+-- 創建 GIN 索引以加速 JSONB 查詢
+CREATE INDEX idx_media_items_metadata ON media_items USING GIN (metadata);
+
+
+Table: album_media_join (多對多關聯表)
+
+SQL
+
+
+CREATE TABLE album_media_join (
+    album_id UUID NOT NULL REFERENCES albums(id) ON DELETE CASCADE,
+    media_id UUID NOT NULL REFERENCES media_items(id) ON DELETE CASCADE,
+    PRIMARY KEY (album_id, media_id)
+);
+
+
+
+第 4 部分：高速上傳工作流程 (客戶端到儲存)
+
+此工作流程的設計目標是：安全、快速地將大檔案從使用者的裝置傳輸到 MinIO 的 originals 儲存桶，同時 完全避免 讓 API 伺服器成為流量瓶頸 34。
+
+模式：預簽章 URL (Presigned URL) + 分塊上傳 (Multipart Upload)
+
+反面模式：讓客戶端將整個檔案 POST 到 API 伺服器，然後 API 伺服器再將其轉發到 MinIO。這會消耗 API 伺服器大量的網路頻寬和記憶體，使其無法處理其他請求，而且速度緩慢 34。
+企業級模式：我們使用 S3 的「預簽章 URL」模式 36。API 伺服器不處理檔案，而是作為一個「授權者」。它會產生一個有時間限制、一次性的 URL，該 URL 授予客戶端 直接 將檔案 PUT 到 MinIO 的權限 38。
+大檔案處理：對於任何大於 100MB 的檔案（特別是影片），我們必須結合使用「分塊上傳」41。
+
+高速上傳的 6 階段協同作業
+
+這是一個精確的 API 協調流程，用於處理大型檔案上傳：
+階段 1：客戶端請求上傳 (Initiate)
+客戶端向 API 伺服器發送請求：
+POST /api/v1/upload/initiate
+請求體 (Body): {"filename": "my_video.mp4", "file_size": 5000000000, "mime_type": "video/mp4"}
+階段 2：API 伺服器初始化 (Orchestrate)
+API 伺服器接收請求，進行身份驗證和權限檢查（例如檢查儲存空間配額）。
+在 PostgreSQL 的 media_items 表中建立一筆新記錄，包含 user_id, storage_key (例如 user-uuid/new-media-uuid.mp4)，並設定 metadata: {'processing_status': 'pending_upload'}。
+API 伺服器呼叫 MinIO SDK 的 create_multipart_upload() 42。
+MinIO 回傳一個全域唯一的 upload_id。
+API 伺服器回應客戶端：{"media_id": "...", "upload_id": "...", "storage_key": "..."}
+階段 3：客戶端請求分塊 URL (Get Chunk URLs)
+客戶端在本地將 5GB 的檔案切割成（例如） 500 個 10MB 的區塊 (Chunks) 42。
+客戶端 並行 地向 API 伺服器請求每個區塊的上傳 URL：
+GET /api/v1/upload/{upload_id}/part/{part_number}?key={storage_key}
+API 伺服器使用 MinIO SDK 的 presigned_put_object()（或 get_presigned_url('upload_part')）為 該特定區塊 產生一個預簽章 URL 39。
+API 回應：{"url": "http://minio:9000/originals/...?partNumber=1&uploadId=..."}
+階段 4：客戶端直接上傳 (Upload Chunks)
+客戶端使用 PUT 方法，將分塊的檔案資料 直接 上傳到 MinIO 提供的預簽章 URL 41。
+這是實現高速的關鍵點：流量完全在客戶端和 MinIO 之間，API 伺服器完全不參與資料傳輸。
+MinIO/S3 對每個成功的 PUT 請求，都會在回應標頭 (Header) 中回傳一個 ETag。客戶端 必須 收集並儲存每個 part_number 對應的 ETag。
+階段 5：客戶端完成上傳 (Finalize)
+當所有區塊都上傳成功後，客戶端向 API 伺服器發送「完成」請求：
+POST /api/v1/upload/{upload_id}/complete?key={storage_key}
+請求體 (Body)：{"parts": [{"part_number": 1, "etag": "..."}, {"part_number": 2, "etag": "..."}]} 42。
+階段 6：API 伺服器確認 (Complete)
+API 伺服器呼叫 MinIO SDK 的 complete_multipart_upload()，並傳入客戶端提交的 parts 列表 42。
+MinIO 在後端驗證所有分塊，並將它們組合成一個完整的物件。
+API 伺服器更新 PostgreSQL 中該 media_id 的 metadata: {'processing_status': 'pending_processing'}。
+觸發下一步：API 伺服器立即向 RabbitMQ 發布一條新訊息（見第 5 部分）。
+
+程式碼範例：FastAPI (Python) 端點
+
+
+Python
+
+
+# api.py (FastAPI 範例)
+from fastapi import FastAPI
+from minio import Minio
+import uuid
+
+app = FastAPI()
+minio_client = Minio("minio:9000", access_key="USER", secret_key="PASS", secure=False)
+BUCKET_NAME = "originals"
+
+@app.post("/api/v1/upload/initiate")
+async def initiate_upload(init_req: dict):
+    storage_key = f"user-abc/{uuid.uuid4()}-{init_req['filename']}"
+    
+    # 1. 在 Postgres 中創建 media_item (省略)
+    media_id = "..." 
+    
+    # 2. 從 MinIO 獲取 upload_id
+    upload_id = minio_client.create_multipart_upload(BUCKET_NAME, storage_key)
+    
+    return {"media_id": media_id, "upload_id": upload_id, "storage_key": storage_key}
+
+@app.get("/api/v1/upload/{upload_id}/part/{part_number}")
+async def get_upload_part_url(upload_id: str, part_number: int, key: str):
+    # 3. 為特定分塊產生預簽章 URL
+    url = minio_client.get_presigned_url(
+        "upload_part",
+        BUCKET_NAME,
+        key,
+        expires=timedelta(hours=1),
+        req_params={"partNumber": part_number, "uploadId": upload_id}
+    )
+    return {"url": url}
+
+@app.post("/api/v1/upload/{upload_id}/complete")
+async def complete_upload(upload_id: str, key: str, parts_req: dict):
+    # 5. 完成分塊上傳
+    parts = [
+        {"part_number": p["part_number"], "etag": p["etag"]}
+        for p in parts_req["parts"]
+    
+    minio_client.complete_multipart_upload(BUCKET_NAME, key, upload_id, parts)
+    
+    # 6. 觸發 RabbitMQ 任務 (省略)
+    # publish_to_rabbitmq({"media_id": "...", "storage_key": key})
+    
+    return {"status": "complete"}
+
+
+
+程式碼範例：前端 (JavaScript)
+
+
+JavaScript
+
+
+// client.js (JavaScript 範例)
+const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
+
+async function uploadLargeFile(file) {
+    // 1. & 2. 初始化
+    const { media_id, upload_id, storage_key } = await fetch("/api/v1/upload/initiate", {
+        method: "POST",
+        body: JSON.stringify({ filename: file.name, file_size: file.size, mime_type: file.type }),
+    }).then(res => res.json());
+
+    const partCount = Math.ceil(file.size / CHUNK_SIZE);
+    const uploadPromises =;
+    const parts =;
+
+    for (let i = 1; i <= partCount; i++) {
+        // 3. 獲取每個分塊的 URL
+        const { url } = await fetch(
+            `/api/v1/upload/${upload_id}/part/${i}?key=${storage_key}`
+        ).then(res => res.json());
+
+        // 4. 並行上傳分塊
+        const start = (i - 1) * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        const chunk = file.slice(start, end); // 
+
+        const promise = fetch(url, { method: "PUT", body: chunk })
+           .then(res => {
+                const etag = res.headers.get("ETag").replace(/"/g, "");
+                parts.push({ part_number: i, etag: etag }); // 
+            });
+        uploadPromises.push(promise);
+    }
+
+    await Promise.all(uploadPromises);
+
+    // 5. & 6. 完成上傳
+    await fetch(`/api/v1/upload/${upload_id}/complete?key=${storage_key}`, {
+        method: "POST",
+        body: JSON.stringify({ parts: parts.sort((a, b) => a.part_number - b.part_number) }),
+    });
+
+    console.log("Upload complete!");
+}
+
+
+
+第 5 部分：異步處理中繼站 (「快速縮圖」引擎)
+
+這是解決「快速上傳」和「快速預覽」之間衝突的架構核心。當第 4 部分的「快速上傳」完成後，真正的處理工作才正要開始——但在一個完全解耦的背景環境中。
+
+為什麼使用 RabbitMQ (而非 Kafka)？
+
+Kafka 46 是一個「分散式事件串流平台」。它被設計用於處理極高吞吐量的 日誌 或 事件流（例如，每秒數百萬次的點擊），並且會持久化這些事件。它的消費者模型相對複雜。
+RabbitMQ 16 是一個「訊息中介層 (Message Broker)」。它被設計用於「任務隊列 (Task Queues)」和複雜的訊息路由。它的消費者模型相對簡單，並且內建了任務確認 (ack) 和重試機制 51。
+我們的使用情境——「這有一個新檔案，請處理它」——是一個經典的 任務隊列 案例，而不是 事件流 49。因此，RabbitMQ 52 是更簡單、更合適、更輕量級的選擇 50。
+
+異步處理工作流程
+
+事件生產 (Production)：在第 4 部分的步驟 6 中，當 API 伺服器確認檔案已在 MinIO 中組合完畢，它 不是 自己去處理檔案，而是向 RabbitMQ 發布一條訊息 54。
+Exchange: media_events (主題交換器)
+Routing Key: media.new.image (如果是圖片) 或 media.new.video (如果是影片)
+Message Body: {"media_id": "uuid-1234", "storage_key": "...", "bucket": "..."}
+事件路由 (Routing) 16：
+RabbitMQ 內部設定將 media.new.image 路由到 image_processing_queue (圖片處理隊列)。
+RabbitMQ 內部設定將 media.new.video 路由到 video_processing_queue (影片處理隊列)。
+圖片中繼站 (Image Worker) - 容器 1：
+這是一個獨立的 Docker 容器，運行一個 Python 腳本，使用 pika 函式庫 55 持續監聽 image_processing_queue。
+核心技術：libvips。該中繼站 必須 使用 libvips (透過 pyvips 綁定 18)。libvips 是一個「需求驅動 (demand-driven)」的影像處理函式庫，速度極快且記憶體佔用遠低於傳統的 ImageMagick 18，這在記憶體有限的 NAS 環境中至關重要。
+處理流程：
+從 MinIO originals 儲存桶下載原始圖片。
+使用 pyvips 57 產生 3-4 種不同尺寸的縮圖（例如 200px, 800px, 1600px）。
+將所有縮圖轉換為高效的 .webp 格式 3。
+將生成的縮圖上傳回 MinIO 的 thumbnails 儲存桶。
+更新 PostgreSQL media_items 表，將 thumbnails 路徑和 exif 資訊寫入 metadata JSONB 欄位 30。
+向 RabbitMQ 發送 ack (確認)，表示該任務已完成 51。
+影片中繼站 (Video Worker) - 容器 2：
+這是一個獨立的 Docker 容器，使用 pika 55 監聽 video_processing_queue。它使用 Python 的 subprocess 模組來呼叫 ffmpeg 二進位檔案 19。
+處理流程 (多任務)：
+任務 A (快速預覽)：立即 執行 ffmpeg 命令，從影片的（例如）第 5 秒處提取一張高畫質縮圖 59。將此縮圖上傳到 thumbnails 儲存桶，並立即更新 Postgres metadata。
+目的：這讓使用者在上傳影片後 幾乎立即 就能看到一個靜態預覽圖，即使影片本身還在轉碼。
+任務 B (適應性比特率轉碼)：這是一個長時間運行的任務。執行 ffmpeg 63，將原始影片轉碼為多種比特率（例如 480p, 720p, 1080p）64，並將其封裝為 HLS (.m3u8 +.ts) 65 或 DASH (.mpd) 格式 66。
+將所有 .m3u8 播放清單和 .ts 媒體切片上傳到 MinIO 的 hls-streams 儲存桶。
+更新 Postgres media_items 表，將 HLS 主播放清單的路徑寫入 metadata JSONB 欄位。
+向 RabbitMQ 發送 ack。
+
+程式碼範例：Dockerfile.worker (合併)
+
+
+Dockerfile
+
+
+# 使用 Alpine 基礎映像以保持輕量
+FROM python:3.11-alpine
+
+# 1. 安裝系統依賴
+#    - ffmpeg 用於影片處理
+#    - libvips-dev (vips-dev in alpine) 用於高效圖片處理
+#    - build-essential (build-base) 用於編譯 Python 擴展
+RUN apk add --no-cache ffmpeg vips-dev build-base
+
+# 2. 設置工作目錄
+WORKDIR /app
+
+# 3. 安裝 Python 依賴
+#    - pika 用於 RabbitMQ 通訊
+#    - psycopg2-binary 用於 Postgres 通訊
+#    - minio 用於 S3 通訊
+#    - pyvips 用於 libvips
+COPY requirements.txt.
+RUN pip install -r requirements.txt
+
+# 4. 複製工作腳本
+COPY worker.py.
+
+# 5. 啟動命令
+CMD ["python", "worker.py"]
+
+
+
+程式碼範例：worker.py (Pika 消費者)
+
+
+Python
+
+
+# worker.py (簡化範例)
+import pika, subprocess, pyvips, json, os
+from minio import Minio
+
+#... (省略 MinIO, Pika, Postgres 的連接設定)...
+
+def process_image(media_id, storage_key):
+    print(f"Processing image: {media_id}")
+    # 1. 下載
+    minio_client.fget_object("originals", storage_key, "/tmp/original")
+    
+    # 2. 處理 (libvips) [18, 57]
+    image = pyvips.Image.new_from_file("/tmp/original")
+    
+    # 3. 產生 200px 的 webp 縮圖
+    thumbnail = image.thumbnail_image(200, height=200, crop="centre")
+    thumbnail.webpsave("/tmp/thumb_200.webp")
+    
+    # 4. 上傳縮圖
+    thumb_key = f"{storage_key}.200w.webp"
+    minio_client.fput_object("thumbnails", thumb_key, "/tmp/thumb_200.webp")
+    
+    # 5. 更新 Postgres (省略)
+    # update_postgres_metadata(media_id, {"thumbnails": {"200w": thumb_key}, "status": "complete"})
+    
+    print(f"Image processing complete: {media_id}")
+
+def process_video(media_id, storage_key):
+    print(f"Processing video: {media_id}")
+    minio_client.fget_object("originals", storage_key, "/tmp/original.mp4")
+
+    # 1. 任務 A: 快速縮圖 (ffmpeg) [59, 60]
+    thumb_key = f"{storage_key}.thumbnail.jpg"
+    subprocess.run([
+        "ffmpeg", "-i", "/tmp/original.mp4", "-ss", "00:00:01.00",
+        "-vframes", "1", "/tmp/thumb.jpg"
+    ])
+    minio_client.fput_object("thumbnails", thumb_key, "/tmp/thumb.jpg")
+    # update_postgres_metadata(media_id, {"thumbnails": {"static": thumb_key}})
+    
+    # 2. 任務 B: HLS 轉碼 (ffmpeg) [66]
+    #... (省略複雜的 HLS 轉碼命令和上傳.ts 切片的邏輯)...
+    # update_postgres_metadata(media_id, {"hls_manifest": "...", "status": "complete"})
+    
+    print(f"Video processing complete: {media_id}")
+
+def on_message_callback(ch, method, properties, body):
+    data = json.loads(body)
+    media_id = data["media_id"]
+    storage_key = data["storage_key"]
+
+    if method.routing_key == "media.new.image":
+        process_image(media_id, storage_key)
+    elif method.routing_key == "media.new.video":
+        process_video(media_id, storage_key)
+        
+    ch.basic_ack(delivery_tag=method.delivery_tag) # 
+
+#... (省略 pika 監聽和訂閱隊列的程式碼) [55, 70]
+
+
+
+第 6 部分：高效能讀取與交付工作流程 (「即時檢視」)
+
+此工作流程回答了「如何即時看到縮圖？」的問題。答案不是「即時處理」，而是「即時交付 預先處理好 且 已被快取 的資產」。
+
+API 讀取流程
+
+使用者打開一個相簿，客戶端呼叫：GET /api/v1/albums/{id}。
+API 伺服器查詢 PostgreSQL，獲取該相簿關聯的所有 media_items 記錄。
+關鍵點：由於我們優秀的 JSONB 綱要設計 30，回傳的 JSON 物件 已經包含了 每個項目所需縮圖的 直接 URL 71。
+JSON
+[
+    {
+        "id": "media-uuid-1",
+        "metadata": {
+            "processing_status": "complete",
+            "thumbnails": {
+                "200w": "https://my-nas.com/thumbnails/key-1-200w.webp",
+                "800w": "https://my-nas.com/thumbnails/key-1-800w.webp"
+            }
+        }
+    },
+    {
+        "id": "media-uuid-2",
+        "metadata": {... }
+    }
+]
+
+
+API 伺服器 絕不 傳輸圖片本身。它只傳輸元數據和 URL。
+
+Nginx 快取層：即時的秘密
+
+客戶端的瀏覽器（或 App）收到 JSON 後，會開始請求 https://my-nas.com/thumbnails/key-1-200w.webp 這些 URL。這些請求會被送到系統的總入口：Nginx。
+我們將 Nginx 設定為一個「快取反向代理」 (Caching Reverse Proxy) 12。
+Nginx 快取工作流程 (Cache-Hit/Miss)：
+瀏覽器請求 .../thumbnails/key-1-200w.webp。
+Nginx 收到請求。它首先檢查其本地磁碟快取區（由 proxy_cache_path 指令定義 12）。
+快取未命中 (Cache MISS) (第一次有使用者請求這張圖時)：
+Nginx 在本地快取中找不到檔案。
+Nginx 向後端 upstream（即 minio:9000/thumbnails）轉發該請求 13。
+MinIO 回傳該縮圖。
+Nginx 將縮圖儲存一份到自己的快取磁碟中，然後將其發送給客戶端。
+快取命中 (Cache HIT) (所有後續的請求)：
+Nginx 收到請求。
+它在本地快取中 找到 了該檔案。
+Nginx 立即 從其本地磁碟（通常是高速 SSD）讀取檔案並發送給客戶端。
+MinIO 完全不會被聯繫 13。
+這個「快取命中」的過程，是實現毫秒級、如絲般滑順的相簿瀏覽體驗的關鍵。
+
+前端優化
+
+為了進一步提升體驗，前端應用程式必須實施：
+延遲加載 (Lazy Loading)：為 <img> 標籤添加 loading="lazy" 屬性 79。這可以防止瀏覽器在頁面加載時一次性請求相簿中的數百張圖片。
+模糊預覽 (LQIP / Dominant Color)：在 loading="lazy" 的圖片加載完成前，顯示一個模糊的超小縮圖（或基於元數據的「主色調」佔位符）80。這提供了極佳的「感知效能」。
+
+關鍵 Nginx 設定範例
+
+
+Nginx
+
+
+# nginx.conf (關鍵部分)
+
+# 1. 定義快取路徑和參數
+# keys_zone=thumb_cache:10m -> 10MB 的記憶體用於儲存快取鍵
+# max_size=10g -> 10GB 的磁碟空間用於儲存快取檔案
+proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=thumbnail_cache:10m inactive=60d max_size=10g;
+
+server {
+    listen 80;
+    
+    #... 其他 location, 如 /api/v1/...
+    
+    # 2. 為 /thumbnails/ 路徑啟用快取
+    location /thumbnails/ {
+        # 啟用名為 "thumbnail_cache" 的快取區
+        proxy_cache thumbnail_cache; 
+        
+        # 將請求轉發到 MinIO
+        proxy_pass http://minio:9000/thumbnails/;
+        
+        # 哪些 HTTP 狀態碼的響應應該被快取，以及快取多久
+        # 200 (OK), 304 (Not Modified) 快取 30 天
+        proxy_cache_valid 200 304 30d;
+        
+        # 如果後端 MinIO 錯誤，允許 Nginx 提供過期的快取
+        proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;
+        
+        # 添加一個 Header，方便除錯時查看是 HIT 還是 MISS
+        add_header X-Cache-Status $upstream_cache_status;
+    }
+}
+
+
+
+第 7 部分：實現非破壞性編輯 (Non-Destructive Editing)
+
+此功能滿足了使用者對「編輯」的需求，並採用了 Adobe Photoshop 82、Lightroom 83 等專業軟體的企業級標準。
+
+編輯哲學：原始檔神聖不可侵犯
+
+「非破壞性編輯」的核心理念是：原始檔案是不可變的 (immutable) 82。
+錯誤的做法：讀取原始檔，套用濾鏡，然後覆蓋原始檔。這會導致資料永久遺失。
+正確的做法：永遠 不修改 originals 儲存桶中的檔案。「編輯」僅僅是 記錄一系列操作（例如「裁切」、「旋轉」、「亮度+10」）83。
+
+架構實施
+
+儲存：originals/user-uuid/media-uuid.jpg 檔案永遠保持不變。
+資料庫 (「配方」)：當使用者在 UI 中進行裁切、旋轉或套用濾鏡時，前端會將這些操作序列化為一個 JSON 物件。
+API：客戶端呼叫 POST /api/v1/media/{id}/edits，請求體 (Body) 如下：
+JSON
+{
+  "op": "filter",
+  "name": "sepia",
+  "amount": 0.7
+}
+
+
+JSONB 編輯歷史：API 伺服器收到此請求後，會將這個「操作」JSON 物件，追加 到 media_items.metadata.edit_history 這個 JSONB 陣列中 28。
+編輯後的 metadata 欄位可能如下：
+JSON
+{
+  "status": "complete",
+  "thumbnails": {... },
+  "edit_history": [
+    {"op": "crop", "rect": },
+    {"op": "filter", "name": "sepia", "amount": 0.7}
+  ]
+}
+
+
+
+如何產生「已編輯」的圖片
+
+當使用者想要查看或下載編輯後的版本時，有兩種企業級的實現方式：
+選項 1：按需渲染 (「匯出」功能)
+使用者點擊「匯出」或「儲存副本」。
+API 觸發一個 RabbitMQ 任務。
+image-worker 收到任務。
+Worker 從 Postgres 讀取 edit_history JSON 86。
+Worker 從 MinIO originals 儲存桶下載 原始檔案。
+Worker 使用 pyvips 57 依序應用 edit_history 中的所有操作。
+Worker 將最終結果另存為一個 新檔案（例如 media-uuid-edited.jpg）並上傳到 MinIO。
+API 回傳這個新檔案的下載 URL。
+選項 2：即時動態生成 (「即時預覽」)
+這是更進階的方案，也是 imgproxy (一個使用 libvips 18 的開源服務) 或 Nginx image_filter 87 所採用的模式。
+API 產生一個特殊的 URL，該 URL 編碼了原始圖片的路徑和所需的編輯操作。
+Nginx（或 imgproxy 服務）攔截此請求。
+它即時從 MinIO 獲取原始檔，在記憶體中執行所有編輯操作，然後將結果回傳給使用者。
+關鍵：Nginx 快取這個動態生成的結果。下次同一個請求進來時，它會直接提供快取版本。
+對於自架 NAS 系統，選項 1 更易於實現且資源可控，完全符合使用者的需求。
+
+第 8 部分：完整實施與部署計畫 (全套方案)
+
+本節提供了在 NAS 上使用 docker-compose 部署整個系統所需的完整、可執行的設定檔。
+
+1. docker-compose.yml (主協調檔案)
+
+此檔案定義了第 1 部分中描述的所有 7 個服務，管理它們的網路、依賴關係和持久化儲存。
+
+YAML
+
+
+# docker-compose.yml
+version: '3.9'
+
+services:
+  # 1. 快取與閘道
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      -./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /mnt/nas/docker-data/nginx-cache:/var/cache/nginx # Nginx 快取路徑 
+    depends_on:
+      - api-server
+      - minio
+    networks:
+      - app-network
+
+  # 2. API 伺服器
+  api-server:
+    build:./api-server # 指向 Dockerfile.api [88, 89]
+    environment:
+      - POSTGRES_DSN=...
+      - MINIO_URL=minio:9000
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      postgres:
+        condition: service_healthy # [17]
+      rabbitmq:
+        condition: service_healthy # [90]
+    networks:
+      - app-network
+
+  # 3. 資料庫
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=media_db
+    volumes:
+      - /mnt/nas/docker-data/postgres:/var/lib/postgresql/data # [15, 17]
+    healthcheck:
+      test: # [17]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # 4. 物件儲存
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # MinIO Console
+    environment:
+      - MINIO_ROOT_USER=minio-admin
+      - MINIO_ROOT_PASSWORD=minio-secret
+    volumes:
+      - /mnt/nas/docker-data/minio:/data # ** NAS 儲存和解點 ** 
+    networks:
+      - app-network
+
+  # 5. 訊息中介層
+  rabbitmq:
+    image: rabbitmq:3-management # [17, 53]
+    ports:
+      - "15672:15672" # 管理介面
+      - "5672:5672"  # AMQP 協議
+    healthcheck:
+      test: "rabbitmqctl node_health_check" # [17]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - app-network
+
+  # 6. & 7. 處理中繼站
+  image-worker:
+    build:./worker # 指向 Dockerfile.worker
+    environment:
+      #... (與 api-server 相同的資料庫/broker/minio 連接資訊)...
+    depends_on:
+      - rabbitmq
+    networks:
+      - app-network
+  
+  video-worker: # 可部署多個
+    build:./worker # 重用同一個 worker 映像
+    environment:
+      #...
+    depends_on:
+      - rabbitmq
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+
+
+2. api-server/Dockerfile.api
+
+
+Dockerfile
+
+
+# api-server/Dockerfile
+FROM python:3.11-alpine
+
+WORKDIR /app
+
+COPY requirements.txt.
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY..
+
+# 使用 uvicorn 運行 FastAPI
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+
+
+requirements.txt: fastapi uvicorn psycopg2-binary minio pika
+
+3. worker/Dockerfile.worker (關鍵映像)
+
+
+Dockerfile
+
+
+# worker/Dockerfile
+FROM python:3.11-alpine
+
+# 安裝 FFmpeg, libvips, 和編譯工具 [91, 92, 93]
+RUN apk add --no-cache ffmpeg vips-dev build-base
+
+WORKDIR /app
+
+COPY requirements.txt.
+# pyvips 會在此處編譯 
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY..
+
+CMD ["python", "worker.py"]
+
+
+requirements.txt: psycopg2-binary minio pika pyvips 18
+
+4. nginx.conf (閘道設定檔)
+
+
+Nginx
+
+
+# nginx.conf
+worker_processes auto;
+
+events { worker_connections 1024; }
+
+http {
+    # 定義快取路徑 (必須與 docker-compose.yml 中的 volume 一致)
+    proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=thumbnail_cache:10m inactive=60d max_size=10g; # [12, 75]
+
+    # 定義後端服務 (Upstreams)
+    upstream api_server {
+        server api-server:8000;
+    }
+    
+    upstream minio_server {
+        server minio:9000; # [78]
+    }
+
+    server {
+        listen 80;
+        server_name my-nas.com;
+
+        # 1. API 路由 (不快取)
+        location /api/v1/ {
+            proxy_pass http://api_server;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        # 2. 縮圖路由 (!! 啟用快取!!) [76, 94]
+        location /thumbnails/ {
+            proxy_cache thumbnail_cache;
+            
+            # 將請求轉發到 MinIO 上的 'thumbnails' 儲存桶
+            rewrite ^/thumbnails/(.*)$ /thumbnails/$1 break;
+            proxy_pass http://minio_server;
+            
+            proxy_cache_valid 200 30d; # 快取 30 天
+            proxy_cache_lock on; # 防止重複請求
+            proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;
+            
+            add_header X-Cache-Status $upstream_cache_status; # 除錯用
+        }
+        
+        # 3. 影片串流路由 (可選，建議也快取 HLS)
+        location /hls-streams/ {
+            #... (類似於 thumbnails 的快取設定)...
+            proxy_pass http://minio_server;
+        }
+    }
+}
+
+
+
+結論：您的企業級 NAS 媒體中心
+
+本報告提供了一個完整的架構藍圖和實施計畫，以滿足使用者在 NAS/Docker 環境中實現企業級媒體管理的需求。
+透過採用微服務架構 5，我們成功地將相互衝突的任務解耦，從而同時實現了所有目標：
+快速上傳：透過「預簽章 URL 分塊上傳」37 實現。檔案直接從客戶端傳輸到 MinIO 儲存，API 伺服器僅作為協調者，實現了極低的上傳延遲。
+即時預覽：透過「異步處理」51 和「快取交付」實現。
+image-worker (使用 libvips 18) 和 video-worker (使用 ffmpeg 59) 在背景自動生成縮圖和 HLS 串流。
+Nginx 12 作為快取代理，從其本地快取中即時交付這些預先生成的資產，實現了「即時」的相簿瀏覽體驗 13。
+強大功能：透過「非破壞性編輯」82 和「JSONB 元數據」30 實現。
+所有編輯操作都作為「配方」儲存在 JSONB 欄位中，原始檔案保持不變 83。
+JSONB 欄位作為所有微服務（上傳、處理、編輯）的中央通訊匯流排，提供了極致的系統靈活性和可擴展性。
+這就是大型企業（如 Google 1）實際在使用的「完整且有效的解決方案」，現已成功地為您的自架 NAS/Docker 環境量身定制。
+引用的著作
+Google Photos builds user experience on Spanner | Google Cloud Blog, 檢索日期：11月 3, 2025， https://cloud.google.com/blog/products/databases/google-photos-builds-user-experience-on-spanner
+How To Build Google Photos From Scratch - System Design Series - YouTube, 檢索日期：11月 3, 2025， https://www.youtube.com/watch?v=nJh_9zVzR3s
+Architecture: Handling large scale photo upload and resizing - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/23223246/architecture-handling-large-scale-photo-upload-and-resizing
+Decoding Instagram System Design & Architecture (And How Reels Recommendation Works?) | TechAhead, 檢索日期：11月 3, 2025， https://www.techaheadcorp.com/blog/decoding-instagram-system-design-architecture-and-how-reels-recommendation-works/
+What is Microservices Architecture? - OVHcloud, 檢索日期：11月 3, 2025， https://us.ovhcloud.com/learn/what-is-microservices-architecture/
+What Is Microservices Architecture? - Google Cloud, 檢索日期：11月 3, 2025， https://cloud.google.com/learn/what-is-microservices-architecture
+Why You Should Not Run MinIO on SAN/NAS Appliances, 檢索日期：11月 3, 2025， https://blog.min.io/no-san-nas/
+Advantages of Object Storage vs SAN/NAS Systems - MinIO Blog, 檢索日期：11月 3, 2025， https://blog.min.io/why-object-storage-is-superior-to-san-nas/
+minio/minio - Docker Image - Docker Hub, 檢索日期：11月 3, 2025， https://hub.docker.com/r/minio/minio
+Setting up Object Storage with MinIO with Docker - KodeKloud, 檢索日期：11月 3, 2025， https://kodekloud.com/community/t/setting-up-object-storage-with-minio-with-docker/336624
+On-prem Backups: NAS and NFS, Minio, Fuse, Monitors and Synology CloudSync, 檢索日期：11月 3, 2025， https://freshbrewed.science/2024/09/10/localbackups.html
+NGINX Content Caching | NGINX Documentation, 檢索日期：11月 3, 2025， https://docs.nginx.com/nginx/admin-guide/content-cache/content-caching/
+Enterprise-Grade Cloud Storage with NGINX Plus and Minio - F5, 檢索日期：11月 3, 2025， https://www.f5.com/company/blog/nginx/enterprise-grade-cloud-storage-nginx-plus-minio
+postgres - Official Image | Docker Hub, 檢索日期：11月 3, 2025， https://hub.docker.com/_/postgres
+RabbitMQ In Event-Driven Communication Between Microservices | by Darshana Dinushal, 檢索日期：11月 3, 2025， https://darshanadinushal.medium.com/rabbitmq-in-event-driven-communication-between-microservices-df3a9c38ece9
+libvips/libvips: A fast image processing library with low memory needs. - GitHub, 檢索日期：11月 3, 2025， https://github.com/libvips/libvips
+FFmpeg libav tutorial - learn how media works from basic to transmuxing, transcoding and more. Translations - GitHub, 檢索日期：11月 3, 2025， https://github.com/leandromoreira/ffmpeg-libav-tutorial
+Block vs File vs Object Storage - Difference Between Data Storage Services - Amazon AWS, 檢索日期：11月 3, 2025， https://aws.amazon.com/compare/the-difference-between-block-file-object-storage/
+Object Storage vs. Databases for data replication: A comprehensive guide - DBSync, 檢索日期：11月 3, 2025， https://www.mydbsync.com/blogs/object-storage-vs-databases
+Block Storage vs. Object Storage in the Cloud: Key Differences | NetApp, 檢索日期：11月 3, 2025， https://www.netapp.com/learn/block-storage-vs-object-storage-cloud/
+MinIO is a high-performance, S3 compatible object store, open sourced under GNU AGPLv3 license. - GitHub, 檢索日期：11月 3, 2025， https://github.com/minio/minio
+Store images(jpg,gif,png) in filesystem or DB? [duplicate] - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/1010652/store-imagesjpg-gif-png-in-filesystem-or-db
+database - Storing Images in DB - Yea or Nay? - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/3748/storing-images-in-db-yea-or-nay
+Storing Images in PostgreSQL - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/54500/storing-images-in-postgresql
+How to add tons of images into Postgres database? : r/PostgreSQL - Reddit, 檢索日期：11月 3, 2025， https://www.reddit.com/r/PostgreSQL/comments/o6lzc3/how_to_add_tons_of_images_into_postgres_database/
+How to safely improve your database schema - Test Double, 檢索日期：11月 3, 2025， https://testdouble.com/insights/improving-database-schema-without-downtime
+How to Make Database Changes Without Breaking Everything - Brent Ozar Unlimited®, 檢索日期：11月 3, 2025， https://www.brentozar.com/archive/2023/06/how-to-make-database-changes-without-breaking-everything/
+Documentation: 18: 8.14. JSON Types - PostgreSQL, 檢索日期：11月 3, 2025， https://www.postgresql.org/docs/current/datatype-json.html
+Metadata with Django & PostgreSQL: Solved | by Kim B Kim - Medium, 檢索日期：11月 3, 2025， https://medium.com/@kbkim9595/metadata-with-django-postgresql-solved-b318f33ca0fa
+Is JSONB appropriate for a user metadata store? : r/PostgreSQL - Reddit, 檢索日期：11月 3, 2025， https://www.reddit.com/r/PostgreSQL/comments/ns88fg/is_jsonb_appropriate_for_a_user_metadata_store/
+How to Use JSONB in PostgreSQL with DbSchema, 檢索日期：11月 3, 2025， https://dbschema.com/blog/postgresql/jsonb-in-postgresql/
+AWS S3 Multipart Uploads Using Presigned URLs | by Rodan Ramdam - wesionaryTEAM, 檢索日期：11月 3, 2025， https://articles.wesionary.team/introduction-to-aws-s3-uploads-and-multipart-uploads-using-presigned-urls-c80c86a1f803
+Tutorial: Upload files to Amazon S3 from the server using pre-signed urls - Medium, 檢索日期：11月 3, 2025， https://medium.com/@maksim_smagin/software-architecture-101-how-to-upload-file-s3-nodejs-fastify-68fceb5c5133
+Uploading objects with presigned URLs - Amazon Simple Storage Service, 檢索日期：11月 3, 2025， https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html
+S3 upload with presigned url — React and NodeJS | by DSL | Medium, 檢索日期：11月 3, 2025， https://fullstackdojo.medium.com/s3-upload-with-presigned-url-react-and-nodejs-b77f348d54cc
+How do you upload a file to a pre-signed POST URL from a browser to Minio or S3 using javascript - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/42869079/how-do-you-upload-a-file-to-a-pre-signed-post-url-from-a-browser-to-minio-or-s3
+Pre-signed MultiPart Uploads with Minio | VanessaSaurus, 檢索日期：11月 3, 2025， https://vsoch.github.io/2020/s3-minio-multipart-presigned-upload/
+How do I generate browser-accessible MinIO pre-signed URLs from a FastAPI backend running in Docker Compose? - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/79614310/how-do-i-generate-browser-accessible-minio-pre-signed-urls-from-a-fastapi-backen
+Uploading large objects to Amazon S3 using multipart upload and transfer acceleration | AWS Compute Blog, 檢索日期：11月 3, 2025， https://aws.amazon.com/blogs/compute/uploading-large-objects-to-amazon-s3-using-multipart-upload-and-transfer-acceleration/
+Upload large files to AWS S3 using Multipart upload and presigned URLs - DEV Community, 檢索日期：11月 3, 2025， https://dev.to/magpys/upload-large-files-to-aws-s3-using-multipart-upload-and-presigned-urls-4olo
+Using the Multipart Upload API for Object Storage - Oracle Help Center, 檢索日期：11月 3, 2025， https://docs.oracle.com/en-us/iaas/Content/Object/Tasks/usingmultipartuploads_topic-Using_the_Multipart_Upload_API.htm
+Upload strategies for large files to S3 : r/aws - Reddit, 檢索日期：11月 3, 2025， https://www.reddit.com/r/aws/comments/1f68zlx/upload_strategies_for_large_files_to_s3/
+amazon web services - uploading the large file through chunking - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/71788632/uploading-the-large-file-through-chunking
+What's the Difference Between Kafka and RabbitMQ? - Amazon AWS, 檢索日期：11月 3, 2025， https://aws.amazon.com/compare/the-difference-between-rabbitmq-and-kafka/
+Apache Kafka vs. RabbitMQ: Comparing architectures, capabilities, and use cases - Quix, 檢索日期：11月 3, 2025， https://quix.io/blog/apache-kafka-vs-rabbitmq-comparison
+Benchmarking RabbitMQ vs Kafka vs Pulsar Performance - Confluent, 檢索日期：11月 3, 2025， https://www.confluent.io/blog/kafka-fastest-messaging-system/
+Kafka vs RabbitMQ: A Comprehensive Comparison with Practical Applications, 檢索日期：11月 3, 2025， https://shaonmajumder.medium.com/kafka-vs-rabbitmq-a-comprehensive-comparison-with-practical-applications-3951f5c27a8f
+When to use RabbitMQ over Kafka? [closed] - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/42151544/when-to-use-rabbitmq-over-kafka
+Everything You Need to Know about Asynchronous Communication and RabbitMQ, 檢索日期：11月 3, 2025， https://www.cloudamqp.com/blog/asynchronous-communication-with-rabbitmq.html
+How to Run RabbitMQ in Docker Compose | by Kaloyan Manev - Medium, 檢索日期：11月 3, 2025， https://medium.com/@kaloyanmanev/how-to-run-rabbitmq-in-docker-compose-e5baccc3e644
+How to use RabbitMQ with Docker and Docker Compose; a beginner's guide, 檢索日期：11月 3, 2025， https://geshan.com.np/blog/2024/05/rabbitmq-docker/
+Designing asynchronous microservices with RabbitMQ - harrisoncramer.me, 檢索日期：11月 3, 2025， https://www.harrisoncramer.me/building-asynchronous-microservices-with-rabbitmq
+Using Python Pika with Amazon MQ for RabbitMQ, 檢索日期：11月 3, 2025， https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/amazon-mq-rabbitmq-pika.html
+RabbitMQ tutorial - Work Queues, 檢索日期：11月 3, 2025， https://www.rabbitmq.com/tutorials/tutorial-two-python
+Using > Python examples - Vips – 8.0 - libvips, 檢索日期：11月 3, 2025， https://www.libvips.org/API/8.17/examples.html
+ffmpeg Documentation, 檢索日期：11月 3, 2025， https://ffmpeg.org/ffmpeg.html
+Extract thumbnails from a video with FFmpeg - Mux, 檢索日期：11月 3, 2025， https://www.mux.com/articles/extract-thumbnails-from-a-video-with-ffmpeg
+Create a thumbnail image every X seconds of the video - FFmpeg Wiki, 檢索日期：11月 3, 2025， https://trac.ffmpeg.org/wiki/Create%20a%20thumbnail%20image%20every%20X%20seconds%20of%20the%20video
+Create thumbnail from video using ffmpeg - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/27145238/create-thumbnail-from-video-using-ffmpeg
+Create Thumbnail Images from a Video | FFMPEG - YouTube, 檢索日期：11月 3, 2025， https://www.youtube.com/watch?v=KlgVXhtkDdA
+transcoding video with ffmpeg - ️ l-lin, 檢索日期：11月 3, 2025， https://l-lin.github.io/video/ffmpeg/transcoding-video-with-ffmpeg
+Creating A Production Ready Multi Bitrate HLS VOD stream | by Peer5 | Medium, 檢索日期：11月 3, 2025， https://medium.com/@peer5/creating-a-production-ready-multi-bitrate-hls-vod-stream-dff1e2f1612c
+FFmpeg Formats Documentation, 檢索日期：11月 3, 2025， https://ffmpeg.org/ffmpeg-formats.html
+HLS Packaging using FFmpeg - Easy Step-by-Step Tutorial - OTTVerse, 檢索日期：11月 3, 2025， https://ottverse.com/hls-packaging-using-ffmpeg-live-vod/
+Mp4 to dynamic adaptive hls with multiple bitrates using ffmpeg - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/46276162/mp4-to-dynamic-adaptive-hls-with-multiple-bitrates-using-ffmpeg
+Mcamin/DASH-HLS-Generator: This project offers a simple config-file based cli tool to prepare streaming media. It greatly simplifies the process of using FFmpeg for both VOD and live content. - GitHub, 檢索日期：11月 3, 2025， https://github.com/Mcamin/DASH-HLS-Generator
+Using both DASH and HLS settings in ffmpeg - Reddit, 檢索日期：11月 3, 2025， https://www.reddit.com/r/ffmpeg/comments/hsjujm/using_both_dash_and_hls_settings_in_ffmpeg/
+json - REST API - file (ie images) processing - best practices - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/33279153/rest-api-file-ie-images-processing-best-practices
+Best Practices for Handling Image Uploads in API Design? : r/node - Reddit, 檢索日期：11月 3, 2025， https://www.reddit.com/r/node/comments/1fo9vmo/best_practices_for_handling_image_uploads_in_api/
+A Guide to Caching with NGINX - NGINX Community Blog, 檢索日期：11月 3, 2025， https://blog.nginx.org/blog/nginx-caching-guide
+Using NGINX as an Object Storage Gateway, 檢索日期：11月 3, 2025， https://blog.nginx.org/blog/using-nginx-as-object-storage-gateway
+Building an Image Cache using NGINX | by JG Lee - Medium, 檢索日期：11月 3, 2025， https://medium.com/@jgleeee/building-an-image-cache-using-nginx-30df79520ad7
+Nginx proxy Amazon S3 resources - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/44639182/nginx-proxy-amazon-s3-resources
+What's the right way to configure Nginx for MinIO server running as a docker service, 檢索日期：11月 3, 2025， https://serverfault.com/questions/1134176/whats-the-right-way-to-configure-nginx-for-minio-server-running-as-a-docker-ser
+Is there a way to configure nginx to proxy-pass minio traffic and handle authentication from itself? - Server Fault, 檢索日期：11月 3, 2025， https://serverfault.com/questions/1161432/is-there-a-way-to-configure-nginx-to-proxy-pass-minio-traffic-and-handle-authent
+Browser-level image lazy loading for the web | Articles - web.dev, 檢索日期：11月 3, 2025， https://web.dev/articles/browser-level-image-lazy-loading
+HTML : load thumbnail image and full image faster - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/43437809/html-load-thumbnail-image-and-full-image-faster
+How to handle long loading of images in a gallery - User Experience Stack Exchange, 檢索日期：11月 3, 2025， https://ux.stackexchange.com/questions/107190/how-to-handle-long-loading-of-images-in-a-gallery
+Nondestructive editing in Photoshop - Adobe Help Center, 檢索日期：11月 3, 2025， https://helpx.adobe.com/photoshop/using/nondestructive-editing.html
+We photographers keep digging ourselves deeper into a hole with non-destructive editing, 檢索日期：11月 3, 2025， https://www.digitalcameraworld.com/news/we-photographers-keep-digging-ourselves-deeper-into-a-hole-with-non-destructive-editing
+What are non-destructive edits and do they exist? - Photography Stack Exchange, 檢索日期：11月 3, 2025， https://photo.stackexchange.com/questions/3328/what-are-non-destructive-edits-and-do-they-exist
+Basics of Schema Composition | Adobe Experience Platform, 檢索日期：11月 3, 2025， https://experienceleague.adobe.com/en/docs/experience-platform/xdm/schema/composition
+Filtering JSON in python - Stack Overflow, 檢索日期：11月 3, 2025， https://stackoverflow.com/questions/64957264/filtering-json-in-python
+Nginx: a caching, thumbnailing, reverse proxying image server? - Charles Leifer, 檢索日期：11月 3, 2025， https://charlesleifer.com/blog/nginx-a-caching-thumbnailing-reverse-proxying-image-server-/

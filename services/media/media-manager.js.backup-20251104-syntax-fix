@@ -1,0 +1,706 @@
+/**
+ * 整合媒體管理服務（統一存儲版）
+ * - 所有媒體檔案（照片、影片）存放在同一個學習歷程目錄
+ * - 使用檔名後綴區分：video.mp4（原始）、video.webm（轉碼）、video.thumb.jpg（縮圖）
+ */
+
+const path = require('path');
+const fs = require('fs');
+const fsPromises = fs.promises;
+const crypto = require('crypto');
+
+const safeFile = require('../../utils/safe-file-operations');
+const MediaSessionRegistry = require('./media-session-registry');
+const mediaStorage = require('./media-storage');
+const mediaIndex = require('./media-index');
+const mediaTranscoder = require('./media-transcoder');
+const photoQueueManager = require('./photo-queue-manager');
+
+const SESSION_ROOT = path.join(__dirname, '..', '..', 'data', 'media-sessions');
+const registry = new MediaSessionRegistry(SESSION_ROOT);
+registry.startCleanup();
+
+function generateId() {
+    return crypto.randomUUID();
+}
+
+function toRelative(filePath) {
+    if (!filePath) return null;
+    try {
+        const relative = path.relative(mediaStorage.MEDIA_ROOT, filePath);
+        return relative.split(path.sep).join('/');
+    } catch (e) {
+        console.error('❌ 轉換相對路徑失敗:', e);
+        return null;
+    }
+}
+
+/**
+ * 生成安全的檔名（保留中文，移除特殊字元）
+ */
+function normalizeFilename(originalName, fallbackExt = '.mp4') {
+    try {
+        const ext = String(path.extname(originalName || '') || fallbackExt || '.mp4').toLowerCase();
+        const base = path.basename(originalName || '', ext) || 'video';
+        const safeName = base.replace(/[<>:"/\\|?*]/g, '').trim() || 'video';
+        const stamp = Date.now();
+        return `${safeName}-${stamp}${ext}`;
+    } catch (e) {
+        console.error('❌ 正規化檔名失敗:', e);
+        return `video-${Date.now()}${fallbackExt}`;
+    }
+}
+
+/**
+ * 生成影片相關檔名（原始、轉碼、縮圖）
+ */
+function generateVideoFilenames(originalName) {
+    try {
+        const ext = path.extname(originalName);
+        const base = path.basename(originalName, ext);
+        const timestamp = Date.now();
+        
+        return {
+            origin: `${base}-${timestamp}${ext}`,           // 原始影片
+            transcoded: `${base}-${timestamp}.webm`,        // 轉碼影片
+            thumbnail: `${base}-${timestamp}.thumb.jpg`     // 縮圖
+        };
+    } catch (e) {
+        console.error('❌ 生成影片檔名失敗:', e);
+        const ts = Date.now();
+        return {
+            origin: `video-${ts}.mp4`,
+            transcoded: `video-${ts}.webm`,
+            thumbnail: `video-${ts}.thumb.jpg`
+        };
+    }
+}
+
+async function initialize() {
+    try {
+        await fsPromises.mkdir(mediaStorage.MEDIA_ROOT, { recursive: true });
+        await fsPromises.mkdir(SESSION_ROOT, { recursive: true });
+        console.log(`✅ 媒體儲存根目錄: ${mediaStorage.MEDIA_ROOT}`);
+        console.log(`✅ 會話臨時目錄: ${SESSION_ROOT}`);
+        
+        // 🔥 啟動效能監控定時輸出（每分鐘）
+        startPerformanceMonitoring();
+    } catch (err) {
+        console.error('❌ 初始化媒體管理器失敗:', err);
+    }
+}
+
+// 🔥 效能監控（2025-11-03）
+const performanceStats = {
+    photoProcessing: {
+        total: 0,
+        success: 0,
+        failed: 0,
+        totalDuration: 0
+    },
+    videoTranscoding: {
+        total: 0,
+        success: 0,
+        failed: 0,
+        totalDuration: 0
+    },
+    thumbnailGeneration: {
+        total: 0,
+        success: 0,
+        failed: 0,
+        totalDuration: 0
+    }
+};
+
+function startPerformanceMonitoring() {
+    setInterval(() => {
+        // 🔥 效能統計摘要
+        const photoAvgTime = performanceStats.photoProcessing.success > 0 
+            ? Math.round(performanceStats.photoProcessing.totalDuration / performanceStats.photoProcessing.success)
+            : 0;
+        const videoAvgTime = performanceStats.videoTranscoding.success > 0
+            ? Math.round(performanceStats.videoTranscoding.totalDuration / performanceStats.videoTranscoding.success)
+            : 0;
+        
+        console.log('📊 [媒體處理統計]', {
+            照片處理: {
+                成功: performanceStats.photoProcessing.success,
+                失敗: performanceStats.photoProcessing.failed,
+                平均耗時: photoAvgTime + 'ms'
+            },
+            影片轉碼: {
+                成功: performanceStats.videoTranscoding.success,
+                失敗: performanceStats.videoTranscoding.failed,
+                平均耗時: videoAvgTime + 'ms'
+            },
+            縮圖生成: {
+                成功: performanceStats.thumbnailGeneration.success,
+                失敗: performanceStats.thumbnailGeneration.failed
+            }
+        });
+    }, 60000); // 每分鐘輸出一次
+}
+
+async function createUploadSession(payload) {
+    const session = await registry.createSession(payload);
+    return {
+        uploadId: session.uploadId,
+        totalChunks: session.totalChunks,
+        chunkSize: session.chunkSize,
+        expiresAt: session.expiresAt
+    };
+}
+
+async function receiveChunk(uploadId, chunkIndex, tempFilePath) {
+    const session = registry.getSession(uploadId);
+    if (!session) {
+        throw new Error('上傳會話不存在或已過期');
+    }
+
+    const chunkDir = session.tempDir;
+    await fsPromises.mkdir(chunkDir, { recursive: true });
+
+    const finalChunkPath = path.join(chunkDir, `chunk_${chunkIndex}`);
+    await fsPromises.rename(tempFilePath, finalChunkPath);
+    session.receivedChunks.add(Number(chunkIndex));
+
+    return {
+        receivedChunks: session.receivedChunks.size,
+        totalChunks: session.totalChunks
+    };
+}
+
+async function mergeChunks(session, bucket, metadata) {
+    // 生成檔名（使用統一命名規則）
+    const filenames = generateVideoFilenames(metadata.safeFilename || session.filename);
+    const finalOriginPath = path.join(bucket.baseDir, filenames.origin);
+
+    // 合併分片到最終檔案
+    const writeStream = fs.createWriteStream(finalOriginPath);
+    for (let i = 0; i < session.totalChunks; i++) {
+        const chunkPath = path.join(session.tempDir, `chunk_${i}`);
+        const data = await fsPromises.readFile(chunkPath);
+        writeStream.write(data);
+    }
+
+    await new Promise((resolve, reject) => {
+        writeStream.end();
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+    });
+
+    console.log('✅ 分片合併完成:', finalOriginPath);
+
+    return {
+        originPath: finalOriginPath,
+        originName: filenames.origin,
+        transcodedName: filenames.transcoded,
+        thumbnailName: filenames.thumbnail
+    };
+}
+
+async function completeUpload(uploadId, metadata = {}) {
+    const session = registry.getSession(uploadId);
+    if (!session) {
+        throw new Error('上傳會話不存在或已過期');
+    }
+    if (session.totalChunks > 0 && session.receivedChunks.size !== session.totalChunks) {
+        throw new Error(`分片不完整: 已接收 ${session.receivedChunks.size}/${session.totalChunks}`);
+    }
+
+    console.log('🚀 開始完成上傳:', {
+        uploadId,
+        filename: session.filename,
+        fileSize: session.fileSize,
+        metadata
+    });
+
+    // 建立統一的儲存桶（學習歷程目錄）
+    const bucket = await mediaStorage.ensureBucket({
+        courseName: metadata.courseName || metadata.courseTitle || metadata.course,
+        period: metadata.period,
+        coursePeriod: metadata.coursePeriod,
+        date: metadata.date || metadata.dateKey || metadata.courseDate,
+        studentName: metadata.studentName,
+        instructorName: metadata.instructorName || metadata.teacherName,
+        isOverview: metadata.isOverview || metadata.mode === 'overview',
+        mode: metadata.mode
+    });
+
+    // 合併分片到最終位置
+    const safeFilename = normalizeFilename(metadata.safeFilename || session.filename);
+    const merged = await mergeChunks(session, bucket, { ...metadata, safeFilename });
+
+    // 清理臨時會話
+    await registry.removeSession(uploadId);
+
+    // 建立媒體記錄
+    const recordId = generateId();
+    const record = {
+        id: recordId,
+        bucketId: bucket.bucketId,
+        relativePath: bucket.relativePath,
+        relativeBase: bucket.relativeBase,
+        courseName: metadata.courseName || metadata.courseTitle || metadata.course || '',
+        courseId: metadata.courseId || '',
+        coursePeriod: bucket.coursePeriod,
+        instructorName: metadata.instructorName || metadata.teacherName || '',
+        studentName: bucket.isOverview ? null : (metadata.studentName || ''),
+        isOverview: bucket.isOverview,
+        dateKey: bucket.dateKey,
+        semester: bucket.semester,
+        filename: merged.originName,
+        originalName: session.filename,
+        originPath: merged.originPath,
+        originRelative: toRelative(merged.originPath),
+        fileSize: session.fileSize,
+        fileType: session.fileType,
+        uploadedAt: Date.now(),
+        status: 'queued',
+        transcoded: null,
+        transcodedRelative: null,
+        thumbnail: null,
+        thumbnailRelative: null
+    };
+
+    // 寫入索引
+    await mediaIndex.appendRecord(record);
+
+    // 更新儲存桶元資料
+    mediaStorage.writeBucketMeta(bucket, async (meta) => {
+        const fileEntry = {
+            id: recordId,
+            filename: merged.originName,
+            type: session.fileType,
+            fileSize: session.fileSize,
+            uploadedAt: Date.now(),
+            status: 'queued'
+        };
+
+        const files = Array.isArray(meta.files) ? meta.files.slice() : [];
+        files.push(fileEntry);
+
+        return {
+            ...meta,
+            courseTitle: record.courseName,
+            instructorName: record.instructorName,
+            studentName: record.studentName,
+            mode: record.isOverview ? 'overview' : 'student',
+            files
+        };
+    }).catch((err) => {
+        console.error('⚠️ 寫入桶資訊失敗:', err.message);
+    });
+
+    // 🎬🖼️ 根据文件类型选择处理器（非同步，不阻塞回應）
+    const isVideo = /^video\//i.test(session.fileType);
+    const isImage = /^image\//i.test(session.fileType);
+    
+    if (isImage) {
+        // 📸 照片：生成缩图
+        console.log('📸 開始照片處理:', merged.originPath);
+        const metaPath = path.join(bucket.baseDir, 'photos-meta.json');
+        const startTime = Date.now();
+        
+        // 🔥 效能追蹤
+        performanceStats.photoProcessing.total++;
+        
+        photoQueueManager.addJob({
+            photoId: recordId,
+            inputPath: merged.originPath,
+            outputDir: bucket.baseDir,
+            originalName: session.filename,
+            metaPath,
+            onComplete: (result) => {
+                const duration = Date.now() - startTime;
+                console.log(`✅ 照片處理完成: ${result.originalName} (${duration}ms)`);
+                
+                // 🔥 效能追蹤
+                performanceStats.photoProcessing.success++;
+                performanceStats.photoProcessing.totalDuration += duration;
+                console.log(`⏱️ [效能] 照片處理耗時: ${duration}ms`);
+                
+                // 更新索引狀態
+                mediaIndex.updateRecord(
+                    (entry) => entry.id === recordId,
+                    () => ({
+                        status: 'ready',
+                        thumbnail: {
+                            path: path.join(bucket.baseDir, result.thumbnails.small),
+                            filename: result.thumbnails.small
+                        },
+                        thumbnailRelative: toRelative(path.join(bucket.baseDir, result.thumbnails.small)),
+                        processedAt: Date.now()
+                    })
+                ).catch((err) => {
+                    console.error('⚠️ 更新索引失敗:', err.message);
+                });
+            },
+            onError: (error) => {
+                const duration = Date.now() - startTime;
+                console.error(`❌ 照片處理失敗: ${error.message} (${duration}ms)`);
+                
+                // 🔥 效能追蹤
+                performanceStats.photoProcessing.failed++;
+                
+                // 標記為錯誤狀態
+                mediaIndex.updateRecord(
+                    (entry) => entry.id === recordId,
+                    () => ({
+                        status: 'error',
+                        error: error.message
+                    })
+                ).catch(() => {});
+            }
+        });
+        
+        // 立即返回（照片處理在背景進行）
+        return { success: true, record, bucket };
+    }
+    
+    if (!isVideo && !isImage) {
+        console.warn('⚠️ 未知文件類型:', session.fileType);
+        return { success: true, record, bucket };
+    }
+    
+    // 🎬 视频处理：背景转码
+    if (isVideo) {
+        console.log('🎬 開始背景轉碼:', merged.originPath);
+        mediaTranscoder.enqueueTranscode(bucket, merged.originPath, {
+            outputName: merged.transcodedName,
+            posterName: merged.thumbnailName
+        })
+        .then((result) => {
+            console.log('✅ 轉碼完成:', result);
+            
+            const transcoded = {
+                path: result.transcoded.outputPath,
+                filename: result.transcoded.outputName || merged.transcodedName,
+                reused: result.transcoded.reused || false
+            };
+            const thumbnail = {
+                path: result.poster.outputPath,
+                filename: result.poster.outputName || merged.thumbnailName
+            };
+            const transcodedRelative = toRelative(result.transcoded.outputPath);
+            const thumbnailRelative = toRelative(result.poster.outputPath);
+
+            // 更新索引狀態
+            mediaIndex.updateRecord(
+                (entry) => entry.id === recordId,
+                () => ({
+                    status: 'ready',
+                    transcoded,
+                    transcodedRelative,
+                    thumbnail,
+                    thumbnailRelative,
+                    processedAt: Date.now()
+                })
+            ).catch((err) => {
+                console.error('⚠️ 更新索引失敗:', err.message);
+            });
+
+            // 更新桶元資料
+            mediaStorage.writeBucketMeta(bucket, async (meta) => {
+                const files = Array.isArray(meta.files) ? meta.files.map((entry) => {
+                    if (entry.id === recordId) {
+                        return {
+                            ...entry,
+                            status: 'ready',
+                            transcoded,
+                            transcodedRelative,
+                            thumbnail,
+                            thumbnailRelative
+                        };
+                    }
+                    return entry;
+                }) : [];
+
+                return {
+                    ...meta,
+                    files
+                };
+            }).catch((err) => {
+                console.error('⚠️ 更新桶 meta 失敗:', err.message);
+            });
+        })
+        .catch((err) => {
+            console.error('❌ 媒體處理失敗，更新索引狀態為 failed:', err.message);
+            mediaIndex.updateRecord(
+                (entry) => entry.id === recordId,
+                () => ({ status: 'failed', error: err.message, failedAt: Date.now() })
+            ).catch((updateErr) => {
+                console.error('⚠️ 更新失敗狀態失敗:', updateErr.message);
+            });
+        });
+    }
+    
+    // 返回上传记录（处理在后台进行）
+    console.log('✅ 上傳完成，記錄已建立:', recordId);
+    return {
+        success: true,
+        record,
+        bucket  // 🔥 包含 bucket 信息，用于写入 photos-meta.json
+    };
+}
+
+async function cancelUpload(uploadId) {
+    await registry.removeSession(uploadId);
+    return { success: true };
+}
+
+async function getUploadStatus(uploadId) {
+    const session = registry.getSession(uploadId);
+    if (!session) {
+        return null;
+    }
+    const progress = session.totalChunks > 0
+        ? Math.round((session.receivedChunks.size / session.totalChunks) * 100)
+        : 0;
+    return {
+        uploadId: session.uploadId,
+        filename: session.filename,
+        receivedChunks: session.receivedChunks.size,
+        totalChunks: session.totalChunks,
+        fileSize: session.fileSize,
+        fileType: session.fileType,
+        progress,
+        createdAt: session.createdAt,
+        expiresAt: session.expiresAt
+    };
+}
+
+async function listMedia(filters) {
+    return mediaIndex.listRecords(filters);
+}
+
+async function getMedia(recordId) {
+    return mediaIndex.findRecordById(recordId);
+}
+
+module.exports = {
+    initialize,
+    createUploadSession,
+    receiveChunk,
+    completeUpload,
+    cancelUpload,
+    getUploadStatus,
+    listMedia,
+    getMedia
+};
+
+            uploadedAt: Date.now(),
+            status: 'queued'
+        };
+
+        const files = Array.isArray(meta.files) ? meta.files.slice() : [];
+        files.push(fileEntry);
+
+        return {
+            ...meta,
+            courseTitle: record.courseName,
+            instructorName: record.instructorName,
+            studentName: record.studentName,
+            mode: record.isOverview ? 'overview' : 'student',
+            files
+        };
+    }).catch((err) => {
+        console.error('⚠️ 寫入桶資訊失敗:', err.message);
+    });
+
+    // 🎬🖼️ 根据文件类型选择处理器（非同步，不阻塞回應）
+    const isVideo = /^video\//i.test(session.fileType);
+    const isImage = /^image\//i.test(session.fileType);
+    
+    if (isImage) {
+        // 📸 照片：生成缩图
+        console.log('📸 開始照片處理:', merged.originPath);
+        const metaPath = path.join(bucket.baseDir, 'photos-meta.json');
+        const startTime = Date.now();
+        
+        // 🔥 效能追蹤
+        performanceStats.photoProcessing.total++;
+        
+        photoQueueManager.addJob({
+            photoId: recordId,
+            inputPath: merged.originPath,
+            outputDir: bucket.baseDir,
+            originalName: session.filename,
+            metaPath,
+            onComplete: (result) => {
+                const duration = Date.now() - startTime;
+                console.log(`✅ 照片處理完成: ${result.originalName} (${duration}ms)`);
+                
+                // 🔥 效能追蹤
+                performanceStats.photoProcessing.success++;
+                performanceStats.photoProcessing.totalDuration += duration;
+                console.log(`⏱️ [效能] 照片處理耗時: ${duration}ms`);
+                
+                // 更新索引狀態
+                mediaIndex.updateRecord(
+                    (entry) => entry.id === recordId,
+                    () => ({
+                        status: 'ready',
+                        thumbnail: {
+                            path: path.join(bucket.baseDir, result.thumbnails.small),
+                            filename: result.thumbnails.small
+                        },
+                        thumbnailRelative: toRelative(path.join(bucket.baseDir, result.thumbnails.small)),
+                        processedAt: Date.now()
+                    })
+                ).catch((err) => {
+                    console.error('⚠️ 更新索引失敗:', err.message);
+                });
+            },
+            onError: (error) => {
+                const duration = Date.now() - startTime;
+                console.error(`❌ 照片處理失敗: ${error.message} (${duration}ms)`);
+                
+                // 🔥 效能追蹤
+                performanceStats.photoProcessing.failed++;
+                
+                // 標記為錯誤狀態
+                mediaIndex.updateRecord(
+                    (entry) => entry.id === recordId,
+                    () => ({
+                        status: 'error',
+                        error: error.message
+                    })
+                ).catch(() => {});
+            }
+        });
+        
+        // 立即返回（照片處理在背景進行）
+        return { success: true, record, bucket };
+    }
+    
+    if (!isVideo && !isImage) {
+        console.warn('⚠️ 未知文件類型:', session.fileType);
+        return { success: true, record, bucket };
+    }
+    
+    // 🎬 视频处理：背景转码
+    if (isVideo) {
+        console.log('🎬 開始背景轉碼:', merged.originPath);
+        mediaTranscoder.enqueueTranscode(bucket, merged.originPath, {
+            outputName: merged.transcodedName,
+            posterName: merged.thumbnailName
+        })
+        .then((result) => {
+            console.log('✅ 轉碼完成:', result);
+            
+            const transcoded = {
+                path: result.transcoded.outputPath,
+                filename: result.transcoded.outputName || merged.transcodedName,
+                reused: result.transcoded.reused || false
+            };
+            const thumbnail = {
+                path: result.poster.outputPath,
+                filename: result.poster.outputName || merged.thumbnailName
+            };
+            const transcodedRelative = toRelative(result.transcoded.outputPath);
+            const thumbnailRelative = toRelative(result.poster.outputPath);
+
+            // 更新索引狀態
+            mediaIndex.updateRecord(
+                (entry) => entry.id === recordId,
+                () => ({
+                    status: 'ready',
+                    transcoded,
+                    transcodedRelative,
+                    thumbnail,
+                    thumbnailRelative,
+                    processedAt: Date.now()
+                })
+            ).catch((err) => {
+                console.error('⚠️ 更新索引失敗:', err.message);
+            });
+
+            // 更新桶元資料
+            mediaStorage.writeBucketMeta(bucket, async (meta) => {
+                const files = Array.isArray(meta.files) ? meta.files.map((entry) => {
+                    if (entry.id === recordId) {
+                        return {
+                            ...entry,
+                            status: 'ready',
+                            transcoded,
+                            transcodedRelative,
+                            thumbnail,
+                            thumbnailRelative
+                        };
+                    }
+                    return entry;
+                }) : [];
+
+                return {
+                    ...meta,
+                    files
+                };
+            }).catch((err) => {
+                console.error('⚠️ 更新桶 meta 失敗:', err.message);
+            });
+        })
+        .catch((err) => {
+            console.error('❌ 媒體處理失敗，更新索引狀態為 failed:', err.message);
+            mediaIndex.updateRecord(
+                (entry) => entry.id === recordId,
+                () => ({ status: 'failed', error: err.message, failedAt: Date.now() })
+            ).catch((updateErr) => {
+                console.error('⚠️ 更新失敗狀態失敗:', updateErr.message);
+            });
+        });
+    }
+    
+    // 返回上传记录（处理在后台进行）
+    console.log('✅ 上傳完成，記錄已建立:', recordId);
+    return {
+        success: true,
+        record,
+        bucket  // 🔥 包含 bucket 信息，用于写入 photos-meta.json
+    };
+}
+
+async function cancelUpload(uploadId) {
+    await registry.removeSession(uploadId);
+    return { success: true };
+}
+
+async function getUploadStatus(uploadId) {
+    const session = registry.getSession(uploadId);
+    if (!session) {
+        return null;
+    }
+    const progress = session.totalChunks > 0
+        ? Math.round((session.receivedChunks.size / session.totalChunks) * 100)
+        : 0;
+    return {
+        uploadId: session.uploadId,
+        filename: session.filename,
+        receivedChunks: session.receivedChunks.size,
+        totalChunks: session.totalChunks,
+        fileSize: session.fileSize,
+        fileType: session.fileType,
+        progress,
+        createdAt: session.createdAt,
+        expiresAt: session.expiresAt
+    };
+}
+
+async function listMedia(filters) {
+    return mediaIndex.listRecords(filters);
+}
+
+async function getMedia(recordId) {
+    return mediaIndex.findRecordById(recordId);
+}
+
+module.exports = {
+    initialize,
+    createUploadSession,
+    receiveChunk,
+    completeUpload,
+    cancelUpload,
+    getUploadStatus,
+    listMedia,
+    getMedia
+};

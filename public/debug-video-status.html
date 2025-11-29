@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>媒体状态调试工具（照片+影片）</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1d4ed8;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #374151;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        button {
+            background: #1d4ed8;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #1e40af;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .result h2 {
+            margin-top: 0;
+            color: #1f2937;
+        }
+        pre {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+        .error {
+            background: #fef2f2;
+            border-color: #fca5a5;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+        .success {
+            background: #f0fdf4;
+            border-color: #86efac;
+            color: #166534;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+        .file-item {
+            padding: 8px;
+            background: white;
+            margin: 5px 0;
+            border-radius: 4px;
+            border: 1px solid #e5e7eb;
+        }
+        .file-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .file-size {
+            color: #6b7280;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 媒体状态调试工具（照片 📸 + 影片 🎬）</h1>
+        
+        <div class="form-group">
+            <label for="course">课程名称:</label>
+            <input type="text" id="course" value="SPIKE PRO" placeholder="例如: SPIKE PRO">
+        </div>
+        
+        <div class="form-group">
+            <label for="period">时段:</label>
+            <input type="text" id="period" value="日 10:00-12:00 第6週" placeholder="例如: 日 10:00-12:00 第6週">
+        </div>
+        
+        <div class="form-group">
+            <label for="date">日期 (YYYY-MM-DD):</label>
+            <input type="text" id="date" value="2025-11-02" placeholder="例如: 2025-11-02">
+        </div>
+        
+        <div class="form-group">
+            <label for="studentName">学生姓名:</label>
+            <input type="text" id="studentName" value="陳杰睿" placeholder="例如: 陳杰睿">
+        </div>
+        
+        <button onclick="checkStatus()">检查状态</button>
+        
+        <div id="result"></div>
+    </div>
+    
+    <script>
+        async function checkStatus() {
+            const course = document.getElementById('course').value;
+            const period = document.getElementById('period').value;
+            const date = document.getElementById('date').value;
+            const studentName = document.getElementById('studentName').value;
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result">⏳ 检查中...</div>';
+            
+            try {
+                const params = new URLSearchParams({ course, period, date, studentName });
+                const response = await fetch(`/api/debug/video-status?${params}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const result = data.data;
+                    let html = '<div class="result">';
+                    html += '<h2>📂 目录信息</h2>';
+                    html += `<p><strong>学期:</strong> ${result.semester}</p>`;
+                    
+                    if (result.testedPaths && result.testedPaths.length > 0) {
+                        html += '<h3>🔍 测试的路径:</h3>';
+                        result.testedPaths.forEach((testPath, index) => {
+                            const isMatch = testPath === result.recordPath;
+                            html += `<div class="file-item" style="${isMatch ? 'background: #f0fdf4; border-color: #86efac;' : ''}">`;
+                            html += `<strong>${index + 1}.</strong> ${testPath}`;
+                            if (isMatch) html += ' <span style="color: #166534;">✅ 找到</span>';
+                            html += '</div>';
+                        });
+                    }
+                    
+                    html += `<p><strong>实际路径:</strong> ${result.recordPath || '未找到'}</p>`;
+                    html += `<p><strong>路径类型:</strong> ${result.pathType || 'N/A'}</p>`;
+                    html += `<p><strong>存在:</strong> ${result.exists ? '✅ 是' : '❌ 否'}</p>`;
+                    
+                    if (result.exists) {
+                        html += '<h3>📄 文件列表:</h3>';
+                        if (result.files.length > 0) {
+                            result.files.forEach(file => {
+                                const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+                                html += `<div class="file-item">
+                                    <div class="file-name">${file.name}</div>
+                                    <div class="file-size">${sizeMB} MB ${file.isDirectory ? '(目录)' : ''}</div>
+                                </div>`;
+                            });
+                        } else {
+                            html += '<p>目录为空</p>';
+                        }
+                        
+                        if (result.videosMeta) {
+                            html += '<h3>🎬 videos-meta.json:</h3>';
+                            html += '<pre>' + JSON.stringify(result.videosMeta, null, 2) + '</pre>';
+                            
+                            // 检查缩图状态
+                            html += '<h3>🖼️ 缩图状态:</h3>';
+                            result.videosMeta.forEach((video, index) => {
+                                html += `<div class="file-item">`;
+                                html += `<strong>视频 ${index + 1}:</strong> ${video.originalName}<br>`;
+                                html += `<strong>ID:</strong> ${video.id}<br>`;
+                                html += `<strong>状态:</strong> ${video.status}<br>`;
+                                html += `<strong>原始文件:</strong> ${video.filename || '❌'}<br>`;
+                                html += `<strong>转码文件:</strong> ${video.transcodedFilename || '❌ 未生成'}<br>`;
+                                html += `<strong>缩图文件:</strong> ${video.thumbnailFilename || '❌ 未生成'}<br>`;
+                                
+                                if (!video.thumbnailFilename) {
+                                    html += '<div class="error">⚠️ <strong>问题:</strong> 缩图文件未生成！这就是手机端无法显示缩图的原因。</div>';
+                                } else {
+                                    html += '<div class="success">✅ 缩图文件存在，应该可以显示</div>';
+                                }
+                                html += '</div>';
+                            });
+                        } else if (result.videosMetaError) {
+                            html += '<div class="error">❌ videos-meta.json 解析失败: ' + result.videosMetaError + '</div>';
+                        } else {
+                            html += '<p>⚠️ videos-meta.json 不存在</p>';
+                        }
+                        
+                        if (result.photosMeta) {
+                            html += '<h3>📸 photos-meta.json:</h3>';
+                            html += '<pre>' + JSON.stringify(result.photosMeta, null, 2) + '</pre>';
+                            
+                            // 检查照片缩图状态
+                            html += '<h3>🖼️ 照片缩图状态:</h3>';
+                            result.photosMeta.forEach((photo, index) => {
+                                html += `<div class="file-item">`;
+                                html += `<strong>照片 ${index + 1}:</strong> ${photo.originalName}<br>`;
+                                html += `<strong>ID:</strong> ${photo.id}<br>`;
+                                html += `<strong>状态:</strong> ${photo.status}<br>`;
+                                html += `<strong>原始文件:</strong> ${photo.filename || '❌'}<br>`;
+                                html += `<strong>缩图:</strong><br>`;
+                                if (photo.thumbnails) {
+                                    if (photo.thumbnails.small) {
+                                        html += `  - 小缩图: ${photo.thumbnails.small} ✅<br>`;
+                                    }
+                                    if (photo.thumbnails.medium) {
+                                        html += `  - 预览图: ${photo.thumbnails.medium} ✅<br>`;
+                                    }
+                                    if (!photo.thumbnails.small && !photo.thumbnails.medium) {
+                                        html += '  - 无缩图 ❌<br>';
+                                    }
+                                } else {
+                                    html += '  - 无缩图 ❌<br>';
+                                }
+                                
+                                if (photo.optimized) {
+                                    const savings = photo.optimized.savings || 0;
+                                    html += `<strong>优化:</strong> 节省 ${savings.toFixed(1)}% 空间<br>`;
+                                }
+                                html += '</div>';
+                            });
+                        } else if (result.photosMetaError) {
+                            html += '<div class="error">❌ photos-meta.json 解析失败: ' + result.photosMetaError + '</div>';
+                        }
+                        
+                        if (result.mediaMeta) {
+                            html += '<h3>📊 media-meta.json:</h3>';
+                            html += '<pre>' + JSON.stringify(result.mediaMeta, null, 2) + '</pre>';
+                        }
+                    }
+                    
+                    html += '</div>';
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ 错误: ' + data.error + '</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">❌ 请求失败: ' + error.message + '</div>';
+            }
+        }
+        
+        // 自动运行
+        setTimeout(() => checkStatus(), 500);
+    </script>
+</body>
+</html>
+

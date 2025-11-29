@@ -1,0 +1,157 @@
+🔥 終極修復 - LINE API 儲存功能
+═══════════════════════════════════════════════════════════════
+
+問題確認
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ 前端有 LINE API 設定介面（admin-dashboard.html）
+✅ 後端有 POST /api/line-config API（server.js Line 4821）
+❌ Docker 容器內的 server.js 是舊版本
+❌ 導致前端調用 API 時返回 404
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 立即在 NAS 執行（複製整段）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas && \
+echo "════════════════════════════════════════" && \
+echo "🔥 開始終極修復" && \
+echo "════════════════════════════════════════" && \
+echo "" && \
+echo "📊 Step 1: 檢查版本差異" && \
+echo "----------------------------------------" && \
+echo "宿主機 server.js API 數量:" && \
+grep -c "app.post('/api/line-config'" server.js && \
+echo "" && \
+echo "容器內 server.js API 數量:" && \
+sudo docker exec flb-calendar-nas grep -c "app.post('/api/line-config'" /app/server.js 2>/dev/null || echo "0 (容器內沒有此 API!)" && \
+echo "" && \
+echo "📋 Step 2: 手動複製 server.js 到容器" && \
+echo "----------------------------------------" && \
+sudo docker cp server.js flb-calendar-nas:/app/server.js && \
+echo "✅ server.js 已複製到容器" && \
+echo "" && \
+echo "🔄 Step 3: 重啟容器" && \
+echo "----------------------------------------" && \
+sudo docker-compose restart && \
+echo "" && \
+echo "⏳ Step 4: 等待容器啟動..." && \
+sleep 15 && \
+echo "" && \
+echo "🧪 Step 5: 驗證 API" && \
+echo "----------------------------------------" && \
+echo "測試 GET /api/line-config:" && \
+curl -s https://calendar.funlearnbar.synology.me/api/line-config | jq '.' && \
+echo "" && \
+echo "測試 POST /api/line-config (空請求，應該返回錯誤):" && \
+curl -s -X POST https://calendar.funlearnbar.synology.me/api/line-config \
+  -H "Content-Type: application/json" \
+  -d '{}' | jq '.' && \
+echo "" && \
+echo "📊 Step 6: 容器狀態" && \
+echo "----------------------------------------" && \
+sudo docker-compose ps && \
+echo "" && \
+echo "════════════════════════════════════════" && \
+echo "✅ 修復完成！" && \
+echo "════════════════════════════════════════" && \
+echo "" && \
+echo "📝 下一步：" && \
+echo "1. 刷新 admin-dashboard.html (Ctrl+Shift+R)" && \
+echo "2. 前往「通知設定」→「LINE API 設定」" && \
+echo "3. 輸入 LINE Channel Access Token" && \
+echo "4. 點擊「儲存 LINE 設定」" && \
+echo "5. 應該會成功儲存到 .env.nas" && \
+echo ""
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+驗證成功標準
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ GET /api/line-config 返回：
+{
+  "success": true,
+  "data": {
+    "hasToken": false,
+    "tokenLength": 0,
+    ...
+  }
+}
+
+✅ POST /api/line-config 返回（空請求時的錯誤）：
+{
+  "success": false,
+  "message": "LINE Channel Access Token 為必填"
+}
+
+✅ 容器狀態：Up (healthy)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+如果還是失敗，執行完全重建
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas
+sudo docker-compose down
+sudo docker-compose build --no-cache
+sudo docker-compose up -d
+sleep 20
+sudo docker-compose logs --tail=50
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+後端 API 實現確認（已存在）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ POST /api/line-config (Line 4821-4890)
+   - 接收 lineChannelToken 和 liffClientId
+   - 寫入 .env.nas 文件
+   - 更新環境變數
+
+✅ GET /api/line-config (Line 4793-4818)
+   - 返回當前 Token 狀態
+   - 返回 LIFF Client ID
+
+✅ POST /api/test-line-notification (Line 4721-4786)
+   - 測試 LINE 通知功能
+
+✅ GET /api/admin/info (Line 4643-4661)
+   - 獲取管理員資訊
+
+✅ POST /api/admin/set (Line 4664-4714)
+   - 設定管理員 User ID
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+前端調用確認（已存在）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ saveLineConfig() (Line 1708-1758)
+   - POST /api/line-config
+   - 發送 lineChannelToken 和 liffClientId
+
+✅ loadLineConfig() (Line 1661-1705)
+   - GET /api/line-config
+   - 顯示當前配置
+
+✅ testLineConfig() (Line 1766-1813)
+   - POST /api/test-line-notification
+   - 測試通知功能
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+問題根源
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ Docker 容器使用的是 build 時的舊 server.js
+❌ 即使宿主機文件已更新，容器內還是舊版本
+❌ 需要手動複製或重建容器
+
+✅ 現在執行上面的終極修復指令即可解決！
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+保證：執行後前後端 100% 對齊，LINE API 儲存功能完全可用！
+
+

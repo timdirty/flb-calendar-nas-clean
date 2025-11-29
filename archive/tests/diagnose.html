@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>診斷工具</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            margin: 0;
+        }
+        .log {
+            background: #252526;
+            border: 1px solid #3c3c3c;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #3c3c3c;
+        }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .warning { color: #dcdcaa; }
+        .info { color: #9cdcfe; }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #252526;
+            border-left: 4px solid #0e639c;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 診斷工具 - 找出卡住的原因</h1>
+    
+    <div class="status" id="currentStatus">
+        ⏳ 準備開始診斷...
+    </div>
+    
+    <div>
+        <button onclick="startDiagnosis()">🚀 開始完整診斷</button>
+        <button onclick="checkAPI()">🌐 測試 API</button>
+        <button onclick="checkLIFF()">🔑 測試 LIFF</button>
+        <button onclick="checkDOM()">📄 檢查 DOM</button>
+        <button onclick="clearLog()">🗑️ 清除日誌</button>
+    </div>
+    
+    <h2>📋 診斷日誌</h2>
+    <div class="log" id="log"></div>
+    
+    <h2>🎯 建議操作</h2>
+    <div id="suggestions"></div>
+    
+    <script>
+        const logContainer = document.getElementById('log');
+        const statusDiv = document.getElementById('currentStatus');
+        const suggestionsDiv = document.getElementById('suggestions');
+        
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `[${timestamp}] ${message}`;
+            logContainer.insertBefore(entry, logContainer.firstChild);
+        }
+        
+        function updateStatus(message) {
+            statusDiv.innerHTML = message;
+        }
+        
+        function clearLog() {
+            logContainer.innerHTML = '';
+            log('日誌已清除', 'info');
+        }
+        
+        async function startDiagnosis() {
+            clearLog();
+            updateStatus('🔍 診斷中...');
+            log('開始完整診斷', 'info');
+            
+            // 1. 基本環境檢查
+            log('=== 環境檢查 ===', 'info');
+            log(`URL: ${location.href}`, 'info');
+            log(`User Agent: ${navigator.userAgent}`, 'info');
+            log(`頁面狀態: ${document.readyState}`, 'info');
+            
+            // 2. 檢查 LIFF
+            await checkLIFF();
+            
+            // 3. 檢查 API
+            await checkAPI();
+            
+            // 4. 檢查 DOM
+            await checkDOM();
+            
+            // 5. 檢查載入遮罩
+            await checkLoadingOverlays();
+            
+            // 6. 檢查全局變數
+            await checkGlobalVars();
+            
+            updateStatus('✅ 診斷完成！請查看日誌和建議。');
+            generateSuggestions();
+        }
+        
+        async function checkLIFF() {
+            log('=== LIFF 檢查 ===', 'info');
+            
+            if (typeof liff === 'undefined') {
+                log('❌ LIFF SDK 未載入', 'warning');
+                return false;
+            }
+            
+            log('✅ LIFF SDK 已載入', 'success');
+            
+            try {
+                const isInClient = liff.isInClient();
+                log(`📱 執行環境: ${isInClient ? 'LINE 應用程式' : '外部瀏覽器'}`, 'info');
+                
+                const isLoggedIn = liff.isLoggedIn();
+                log(`🔑 登入狀態: ${isLoggedIn ? '已登入' : '未登入'}`, isLoggedIn ? 'success' : 'warning');
+                
+                if (isLoggedIn) {
+                    const profile = await liff.getProfile();
+                    log(`👤 用戶: ${profile.displayName}`, 'success');
+                }
+            } catch (error) {
+                log(`❌ LIFF 錯誤: ${error.message}`, 'error');
+            }
+            
+            return true;
+        }
+        
+        async function checkAPI() {
+            log('=== API 檢查 ===', 'info');
+            
+            const apis = [
+                '/api/events',
+                '/api/teachers',
+                '/api/templates'
+            ];
+            
+            for (const api of apis) {
+                try {
+                    log(`測試 ${api}...`, 'info');
+                    const startTime = Date.now();
+                    const response = await fetch(api);
+                    const duration = Date.now() - startTime;
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        const count = Array.isArray(data) ? data.length : (data.events?.length || 0);
+                        log(`✅ ${api}: ${response.status} (${duration}ms, ${count} 項)`, 'success');
+                    } else {
+                        log(`❌ ${api}: ${response.status} ${response.statusText}`, 'error');
+                    }
+                } catch (error) {
+                    log(`❌ ${api}: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        async function checkDOM() {
+            log('=== DOM 檢查 ===', 'info');
+            
+            const elements = [
+                '#eventsContainer',
+                '#instructorSelect',
+                '#timeFilter',
+                '#loadingOverlay',
+                '.view-buttons',
+                'body'
+            ];
+            
+            elements.forEach(selector => {
+                const element = document.querySelector(selector);
+                if (element) {
+                    const styles = window.getComputedStyle(element);
+                    log(`✅ ${selector}: display=${styles.display}, visibility=${styles.visibility}`, 'success');
+                } else {
+                    log(`❌ ${selector}: 不存在`, 'error');
+                }
+            });
+        }
+        
+        async function checkLoadingOverlays() {
+            log('=== 載入遮罩檢查 ===', 'info');
+            
+            const overlays = [
+                '#loadingOverlay',
+                '#optimized-loading-overlay',
+                '.loading-overlay',
+                '.student-loading-overlay'
+            ];
+            
+            let foundVisible = false;
+            
+            overlays.forEach(selector => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach((element, index) => {
+                    const styles = window.getComputedStyle(element);
+                    const isVisible = styles.display !== 'none' && styles.visibility !== 'hidden';
+                    
+                    if (isVisible) {
+                        log(`⚠️ ${selector}[${index}] 仍然可見！這可能導致卡住`, 'warning');
+                        foundVisible = true;
+                        
+                        // 提供移除按鈕
+                        const btn = document.createElement('button');
+                        btn.textContent = `移除 ${selector}`;
+                        btn.onclick = () => {
+                            element.remove();
+                            log(`✅ 已移除 ${selector}[${index}]`, 'success');
+                        };
+                        suggestionsDiv.appendChild(btn);
+                    } else {
+                        log(`✅ ${selector}[${index}]: 已隱藏`, 'success');
+                    }
+                });
+                
+                if (elements.length === 0) {
+                    log(`ℹ️ ${selector}: 不存在`, 'info');
+                }
+            });
+            
+            if (!foundVisible) {
+                log('✅ 沒有發現可見的載入遮罩', 'success');
+            }
+        }
+        
+        async function checkGlobalVars() {
+            log('=== 全局變數檢查 ===', 'info');
+            
+            const vars = [
+                'Utils',
+                'AppState',
+                'UIManager',
+                'APIManager',
+                'EventManager',
+                'RenderManager',
+                'LIFFManager',
+                'initApp'
+            ];
+            
+            vars.forEach(varName => {
+                if (typeof window[varName] !== 'undefined') {
+                    log(`✅ ${varName}: 已定義`, 'success');
+                } else {
+                    log(`❌ ${varName}: 未定義`, 'error');
+                }
+            });
+        }
+        
+        function generateSuggestions() {
+            log('=== 生成建議 ===', 'info');
+            
+            suggestionsDiv.innerHTML = '<h3>💡 建議操作：</h3>';
+            
+            // 檢查是否有載入遮罩
+            const hasVisibleOverlay = document.querySelector('#loadingOverlay, #optimized-loading-overlay, .loading-overlay');
+            if (hasVisibleOverlay && window.getComputedStyle(hasVisibleOverlay).display !== 'none') {
+                const btn = document.createElement('button');
+                btn.textContent = '🗑️ 移除所有載入遮罩';
+                btn.style.background = '#d13438';
+                btn.onclick = () => {
+                    document.querySelectorAll('#loadingOverlay, #optimized-loading-overlay, .loading-overlay, .student-loading-overlay')
+                        .forEach(el => el.remove());
+                    log('✅ 已移除所有載入遮罩', 'success');
+                    location.reload();
+                };
+                suggestionsDiv.appendChild(btn);
+            }
+            
+            // 手動初始化按鈕
+            const initBtn = document.createElement('button');
+            initBtn.textContent = '🚀 手動執行 initApp()';
+            initBtn.onclick = async () => {
+                try {
+                    if (typeof initApp === 'function') {
+                        log('執行 initApp()...', 'info');
+                        await initApp();
+                        log('✅ initApp() 執行完成', 'success');
+                    } else {
+                        log('❌ initApp 未定義', 'error');
+                    }
+                } catch (error) {
+                    log(`❌ initApp() 錯誤: ${error.message}`, 'error');
+                }
+            };
+            suggestionsDiv.appendChild(initBtn);
+            
+            // 重新載入按鈕
+            const reloadBtn = document.createElement('button');
+            reloadBtn.textContent = '🔄 強制重新載入';
+            reloadBtn.onclick = () => location.reload(true);
+            suggestionsDiv.appendChild(reloadBtn);
+        }
+        
+        // 自動開始診斷
+        window.addEventListener('load', () => {
+            log('診斷工具已載入', 'success');
+            log('點擊「開始完整診斷」按鈕開始', 'info');
+        });
+    </script>
+</body>
+</html>
+

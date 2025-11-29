@@ -1,0 +1,153 @@
+/* 🔥 刪除按鈕位置修復 - 移到縮圖外側右上角 (2025-11-17) */
+
+/* 確保容器有相對定位 */
+.file-preview {
+    position: relative !important;
+}
+
+/* 刪除按鈕移到外側右上角 - 強化優先級 */
+body .file-preview .remove-btn,
+#studentsSection .file-preview .remove-btn,
+.student-card .file-preview .remove-btn,
+.media-preview-container .file-preview .remove-btn {
+    position: absolute !important;
+    top: -10px !important;
+    /* 往上移出縮圖邊界 */
+    right: -10px !important;
+    /* 往右移出縮圖邊界 */
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    border-radius: 50% !important;
+    background: #dc2626 !important;
+    border: 2px solid #fff !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 12px !important;
+    color: #fff !important;
+    cursor: pointer !important;
+    z-index: 100 !important;
+    /* 提高到 100 確保在最上層 */
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transition: transform 0.2s ease, background 0.2s ease !important;
+}
+
+/* hover 效果 - 僅限尚未上傳的檔案 */
+.file-preview.new-upload .remove-btn:hover,
+.file-preview.pending .remove-btn:hover,
+.file-preview.uploading .remove-btn:hover {
+    transform: scale(1.1) !important;
+    background: #ef4444 !important;
+}
+
+/* 上傳完成的檔案 - 禁用 hover 效果但保留功能 */
+.file-preview.upload-success .remove-btn,
+.file-preview.synced-preview .remove-btn,
+.file-preview.synced .remove-btn,
+.file-preview.existing .remove-btn,
+.file-preview.loaded:not(.new-upload) .remove-btn {
+    /* 保持原樣，不縮放 */
+    pointer-events: auto !important;
+}
+
+.file-preview.upload-success .remove-btn:hover,
+.file-preview.synced-preview .remove-btn:hover,
+.file-preview.synced .remove-btn:hover,
+.file-preview.existing .remove-btn:hover,
+.file-preview.loaded:not(.new-upload) .remove-btn:hover {
+    transform: none !important;
+    background: #dc2626 !important;
+    cursor: pointer !important;
+}
+
+/* 點擊效果 */
+.file-preview .remove-btn:active {
+    transform: scale(0.95) !important;
+}
+
+/* 圖標樣式 */
+.file-preview .remove-btn i {
+    font-size: 10px !important;
+    line-height: 1 !important;
+}
+
+/* 手機端稍微大一點 */
+@media (max-width: 768px) {
+    .file-preview .remove-btn {
+        top: -12px !important;
+        right: -12px !important;
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        min-height: 28px !important;
+        font-size: 14px !important;
+    }
+
+    .file-preview .remove-btn i {
+        font-size: 12px !important;
+    }
+}
+
+/* 確保父容器不會裁剪按鈕 - 增強選擇器 */
+/* 🔥 統一管理，包含課程總覽容器 */
+.media-preview-container,
+.file-preview-container,
+.upload-preview-container,
+#photosPreview,
+#videosPreview,
+.photosPreview,
+.videosPreview,
+.student-photos,
+.student-videos,
+.file-previews,
+.student-card .file-previews,
+#studentsSection .file-previews {
+    overflow: visible !important;
+    padding: 12px !important;
+    /* 給按鈕留出空間 */
+    margin: 5px !important;
+}
+
+/* 特別針對學生卡片的預覽區域 */
+.student-card .student-photos,
+.student-card .student-videos {
+    overflow: visible !important;
+    padding-top: 12px !important;
+    padding-right: 12px !important;
+}
+
+/* 調整容器間距，避免按鈕重疊 */
+.file-preview {
+    margin: 0 !important;
+    /* 🔥 統一使用 0，由 flex gap 控制間距 */
+}
+
+/* 課程總覽的特殊處理 */
+#overviewExistingPreviews .file-preview .remove-btn,
+#overviewPhotosPreviews .file-preview .remove-btn {
+    top: -8px !important;
+    right: -8px !important;
+}
+
+/* 防止按鈕被其他元素遮擋 */
+.file-uploading-overlay {
+    z-index: 2 !important;
+    /* 低於刪除按鈕 */
+}
+
+/* 載入中狀態不顯示刪除按鈕 */
+.file-preview.loading .remove-btn {
+    display: none !important;
+}
+
+/* 錯誤狀態的刪除按鈕 */
+.file-preview.upload-error .remove-btn {
+    background: #991b1b !important;
+    border-color: #fca5a5 !important;
+}

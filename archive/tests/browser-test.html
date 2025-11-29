@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>瀏覽器端測試 - Perfect Calendar</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .test-section h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+        
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            color: #0c5460;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 瀏覽器端測試工具</h1>
+        <p class="subtitle">測試 perfect-calendar-complete-optimized.html 的瀏覽器兼容性和功能</p>
+        
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="testsPassed">0</div>
+                <div class="stat-label">✅ 測試通過</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="testsFailed">0</div>
+                <div class="stat-label">❌ 測試失敗</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="testsWarning">0</div>
+                <div class="stat-label">⚠️ 警告</div>
+            </div>
+        </div>
+        
+        <div class="test-buttons">
+            <button onclick="runAllTests()">🚀 運行所有測試</button>
+            <button onclick="testHTMLStructure()">📄 測試 HTML 結構</button>
+            <button onclick="testJavaScript()">⚙️ 測試 JavaScript</button>
+            <button onclick="testResources()">🎨 測試資源載入</button>
+            <button onclick="loadInIframe()">🖼️ 載入完整頁面</button>
+            <button onclick="clearResults()">🗑️ 清除結果</button>
+        </div>
+        
+        <div id="results"></div>
+        
+        <div class="test-section">
+            <h2>📱 預覽頁面</h2>
+            <iframe id="previewFrame" style="display: none;"></iframe>
+        </div>
+    </div>
+    
+    <script>
+        let testsPassed = 0;
+        let testsFailed = 0;
+        let testsWarning = 0;
+        
+        function updateStats() {
+            document.getElementById('testsPassed').textContent = testsPassed;
+            document.getElementById('testsFailed').textContent = testsFailed;
+            document.getElementById('testsWarning').textContent = testsWarning;
+        }
+        
+        function addResult(type, message) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+            
+            if (type === 'success') testsPassed++;
+            else if (type === 'error') testsFailed++;
+            else if (type === 'warning') testsWarning++;
+            
+            updateStats();
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            testsPassed = 0;
+            testsFailed = 0;
+            testsWarning = 0;
+            updateStats();
+        }
+        
+        async function testHTMLStructure() {
+            addResult('info', '🔍 開始測試 HTML 結構...');
+            
+            try {
+                const response = await fetch('/perfect-calendar-complete-optimized.html');
+                const text = await response.text();
+                
+                // 測試 1: 基本結構
+                if (text.includes('<!DOCTYPE html>') && 
+                    text.includes('<html') && 
+                    text.includes('</html>')) {
+                    addResult('success', '✅ HTML 基本結構正確');
+                } else {
+                    addResult('error', '❌ HTML 基本結構缺失');
+                }
+                
+                // 測試 2: 所有 script 標籤閉合
+                const scriptOpen = (text.match(/<script[^>]*>/g) || []).length;
+                const scriptClose = (text.match(/<\/script>/g) || []).length;
+                
+                if (scriptOpen === scriptClose) {
+                    addResult('success', `✅ 所有 script 標籤正確閉合 (${scriptOpen} 對)`);
+                } else {
+                    addResult('error', `❌ script 標籤不匹配: ${scriptOpen} 開 vs ${scriptClose} 閉`);
+                }
+                
+                // 測試 3: 檢查 </html> 後無多餘內容
+                const htmlEndIndex = text.lastIndexOf('</html>');
+                const afterHTML = text.substring(htmlEndIndex + 7).trim();
+                
+                if (afterHTML.length === 0) {
+                    addResult('success', '✅ </html> 後無多餘內容');
+                } else {
+                    addResult('error', `❌ </html> 後發現 ${afterHTML.length} 字元的多餘內容`);
+                }
+                
+                // 測試 4: 必要的 HTML 元素
+                const requiredElements = [
+                    'teacherBindModal',
+                    'unbindConfirmModal',
+                    'eventsContainer',
+                    'instructorSelect'
+                ];
+                
+                requiredElements.forEach(id => {
+                    if (text.includes(`id="${id}"`)) {
+                        addResult('success', `✅ 找到元素: ${id}`);
+                    } else {
+                        addResult('error', `❌ 缺少元素: ${id}`);
+                    }
+                });
+                
+            } catch (error) {
+                addResult('error', `❌ 測試失敗: ${error.message}`);
+            }
+        }
+        
+        async function testJavaScript() {
+            addResult('info', '⚙️ 開始測試 JavaScript...');
+            
+            try {
+                const response = await fetch('/perfect-calendar-complete-optimized.html');
+                const text = await response.text();
+                
+                // 測試必要的 JavaScript 函數
+                const requiredFunctions = [
+                    'initApp',
+                    'showTeacherBindModal',
+                    'confirmTeacherBinding',
+                    'switchView',
+                    'renderEvents'
+                ];
+                
+                requiredFunctions.forEach(func => {
+                    if (text.includes(`function ${func}`) || text.includes(`${func}:`)) {
+                        addResult('success', `✅ 找到函數: ${func}`);
+                    } else {
+                        addResult('warning', `⚠️ 可能缺少函數: ${func}`);
+                    }
+                });
+                
+                // 測試必要的管理器
+                const requiredManagers = [
+                    'Utils',
+                    'AppState',
+                    'UIManager',
+                    'APIManager',
+                    'LIFFManager'
+                ];
+                
+                requiredManagers.forEach(manager => {
+                    if (text.includes(`const ${manager}`)) {
+                        addResult('success', `✅ 找到管理器: ${manager}`);
+                    } else {
+                        addResult('error', `❌ 缺少管理器: ${manager}`);
+                    }
+                });
+                
+            } catch (error) {
+                addResult('error', `❌ 測試失敗: ${error.message}`);
+            }
+        }
+        
+        async function testResources() {
+            addResult('info', '🎨 開始測試資源載入...');
+            
+            try {
+                const response = await fetch('/perfect-calendar-complete-optimized.html');
+                const text = await response.text();
+                
+                // 測試 preload
+                if (text.includes('rel="preload"')) {
+                    addResult('success', '✅ 使用 preload 優化');
+                    
+                    // 檢查 crossorigin
+                    const preloadTags = text.match(/<link[^>]*rel="preload"[^>]*>/g) || [];
+                    const withCrossorigin = preloadTags.filter(tag => tag.includes('crossorigin')).length;
+                    
+                    if (withCrossorigin === preloadTags.length) {
+                        addResult('success', `✅ 所有 preload 標籤都有 crossorigin (${preloadTags.length})`);
+                    } else {
+                        addResult('warning', `⚠️ ${preloadTags.length - withCrossorigin} 個 preload 標籤缺少 crossorigin`);
+                    }
+                } else {
+                    addResult('warning', '⚠️ 未使用 preload 優化');
+                }
+                
+                // 測試 preconnect
+                if (text.includes('rel="preconnect"')) {
+                    addResult('success', '✅ 使用 preconnect 優化');
+                } else {
+                    addResult('warning', '⚠️ 未使用 preconnect 優化');
+                }
+                
+                // 測試 CSS 變數
+                if (text.includes(':root') && text.includes('--')) {
+                    addResult('success', '✅ 使用 CSS 變數系統');
+                } else {
+                    addResult('warning', '⚠️ 未使用 CSS 變數');
+                }
+                
+            } catch (error) {
+                addResult('error', `❌ 測試失敗: ${error.message}`);
+            }
+        }
+        
+        function loadInIframe() {
+            const iframe = document.getElementById('previewFrame');
+            iframe.src = '/perfect-calendar-complete-optimized.html';
+            iframe.style.display = 'block';
+            addResult('info', '🖼️ 載入完整頁面到 iframe...');
+            
+            iframe.onload = () => {
+                addResult('success', '✅ 頁面載入成功！請檢查控制台是否有錯誤。');
+            };
+            
+            iframe.onerror = () => {
+                addResult('error', '❌ 頁面載入失敗');
+            };
+        }
+        
+        async function runAllTests() {
+            clearResults();
+            addResult('info', '🚀 開始運行所有測試...');
+            await testHTMLStructure();
+            await testJavaScript();
+            await testResources();
+            addResult('info', '✨ 所有測試完成！');
+        }
+        
+        // 自動運行測試
+        window.onload = () => {
+            addResult('info', '👋 歡迎使用瀏覽器端測試工具！');
+            addResult('info', '💡 點擊上方按鈕開始測試，或點擊「運行所有測試」');
+        };
+    </script>
+</body>
+</html>
+

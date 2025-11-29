@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>學習歷程上傳系統 V2</title>
+  <link rel="stylesheet" href="/v2/styles/main.css">
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <h1>📚 學習歷程上傳 V2</h1>
+      <span class="version-badge">Beta</span>
+    </header>
+
+    <main class="app-main">
+      <!-- 課程選擇區 -->
+      <section id="course-selector" class="section">
+        <h2>選擇課程</h2>
+        <div id="course-list"></div>
+      </section>
+
+      <!-- 學生卡片區 -->
+      <section id="student-cards" class="section">
+        <h2>學生列表</h2>
+        <div id="student-list"></div>
+      </section>
+
+      <!-- 上傳區 -->
+      <section id="upload-area" class="section">
+        <h2>媒體上傳</h2>
+        <div id="media-uploader"></div>
+      </section>
+
+      <!-- 學習歷程索引管理 -->
+      <section id="learning-index-tools" class="section">
+        <h2>學習歷程索引管理（實驗功能）</h2>
+        <p style="font-size: 0.9rem; color: #4b5563; margin-bottom: 8px;">
+          透過集中索引，快速檢視單堂課的上傳狀態，或在資料異常時從 Drive 重新重建索引。
+        </p>
+
+        <div class="index-form" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:flex-end;">
+          <div style="min-width:140px;">
+            <label for="indexSemester" style="display:block;font-size:0.85rem;margin-bottom:2px;">學期</label>
+            <input id="indexSemester" type="text" placeholder="例：114-1" style="width:100%;padding:4px 6px;font-size:0.85rem;">
+          </div>
+          <div style="min-width:200px;">
+            <label for="indexCourseName" style="display:block;font-size:0.85rem;margin-bottom:2px;">課程名稱</label>
+            <input id="indexCourseName" type="text" placeholder="例：SPIKE 五 1610-1740 松山" style="width:100%;padding:4px 6px;font-size:0.85rem;">
+          </div>
+          <div style="min-width:140px;">
+            <label for="indexDate" style="display:block;font-size:0.85rem;margin-bottom:2px;">日期</label>
+            <input id="indexDate" type="date" style="width:100%;padding:4px 6px;font-size:0.85rem;">
+          </div>
+          <div style="min-width:160px;">
+            <label for="indexTopic" style="display:block;font-size:0.85rem;margin-bottom:2px;">主題（選填）</label>
+            <input id="indexTopic" type="text" placeholder="例：洞棍發射器" style="width:100%;padding:4px 6px;font-size:0.85rem;">
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button id="indexQueryBtn" type="button" style="padding:6px 10px;font-size:0.85rem;">
+              查詢單堂課索引
+            </button>
+            <button id="indexRebuildBtn" type="button" style="padding:6px 10px;font-size:0.85rem;">
+              🔄 從 Drive 重建索引
+            </button>
+          </div>
+        </div>
+
+        <div id="indexCourseResult" style="font-size:0.85rem;color:#111827;margin-bottom:8px;"></div>
+        <pre id="indexCourseRaw" style="max-height:180px;overflow:auto;background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:6px;font-size:0.78rem;color:#374151;display:none;"></pre>
+
+        <div id="indexRebuildResult" style="font-size:0.85rem;color:#374151;margin-top:8px;"></div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>powered by 樂程坊 FunLearnBar © 2025</p>
+    </footer>
+  </div>
+
+  <!-- 🔥 使用 ES Module，完全隔離 -->
+  <script type="module" src="/v2/app.js"></script>
+
+  <!-- 學習歷程索引管理工具（簡單前端） -->
+  <script>
+    (function () {
+      const semesterInput = document.getElementById('indexSemester');
+      const courseNameInput = document.getElementById('indexCourseName');
+      const dateInput = document.getElementById('indexDate');
+      const topicInput = document.getElementById('indexTopic');
+      const queryBtn = document.getElementById('indexQueryBtn');
+      const rebuildBtn = document.getElementById('indexRebuildBtn');
+      const resultEl = document.getElementById('indexCourseResult');
+      const rawEl = document.getElementById('indexCourseRaw');
+      const rebuildEl = document.getElementById('indexRebuildResult');
+
+      if (!queryBtn || !rebuildBtn) return;
+
+      function renderCourseSummary(data) {
+        if (!data) {
+          resultEl.textContent = '目前索引中找不到這堂課的紀錄。';
+          rawEl.style.display = 'none';
+          rawEl.textContent = '';
+          return;
+        }
+        const students = data.students || {};
+        const studentList = Object.values(students);
+        const totalStudents = studentList.length;
+        const withUploads = studentList.filter(s => s && s.hasAnyUpload).length;
+        const withComment = studentList.filter(s => s && s.hasComment).length;
+
+        resultEl.innerHTML = '' +
+          '課程：' + (data.courseName || '-') + '｜日期：' + (data.date || '-') + (data.topic ? '｜主題：' + data.topic : '') + '<br>' +
+          '學生數：' + totalStudents + ' 位，已有上傳：' + withUploads + ' 位，已有評語：' + withComment + ' 位';
+
+        rawEl.style.display = 'block';
+        rawEl.textContent = JSON.stringify({ overview: data.overview || null, students }, null, 2);
+      }
+
+      async function handleQuery() {
+        const semester = (semesterInput.value || '').trim();
+        const courseName = (courseNameInput.value || '').trim();
+        const date = (dateInput.value || '').trim();
+        const topic = (topicInput.value || '').trim();
+
+        if (!semester || !courseName || !date) {
+          alert('請至少填寫學期、課程名稱與日期');
+          return;
+        }
+
+        resultEl.textContent = '查詢中...';
+        rawEl.style.display = 'none';
+        rawEl.textContent = '';
+
+        try {
+          const params = new URLSearchParams({ semester, courseName, date });
+          if (topic) params.set('topic', topic);
+          const res = await fetch('/api/learning-records/index/course?' + params.toString());
+          const json = await res.json();
+          if (!json.success) {
+            throw new Error(json.message || '查詢失敗');
+          }
+          renderCourseSummary(json.data || null);
+        } catch (err) {
+          console.error('[IndexTools] 查詢失敗:', err);
+          resultEl.textContent = '❌ 查詢失敗：' + (err && err.message ? err.message : '未知錯誤');
+        }
+      }
+
+      async function handleRebuild() {
+        if (!confirm('確定要從 Drive 重新掃描並重建索引嗎？此操作可能花費較久時間。')) {
+          return;
+        }
+        rebuildEl.textContent = '重建中，請稍候...';
+        try {
+          const res = await fetch('/api/learning-records/rebuild-index', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          const json = await res.json();
+          if (!json.success) {
+            throw new Error(json.message || '重建失敗');
+          }
+          const info = json.data || {};
+          rebuildEl.textContent = '✅ 重建完成：共 ' + (info.totalRecords || 0) + ' 筆記錄，' +
+            '課程數 ' + (info.totalCourses || 0) + '，更新時間 ' + (info.updatedAt || '-');
+        } catch (err) {
+          console.error('[IndexTools] 重建索引失敗:', err);
+          rebuildEl.textContent = '❌ 重建索引失敗：' + (err && err.message ? err.message : '未知錯誤');
+        }
+      }
+
+      queryBtn.addEventListener('click', handleQuery);
+      rebuildBtn.addEventListener('click', handleRebuild);
+    })();
+  </script>
+</body>
+</html>

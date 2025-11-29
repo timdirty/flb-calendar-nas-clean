@@ -1,0 +1,119 @@
+🚨 API 404 錯誤 - 立即在 NAS 上執行以下指令
+═══════════════════════════════════════════════════════════════
+
+問題：admin-dashboard.html 顯示 404 錯誤
+原因：server.js 還沒同步到 NAS，或服務還沒重啟
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+步驟 1: 在 NAS SSH 終端執行（檢查同步狀態）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas
+
+echo "🔍 檢查 server.js 是否包含新 API..."
+echo ""
+
+echo "1. GET /api/students:"
+grep -c "app.get('/api/students'" server.js
+
+echo "2. GET /api/admin/info:"
+grep -c "app.get('/api/admin/info'" server.js
+
+echo "3. POST /api/admin/set:"
+grep -c "app.post('/api/admin/set'" server.js
+
+echo "4. POST /api/test-line-notification:"
+grep -c "app.post('/api/test-line-notification'" server.js
+
+echo "5. GET /api/line-config:"
+grep -c "app.get('/api/line-config'" server.js
+
+echo "6. POST /api/line-config:"
+grep -c "app.post('/api/line-config'" server.js
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 如果每個都返回 1，表示已同步 → 執行步驟 2
+❌ 如果返回 0，表示未同步 → 等待 1 分鐘後重新檢查
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+步驟 2: 重啟服務（確認已同步後執行）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+sudo docker-compose down
+sudo docker-compose up -d
+sleep 10
+sudo docker-compose logs --tail=50
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+步驟 3: 測試 API（重啟後執行）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+curl -s https://calendar.funlearnbar.synology.me/api/students | jq '.'
+curl -s https://calendar.funlearnbar.synology.me/api/admin/info | jq '.'
+curl -s https://calendar.funlearnbar.synology.me/api/line-config | jq '.'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ 一鍵完整指令（如果已確認同步完成）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas && \
+echo "🔍 檢查 API..." && \
+API_COUNT=$(grep -c "app.get('/api/students'" server.js) && \
+if [ "$API_COUNT" -gt 0 ]; then \
+  echo "✅ API 已同步！重啟服務..." && \
+  sudo docker-compose down && \
+  sudo docker-compose up -d && \
+  sleep 10 && \
+  echo "" && \
+  echo "📊 容器狀態:" && \
+  sudo docker-compose ps && \
+  echo "" && \
+  echo "🧪 測試 API:" && \
+  curl -s https://calendar.funlearnbar.synology.me/api/students | jq '.success' && \
+  curl -s https://calendar.funlearnbar.synology.me/api/line-config | jq '.success'; \
+else \
+  echo "❌ API 尚未同步，請等待 1 分鐘後重試"; \
+fi
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 注意事項：
+
+1. Synology Drive 同步通常需要 1-2 分鐘
+2. 如果 server.js 檔案很大（157K），可能需要更長時間
+3. 本地檔案最後修改時間：Oct 10 23:21
+4. 請確認 NAS 上的 server.js 修改時間是否已更新
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🆘 如果同步一直失敗：
+
+方案 A: 手動複製（最快）
+1. 在本地執行：
+   cat server.js | pbcopy
+   
+2. 在 NAS 執行：
+   cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas
+   cp server.js server.js.backup
+   nano server.js
+   # 貼上複製的內容，Ctrl+X 儲存
+
+方案 B: 使用 scp（推薦）
+scp -P 1022 server.js ctctim14@funlearnbar.synology.me:/volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 成功標準：
+- API 檢查每個都返回 1
+- 容器狀態為 Up
+- curl 測試返回 {"success": true}
+- admin-dashboard.html 不再顯示 404 錯誤
+
+現在就複製指令到 NAS 執行！🚀
+
+

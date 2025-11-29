@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統維護工具 - FLB 行事曆</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* 當在 iframe 中時，調整樣式 */
+        body.in-iframe {
+            background: #f8f9fc;
+            padding: 0;
+            min-height: auto;
+        }
+
+        body.in-iframe .container {
+            box-shadow: none;
+            max-width: none;
+        }
+
+        body.in-iframe .header {
+            display: none;
+        }
+
+        body.in-iframe .back-link {
+            display: none;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .header h1 {
+            color: #2D3561;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .tools-grid {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .tool-card {
+            background: linear-gradient(135deg, #f6f8fb 0%, #ffffff 100%);
+            border: 2px solid #e1e8ed;
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .tool-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .tool-title {
+            flex: 1;
+        }
+
+        .tool-title h3 {
+            color: #2D3561;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .tool-title p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .tool-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            padding-left: 65px;
+        }
+
+        .tool-actions {
+            display: flex;
+            gap: 10px;
+            padding-left: 65px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status-message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding-left: 65px;
+        }
+
+        .stat-item {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loader {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-tools"></i>
+                系統維護工具
+            </h1>
+            <p>清理無效資料，優化系統效能</p>
+        </div>
+
+        <div class="tools-grid">
+            <!-- 工具 1：後端清理 -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="tool-title">
+                        <h3>後端清理無效記錄</h3>
+                        <p>清理資料庫中不存在的照片/影片記錄</p>
+                    </div>
+                </div>
+                <div class="tool-description">
+                    掃描所有學習記錄目錄，清理 <code>photos-meta.json</code>、<code>videos-meta.json</code> 和 <code>media-meta.json</code> 中不存在的檔案記錄。
+                </div>
+                <div class="tool-actions">
+                    <button class="btn btn-primary" onclick="cleanBackend()">
+                        <i class="fas fa-broom"></i>
+                        開始清理
+                    </button>
+                </div>
+                <div id="backendStatus" class="status-message"></div>
+                <div id="backendStats" class="stats" style="display: none;"></div>
+            </div>
+
+            <!-- 工具 2：前端清除緩存 -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon">
+                        <i class="fas fa-desktop"></i>
+                    </div>
+                    <div class="tool-title">
+                        <h3>前端清除緩存</h3>
+                        <p>清除瀏覽器本地緩存資料</p>
+                    </div>
+                </div>
+                <div class="tool-description">
+                    清除 localStorage、sessionStorage、Cookies 和快取，解決前端顯示舊資料的問題。<br>
+                    <strong style="color: #f59e0b;">⚠️ 注意：清除後需要重新登入 LINE LIFF</strong>
+                </div>
+                <div class="tool-actions">
+                    <button class="btn btn-primary" onclick="cleanFrontend()">
+                        <i class="fas fa-trash-alt"></i>
+                        清除緩存
+                    </button>
+                </div>
+                <div id="frontendStatus" class="status-message"></div>
+            </div>
+
+            <!-- 工具 3：一鍵完整清理 -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                    <div class="tool-title">
+                        <h3>一鍵完整清理</h3>
+                        <p>執行後端清理 + 前端清除</p>
+                    </div>
+                </div>
+                <div class="tool-description">
+                    先執行後端清理無效記錄，完成後自動清除前端緩存並重新載入頁面。<br>
+                    <strong style="color: #10b981;">✅ 推薦使用此功能獲得最佳效果</strong>
+                </div>
+                <div class="tool-actions">
+                    <button class="btn btn-primary" onclick="cleanAll()">
+                        <i class="fas fa-rocket"></i>
+                        一鍵清理
+                    </button>
+                </div>
+                <div id="allStatus" class="status-message"></div>
+            </div>
+        </div>
+
+        <div class="back-link">
+            <a href="/admin-dashboard.html">
+                <i class="fas fa-arrow-left"></i>
+                返回管理後台
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 後端清理 ====================
+        async function cleanBackend() {
+            const statusEl = document.getElementById('backendStatus');
+            const statsEl = document.getElementById('backendStats');
+            const btn = event.target.closest('button');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loader"></span> 清理中...';
+            
+            statusEl.className = 'status-message status-info show';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在掃描並清理無效記錄，請稍候...';
+            statsEl.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/clean-all-metadata', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('❌ 伺服器回傳非 JSON 格式:', text.substring(0, 200));
+                    throw new Error('伺服器回傳格式錯誤，請檢查伺服器日誌');
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusEl.className = 'status-message status-success show';
+                    statusEl.innerHTML = `
+                        <strong><i class="fas fa-check-circle"></i> 清理完成！</strong><br>
+                        ${result.message}
+                    `;
+                    
+                    // 顯示統計資訊
+                    const data = result.data;
+                    statsEl.style.display = 'grid';
+                    statsEl.innerHTML = `
+                        <div class="stat-item">
+                            <div class="stat-value">${data.totalDirectories}</div>
+                            <div class="stat-label">掃描目錄數</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.processedDirectories}</div>
+                            <div class="stat-label">處理目錄數</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.totalPhotosRemoved}</div>
+                            <div class="stat-label">移除照片記錄</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.totalVideosRemoved}</div>
+                            <div class="stat-label">移除影片記錄</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.emptyMetaDeleted}</div>
+                            <div class="stat-label">刪除空檔案</div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(result.error || '清理失敗');
+                }
+            } catch (error) {
+                statusEl.className = 'status-message status-error show';
+                statusEl.innerHTML = `<strong><i class="fas fa-exclamation-circle"></i> 錯誤：</strong> ${error.message}`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-broom"></i> 開始清理';
+            }
+        }
+
+        // ==================== 前端清除緩存 ====================
+        function cleanFrontend() {
+            const statusEl = document.getElementById('frontendStatus');
+            const btn = event.target.closest('button');
+            
+            if (!confirm('確定要清除所有前端緩存嗎？清除後需要重新登入。')) {
+                return;
+            }
+            
+            btn.disabled = true;
+            statusEl.className = 'status-message status-info show';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在清除緩存...';
+            
+            try {
+                // 清除 localStorage
+                localStorage.clear();
+                console.log('✅ localStorage 已清除');
+                
+                // 清除 sessionStorage
+                sessionStorage.clear();
+                console.log('✅ sessionStorage 已清除');
+                
+                // 清除 cookies
+                document.cookie.split(";").forEach(c => { 
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                });
+                console.log('✅ Cookies 已清除');
+                
+                // 清除快取
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        names.forEach(name => caches.delete(name));
+                    });
+                    console.log('✅ Cache API 已清除');
+                }
+                
+                statusEl.className = 'status-message status-success show';
+                statusEl.innerHTML = `
+                    <strong><i class="fas fa-check-circle"></i> 清除完成！</strong><br>
+                    2 秒後自動重新載入頁面...
+                `;
+                
+                setTimeout(() => {
+                    location.reload(true);
+                }, 2000);
+                
+            } catch (error) {
+                statusEl.className = 'status-message status-error show';
+                statusEl.innerHTML = `<strong><i class="fas fa-exclamation-circle"></i> 錯誤：</strong> ${error.message}`;
+                btn.disabled = false;
+            }
+        }
+
+        // ==================== 一鍵完整清理 ====================
+        async function cleanAll() {
+            const statusEl = document.getElementById('allStatus');
+            const btn = event.target.closest('button');
+            
+            if (!confirm('確定要執行完整清理嗎？\n\n將執行：\n1. 後端清理無效記錄\n2. 前端清除緩存\n3. 重新載入頁面\n\n清除後需要重新登入。')) {
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loader"></span> 執行中...';
+            
+            // 步驟 1：後端清理
+            statusEl.className = 'status-message status-info show';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 步驟 1/2：正在清理後端無效記錄...';
+            
+            try {
+                const response = await fetch('/api/clean-all-metadata', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('❌ 伺服器回傳非 JSON 格式:', text.substring(0, 200));
+                    throw new Error('伺服器回傳格式錯誤，請檢查伺服器日誌');
+                }
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error || '後端清理失敗');
+                }
+                
+                // 步驟 2：前端清除緩存
+                statusEl.innerHTML = `
+                    <i class="fas fa-check-circle"></i> 後端清理完成（清理 ${result.data.totalPhotosRemoved + result.data.totalVideosRemoved} 個無效記錄）<br>
+                    <i class="fas fa-spinner fa-spin"></i> 步驟 2/2：正在清除前端緩存...
+                `;
+                
+                setTimeout(() => {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    document.cookie.split(";").forEach(c => { 
+                        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                    });
+                    
+                    if ('caches' in window) {
+                        caches.keys().then(names => {
+                            names.forEach(name => caches.delete(name));
+                        });
+                    }
+                    
+                    statusEl.className = 'status-message status-success show';
+                    statusEl.innerHTML = `
+                        <strong><i class="fas fa-check-circle"></i> 完整清理完成！</strong><br>
+                        後端：清理 ${result.data.totalPhotosRemoved + result.data.totalVideosRemoved} 個無效記錄<br>
+                        前端：已清除所有緩存<br>
+                        <br>2 秒後自動重新載入頁面...
+                    `;
+                    
+                    setTimeout(() => {
+                        location.reload(true);
+                    }, 2000);
+                }, 1000);
+                
+            } catch (error) {
+                statusEl.className = 'status-message status-error show';
+                statusEl.innerHTML = `<strong><i class="fas fa-exclamation-circle"></i> 錯誤：</strong> ${error.message}`;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket"></i> 一鍵清理';
+            }
+        }
+
+        // 偵測是否在 iframe 中
+        if (window.self !== window.top) {
+            document.body.classList.add('in-iframe');
+            console.log('🖼️ 在 iframe 中運行');
+        }
+
+        // 頁面載入完成
+        console.log('🔧 系統維護工具已就緒');
+        console.log('📍 API 端點: /api/clean-all-metadata');
+    </script>
+</body>
+</html>
+

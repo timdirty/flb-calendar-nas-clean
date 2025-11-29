@@ -1,0 +1,319 @@
+{
+  "students": [
+    {
+      "id": "temp_1764157374159_plxeal9cz",
+      "name": "洪康絜",
+      "type": "makeup",
+      "course": "SPIKE",
+      "scheduledDate": "2025-11-30",
+      "scheduledTime": "SPIKE 日 15:15-17:15 第9週",
+      "period": "SPIKE 日 15:15-17:15 第9週",
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "15:15",
+        "endTime": "17:15",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 日 15:15-17:15 第9週"
+      },
+      "originalStudent": "洪康絜",
+      "originalCourse": "SPIKE",
+      "originalPeriod": "SPIKE 五 16:10-17:40 松山",
+      "remaining": 1,
+      "userId": "U49e6fc37995b7a41c6f10a58ff5d5d44",
+      "location": "樂程坊",
+      "notificationNote": "",
+      "expiryDate": "2025-11-30",
+      "attendance": [],
+      "createdAt": "2025-11-26T11:42:54.159Z",
+      "createdBy": "admin"
+    },
+    {
+      "id": "temp_1764157419552_bddngj6hd",
+      "name": "黃定燊",
+      "type": "trial",
+      "course": "spm",
+      "scheduledDate": "2025-11-27",
+      "scheduledTime": "SPM 四 17:00-18:30 第2週",
+      "period": "SPM 四 17:00-18:30 第2週",
+      "periodParsed": {
+        "weekdays": [
+          "四"
+        ],
+        "startTime": "17:00",
+        "endTime": "18:30",
+        "location": null,
+        "note": null,
+        "raw": "SPM 四 17:00-18:30 第2週"
+      },
+      "originalStudent": "黃定燊",
+      "originalCourse": "spm",
+      "originalPeriod": "",
+      "remaining": 1,
+      "userId": "U29d011f6a7bf52c37ebb546dd6fa063e",
+      "location": "樂程坊",
+      "notificationNote": "",
+      "expiryDate": "2025-11-27",
+      "attendance": [
+        {
+          "date": "2025-11-27",
+          "present": true
+        }
+      ],
+      "createdAt": "2025-11-26T11:43:39.552Z",
+      "createdBy": "admin"
+    },
+    {
+      "id": "temp_1764157467648_i9ntdku8s",
+      "name": "黃定軒",
+      "type": "trial",
+      "course": "spm",
+      "scheduledDate": "2025-11-27",
+      "scheduledTime": "SPM 四 17:00-18:30 第2週",
+      "period": "SPM 四 17:00-18:30 第2週",
+      "periodParsed": {
+        "weekdays": [
+          "四"
+        ],
+        "startTime": "17:00",
+        "endTime": "18:30",
+        "location": null,
+        "note": null,
+        "raw": "SPM 四 17:00-18:30 第2週"
+      },
+      "originalStudent": "黃定軒",
+      "originalCourse": "spm",
+      "originalPeriod": "",
+      "remaining": 1,
+      "userId": "U29d011f6a7bf52c37ebb546dd6fa063e",
+      "location": "樂程坊",
+      "notificationNote": "",
+      "expiryDate": "2025-11-27",
+      "attendance": [
+        {
+          "date": "2025-11-27",
+          "present": true
+        }
+      ],
+      "createdAt": "2025-11-26T11:44:27.648Z",
+      "createdBy": "admin"
+    },
+    {
+      "id": "temp_1764157764953_rcgv73lhf",
+      "name": "陳謙樂",
+      "type": "trial",
+      "course": "spm",
+      "scheduledDate": "2025-11-29",
+      "scheduledTime": "SPM 六 14:30-16:00 體驗",
+      "period": "SPM 六 14:30-16:00 體驗",
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "14:30",
+        "endTime": "16:00",
+        "location": null,
+        "note": null,
+        "raw": "SPM 六 14:30-16:00 體驗"
+      },
+      "originalStudent": "陳謙樂",
+      "originalCourse": "spm",
+      "originalPeriod": "",
+      "remaining": 1,
+      "userId": "U726f91673cf249a1c33853d94e492fb7",
+      "location": "樂程坊",
+      "notificationNote": "",
+      "expiryDate": "2025-11-29",
+      "attendance": [],
+      "createdAt": "2025-11-26T11:49:24.953Z",
+      "createdBy": "admin"
+    },
+    {
+      "id": "temp_1764157781151_1uhsm3i4c",
+      "name": "陳芊寧",
+      "type": "trial",
+      "course": "spm",
+      "scheduledDate": "2025-11-29",
+      "scheduledTime": "SPM 六 14:30-16:00 體驗",
+      "period": "SPM 六 14:30-16:00 體驗",
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "14:30",
+        "endTime": "16:00",
+        "location": null,
+        "note": null,
+        "raw": "SPM 六 14:30-16:00 體驗"
+      },
+      "originalStudent": "陳芊寧",
+      "originalCourse": "spm",
+      "originalPeriod": "",
+      "remaining": 1,
+      "userId": "U726f91673cf249a1c33853d94e492fb7",
+      "location": "樂程坊",
+      "notificationNote": "",
+      "expiryDate": "2025-11-29",
+      "attendance": [],
+      "createdAt": "2025-11-26T11:49:41.151Z",
+      "createdBy": "admin"
+    },
+    {
+      "id": "temp_1764319418564_0vzaqq334",
+      "name": "莫名其妙🔥",
+      "type": "trial",
+      "course": "spm",
+      "scheduledDate": "2025-11-29",
+      "scheduledTime": "SPM 六 9:30-11:00 第9週",
+      "period": "SPM 六 9:30-11:00 第9週",
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "09:30",
+        "endTime": "11:00",
+        "location": null,
+        "note": null,
+        "raw": "SPM 六 9:30-11:00 第9週"
+      },
+      "originalStudent": "莫名其妙🔥",
+      "originalCourse": "spm",
+      "originalPeriod": "",
+      "remaining": 1,
+      "userId": "Ucf9b239b708001ed44f0710704282655",
+      "location": "樂程坊",
+      "detailedAddress": "台北市中正區開封街一段2號9樓",
+      "notificationNote": "莫名其妙🔥莫名其妙🔥莫名其妙🔥莫名其妙🔥",
+      "expiryDate": "2025-11-29",
+      "attendance": [],
+      "createdAt": "2025-11-28T08:43:38.564Z",
+      "createdBy": "admin"
+    },
+    {
+      "id": "temp_1764319704626_ye739skka",
+      "name": "曾紀喆",
+      "type": "trial",
+      "course": "esm",
+      "scheduledDate": "2025-12-07",
+      "scheduledTime": "ESM 日 10:00-11:00 小樹屋 體驗課",
+      "period": "ESM 日 10:00-11:00 小樹屋 體驗課",
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "10:00",
+        "endTime": "11:00",
+        "location": null,
+        "note": null,
+        "raw": "ESM 日 10:00-11:00 小樹屋 體驗課"
+      },
+      "originalStudent": "曾紀喆",
+      "originalCourse": "esm",
+      "originalPeriod": "",
+      "remaining": 1,
+      "userId": "Ud7e08c6260d3135c508e5ff2ba3a786f",
+      "location": "小樹屋",
+      "detailedAddress": "臺北市中山區復興北路150號 9樓-919房",
+      "notificationNote": "",
+      "expiryDate": "2025-12-07",
+      "attendance": [],
+      "createdAt": "2025-11-28T08:48:24.626Z",
+      "createdBy": "admin"
+    },
+    {
+      "id": "temp_1764319744768_e08wfvcdk",
+      "name": "曾紀溱",
+      "type": "trial",
+      "course": "esm",
+      "scheduledDate": "2025-12-07",
+      "scheduledTime": "ESM 日 10:00-11:00 小樹屋 體驗課",
+      "period": "ESM 日 10:00-11:00 小樹屋 體驗課",
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "10:00",
+        "endTime": "11:00",
+        "location": null,
+        "note": null,
+        "raw": "ESM 日 10:00-11:00 小樹屋 體驗課"
+      },
+      "originalStudent": "曾紀溱",
+      "originalCourse": "esm",
+      "originalPeriod": "",
+      "remaining": 1,
+      "userId": "Ud7e08c6260d3135c508e5ff2ba3a786f",
+      "location": "小樹屋",
+      "detailedAddress": "臺北市中山區復興北路150號 9樓-919房",
+      "notificationNote": "",
+      "expiryDate": "2025-12-07",
+      "attendance": [],
+      "createdAt": "2025-11-28T08:49:04.768Z",
+      "createdBy": "admin"
+    },
+    {
+      "id": "temp_1764319796636_ra41d4lty",
+      "name": "鄭聿閔",
+      "type": "trial",
+      "course": "esm",
+      "scheduledDate": "2025-11-29",
+      "scheduledTime": "ESM 六 13:30-14:30   第3週",
+      "period": "ESM 六 13:30-14:30   第3週",
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "13:30",
+        "endTime": "14:30",
+        "location": null,
+        "note": null,
+        "raw": "ESM 六 13:30-14:30   第3週"
+      },
+      "originalStudent": "鄭聿閔",
+      "originalCourse": "esm",
+      "originalPeriod": "",
+      "remaining": 1,
+      "userId": "Uaabc4c3d62aff77589db49d8b10a524a",
+      "location": "樂程坊",
+      "detailedAddress": "台北市中正區開封街一段2號9樓",
+      "notificationNote": "",
+      "expiryDate": "2025-11-29",
+      "attendance": [],
+      "createdAt": "2025-11-28T08:49:56.636Z",
+      "createdBy": "admin"
+    },
+    {
+      "id": "temp_1764320067193_4atgari1d",
+      "name": "張秉穎",
+      "type": "trial",
+      "course": "spm",
+      "scheduledDate": "2025-11-29",
+      "scheduledTime": "SPM 六 9:30-11:00 第9週",
+      "period": "SPM 六 9:30-11:00 第9週",
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "09:30",
+        "endTime": "11:00",
+        "location": null,
+        "note": null,
+        "raw": "SPM 六 9:30-11:00 第9週"
+      },
+      "originalStudent": "張秉穎",
+      "originalCourse": "spm",
+      "originalPeriod": "",
+      "remaining": 1,
+      "userId": "U8361e526d7a30d2f3981824edb1707bc",
+      "location": "樂程坊",
+      "detailedAddress": "台北市中正區開封街一段2號9樓",
+      "notificationNote": "",
+      "expiryDate": "2025-11-29",
+      "attendance": [],
+      "createdAt": "2025-11-28T08:54:27.193Z",
+      "createdBy": "admin"
+    }
+  ]
+}

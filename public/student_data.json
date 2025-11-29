@@ -1,0 +1,4386 @@
+{
+  "success": true,
+  "count": 96,
+  "students": [
+    {
+      "name": "a1123",
+      "course": "Minecraft",
+      "period": "MINECRAFT 二 11:00-12:00",
+      "remaining": 9,
+      "userId": "Udb51363eb6fdc605a6a9816379a38103",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-07-20",
+          "present": true
+        },
+        {
+          "date": "2025-07-21",
+          "present": false
+        },
+        {
+          "date": "2025-08-06",
+          "present": true
+        },
+        {
+          "date": "2025-08-13",
+          "present": true
+        },
+        {
+          "date": "2025-08-16",
+          "present": true
+        },
+        {
+          "date": "2025-08-19",
+          "present": true
+        },
+        {
+          "date": "2025-09-07",
+          "present": true
+        },
+        {
+          "date": "2025-09-08",
+          "present": true
+        },
+        {
+          "date": "2025-10-29",
+          "present": false
+        },
+        {
+          "date": "2025-11-25",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "二"
+        ],
+        "startTime": "11:00",
+        "endTime": "12:00",
+        "location": null,
+        "note": null,
+        "raw": "MINECRAFT 二 11:00-12:00"
+      }
+    },
+    {
+      "name": "b",
+      "course": "Minecraft",
+      "period": "MINECRAFT 二 11:00-12:00",
+      "remaining": 0,
+      "userId": "Udb51363eb6fdc605a6a9816379a38103",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-07-20",
+          "present": true
+        },
+        {
+          "date": "2025-07-21",
+          "present": true
+        },
+        {
+          "date": "2025-07-22",
+          "present": true
+        },
+        {
+          "date": "2025-07-29",
+          "present": true
+        },
+        {
+          "date": "2025-08-06",
+          "present": true
+        },
+        {
+          "date": "2025-08-13",
+          "present": false
+        },
+        {
+          "date": "2025-08-16",
+          "present": false
+        },
+        {
+          "date": "2025-08-19",
+          "present": true
+        },
+        {
+          "date": "2025-08-29",
+          "present": true
+        },
+        {
+          "date": "2025-09-07",
+          "present": true
+        },
+        {
+          "date": "2025-09-08",
+          "present": false
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "二"
+        ],
+        "startTime": "11:00",
+        "endTime": "12:00",
+        "location": null,
+        "note": null,
+        "raw": "MINECRAFT 二 11:00-12:00"
+      }
+    },
+    {
+      "name": "c",
+      "course": "Minecraft",
+      "period": "MINECRAFT 二 11:00-12:00",
+      "remaining": 8,
+      "userId": "Udb51363eb6fdc605a6a9816379a38103",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-07-20",
+          "present": true
+        },
+        {
+          "date": "2025-07-22",
+          "present": true
+        },
+        {
+          "date": "2025-07-25",
+          "present": true
+        },
+        {
+          "date": "2025-08-06",
+          "present": false
+        },
+        {
+          "date": "2025-08-13",
+          "present": false
+        },
+        {
+          "date": "2025-08-16",
+          "present": true
+        },
+        {
+          "date": "2025-08-19",
+          "present": true
+        },
+        {
+          "date": "2025-09-07",
+          "present": false
+        },
+        {
+          "date": "2025-09-08",
+          "present": true
+        },
+        {
+          "date": "2025-10-29",
+          "present": true
+        },
+        {
+          "date": "2025-11-25",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "二"
+        ],
+        "startTime": "11:00",
+        "endTime": "12:00",
+        "location": null,
+        "note": null,
+        "raw": "MINECRAFT 二 11:00-12:00"
+      }
+    },
+    {
+      "name": "d",
+      "course": "Minecraft",
+      "period": "MINECRAFT 二 11:00-12:00",
+      "remaining": 16,
+      "userId": "Udb51363eb6fdc605a6a9816379a38103",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-25",
+          "present": false
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "二"
+        ],
+        "startTime": "11:00",
+        "endTime": "12:00",
+        "location": null,
+        "note": null,
+        "raw": "MINECRAFT 二 11:00-12:00"
+      }
+    },
+    {
+      "name": "李霽 JI",
+      "course": "Minecraft",
+      "period": "",
+      "remaining": 16,
+      "userId": "U7cbb3424ed146adeb53e6e2403966509",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "張小明",
+      "course": "SPIKE",
+      "period": "",
+      "remaining": 14,
+      "userId": "",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-01-20",
+          "present": true
+        },
+        {
+          "date": "2025-07-02",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "李小華",
+      "course": "SPIKE",
+      "period": "",
+      "remaining": 15,
+      "userId": "",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-01-20",
+          "present": false
+        },
+        {
+          "date": "2025-07-02",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "陳杰睿",
+      "course": "SPIKE",
+      "period": "SPIKE PRO 日 10:00-12:00",
+      "remaining": 10,
+      "userId": "Udd5a9cd3a87b4a57c52f25b55956fb30",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-14",
+          "present": true
+        },
+        {
+          "date": "2025-09-21",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": false
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "10:00",
+        "endTime": "12:00",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE PRO 日 10:00-12:00"
+      }
+    },
+    {
+      "name": "吳昀衡",
+      "course": "SPIKE",
+      "period": "SPIKE 六 16:00-18:00",
+      "remaining": 8,
+      "userId": "Ua9fb0ab50b6e4cb07c64fac5854a5d80",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-13",
+          "present": true
+        },
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-09-27",
+          "present": true
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-08",
+          "present": true
+        },
+        {
+          "date": "2025-11-15",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "16:00",
+        "endTime": "18:00",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 六 16:00-18:00"
+      }
+    },
+    {
+      "name": "蔡定言",
+      "course": "SPIKE",
+      "period": "SPIKE 三 18:30-20:30",
+      "remaining": 6,
+      "userId": "Ud01f8449fb0035fecdcd2b3cfa156fe6",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-17",
+          "present": true
+        },
+        {
+          "date": "2025-09-24",
+          "present": true
+        },
+        {
+          "date": "2025-10-01",
+          "present": true
+        },
+        {
+          "date": "2025-10-08",
+          "present": true
+        },
+        {
+          "date": "2025-10-15",
+          "present": true
+        },
+        {
+          "date": "2025-10-22",
+          "present": true
+        },
+        {
+          "date": "2025-10-29",
+          "present": true
+        },
+        {
+          "date": "2025-11-05",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-12",
+          "present": true
+        },
+        {
+          "date": "2025-11-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-26",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "三"
+        ],
+        "startTime": "18:30",
+        "endTime": "20:30",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 三 18:30-20:30"
+      }
+    },
+    {
+      "name": "蔡定言 同班同學",
+      "course": "SPIKE",
+      "period": "",
+      "remaining": 3,
+      "userId": "",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-17",
+          "present": false
+        },
+        {
+          "date": "2025-10-01",
+          "present": false
+        },
+        {
+          "date": "2025-10-08",
+          "present": false
+        },
+        {
+          "date": "2025-10-15",
+          "present": false
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "顏世餘",
+      "course": "SPIKE",
+      "period": "SPIKE PRO 日 10:00-12:00",
+      "remaining": 10,
+      "userId": "U6f652812c6169e2b021f414da8e241a6",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-14",
+          "present": true
+        },
+        {
+          "date": "2025-09-21",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": false
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "10:00",
+        "endTime": "12:00",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE PRO 日 10:00-12:00"
+      }
+    },
+    {
+      "name": "菲菲 11401",
+      "course": "SPIKE",
+      "period": "SPIKE 一 1930-2100 客製化",
+      "remaining": 6,
+      "userId": "U0515c978a75a2d86e74c5fc4a48f3faf",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-22",
+          "present": true
+        },
+        {
+          "date": "2025-09-15",
+          "present": true
+        },
+        {
+          "date": "2025-09-08",
+          "present": true
+        },
+        {
+          "date": "2025-10-02",
+          "present": true
+        },
+        {
+          "date": "2025-10-08",
+          "present": true
+        },
+        {
+          "date": "2025-10-13",
+          "present": true
+        },
+        {
+          "date": "2025-10-20",
+          "present": true
+        },
+        {
+          "date": "2025-10-27",
+          "present": true
+        },
+        {
+          "date": "2025-11-03",
+          "present": true
+        },
+        {
+          "date": "2025-11-17",
+          "present": true
+        },
+        {
+          "date": "2025-11-10",
+          "present": true
+        },
+        {
+          "date": "2025-11-24",
+          "present": true
+        },
+        {
+          "date": "2025-12-08",
+          "present": "leave"
+        },
+        {
+          "date": "2025-12-15",
+          "present": "leave"
+        },
+        {
+          "date": "2025-12-22",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "一"
+        ],
+        "startTime": "19:30",
+        "endTime": "21:00",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 一 1930-2100 客製化"
+      }
+    },
+    {
+      "name": "盧奕丞",
+      "course": "SPIKE",
+      "period": "SPIKE 六 16:00-18:00",
+      "remaining": 0,
+      "userId": "U699e6ef1716019948518f2adfd54970d",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-13",
+          "present": true
+        },
+        {
+          "date": "2025-09-20",
+          "present": "leave"
+        },
+        {
+          "date": "2025-09-27",
+          "present": "leave"
+        },
+        {
+          "date": "2025-10-18",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-01",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-08",
+          "present": true
+        },
+        {
+          "date": "2025-11-15",
+          "present": false
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "16:00",
+        "endTime": "18:00",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 六 16:00-18:00"
+      }
+    },
+    {
+      "name": "盧奕維",
+      "course": "SPIKE",
+      "period": "SPIKE 六 16:00-18:00",
+      "remaining": 0,
+      "userId": "U699e6ef1716019948518f2adfd54970d",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-14",
+          "present": true
+        },
+        {
+          "date": "2025-09-20",
+          "present": "leave"
+        },
+        {
+          "date": "2025-09-27",
+          "present": "leave"
+        },
+        {
+          "date": "2025-10-18",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-01",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-08",
+          "present": true
+        },
+        {
+          "date": "2025-11-15",
+          "present": false
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "16:00",
+        "endTime": "18:00",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 六 16:00-18:00"
+      }
+    },
+    {
+      "name": "戴睿佑",
+      "course": "SPIKE",
+      "period": "SPIKE 六 16:00-18:00",
+      "remaining": 12,
+      "userId": "U6e82f1dd3147a4b20c2fc560beb8820c",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-13",
+          "present": true
+        },
+        {
+          "date": "2025-09-21",
+          "present": "leave"
+        },
+        {
+          "date": "2025-09-27",
+          "present": true
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": true
+        },
+        {
+          "date": "2025-11-08",
+          "present": true
+        },
+        {
+          "date": "2025-11-15",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "16:00",
+        "endTime": "18:00",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 六 16:00-18:00"
+      }
+    },
+    {
+      "name": "傅柏睿",
+      "course": "SPIKE",
+      "period": "SPIKE 日 15:15-17:15",
+      "remaining": 8,
+      "userId": "Ufcbfc6302b5354bbe39c985a117711da",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-13",
+          "present": true
+        },
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-09-21",
+          "present": false
+        },
+        {
+          "date": "2025-09-28",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        },
+        {
+          "date": "2025-11-30",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "15:15",
+        "endTime": "17:15",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 日 15:15-17:15"
+      }
+    },
+    {
+      "name": "吳竑逸",
+      "course": "SPIKE",
+      "period": "SPIKE 六 16:00-18:00",
+      "remaining": 11,
+      "userId": "U4c16d81fcfda24020e101f97304ecbf6",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-09-27",
+          "present": "leave"
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": true
+        },
+        {
+          "date": "2025-11-15",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "16:00",
+        "endTime": "18:00",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 六 16:00-18:00"
+      }
+    },
+    {
+      "name": "吳竑均",
+      "course": "SPIKE",
+      "period": "SPIKE 六 16:00-18:00",
+      "remaining": 11,
+      "userId": "U4c16d81fcfda24020e101f97304ecbf6",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-14",
+          "present": true
+        },
+        {
+          "date": "2025-09-27",
+          "present": "leave"
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": true
+        },
+        {
+          "date": "2025-11-15",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "16:00",
+        "endTime": "18:00",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 六 16:00-18:00"
+      }
+    },
+    {
+      "name": "劉柏辰",
+      "course": "SPIKE",
+      "period": "",
+      "remaining": 2,
+      "userId": "U8b0a8aa53eb7dac4a484788bb2e3cc42",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-14",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "呂恩琦",
+      "course": "SPIKE",
+      "period": "SPIKE 日 15:15-17:15",
+      "remaining": 6,
+      "userId": "U42cc954296e3414f83ec73dee085bba1",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-21",
+          "present": false
+        },
+        {
+          "date": "2025-09-28",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-09",
+          "present": false
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "15:15",
+        "endTime": "17:15",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 日 15:15-17:15"
+      }
+    },
+    {
+      "name": "郭昕喬",
+      "course": "SPIKE",
+      "period": "SPIKE 日 15:15-17:15",
+      "remaining": 7,
+      "userId": "Uebf906689e5a60cd752cb3b58178f23d",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-20",
+          "present": false
+        },
+        {
+          "date": "2025-09-21",
+          "present": false
+        },
+        {
+          "date": "2025-09-28",
+          "present": false
+        },
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-09",
+          "present": false
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "15:15",
+        "endTime": "17:15",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 日 15:15-17:15"
+      }
+    },
+    {
+      "name": "胡郡宸",
+      "course": "SPIKE",
+      "period": "",
+      "remaining": 3,
+      "userId": "U0b3c629b62485ad5fbdb37e89200ea3e",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-14",
+          "present": true
+        },
+        {
+          "date": "2025-09-27",
+          "present": false
+        },
+        {
+          "date": "2025-10-18",
+          "present": false
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "王予樂",
+      "course": "SPIKE",
+      "period": "",
+      "remaining": 8,
+      "userId": "",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "蘇禹中",
+      "course": "SPIKE",
+      "period": "",
+      "remaining": 0,
+      "userId": "Uf22ff876671bca72485c43bb922df865",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-14",
+          "present": true
+        },
+        {
+          "date": "2025-09-21",
+          "present": true
+        },
+        {
+          "date": "2025-09-28",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "石紹言",
+      "course": "SPIKE",
+      "period": "SPIKE 五 16:10-17:40 松山",
+      "remaining": 0,
+      "userId": "U6e64d93ba1eb79aea42c68042e95c921",
+      "coursePlan": "",
+      "remainingFromCourseSheet": null,
+      "attendance": [
+        {
+          "date": "2025-09-12",
+          "present": true
+        },
+        {
+          "date": "2025-09-19",
+          "present": true
+        },
+        {
+          "date": "2025-09-26",
+          "present": true
+        },
+        {
+          "date": "2025-10-03",
+          "present": true
+        },
+        {
+          "date": "2025-10-17",
+          "present": true
+        },
+        {
+          "date": "2025-10-31",
+          "present": true
+        },
+        {
+          "date": "2025-11-07",
+          "present": true
+        },
+        {
+          "date": "2025-11-14",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "五"
+        ],
+        "startTime": "16:10",
+        "endTime": "17:40",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 五 16:10-17:40 松山"
+      }
+    },
+    {
+      "name": "魏翔燊",
+      "course": "SPIKE",
+      "period": "SPIKE 五 16:10-17:40 松山",
+      "remaining": 0,
+      "userId": "U9ca1b33367639f73795866eab94ecfc4",
+      "coursePlan": "",
+      "remainingFromCourseSheet": null,
+      "attendance": [
+        {
+          "date": "2025-09-12",
+          "present": true
+        },
+        {
+          "date": "2025-09-19",
+          "present": true
+        },
+        {
+          "date": "2025-09-26",
+          "present": true
+        },
+        {
+          "date": "2025-10-03",
+          "present": true
+        },
+        {
+          "date": "2025-10-17",
+          "present": true
+        },
+        {
+          "date": "2025-10-31",
+          "present": true
+        },
+        {
+          "date": "2025-11-07",
+          "present": true
+        },
+        {
+          "date": "2025-11-14",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "五"
+        ],
+        "startTime": "16:10",
+        "endTime": "17:40",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 五 16:10-17:40 松山"
+      }
+    },
+    {
+      "name": "洪康絜",
+      "course": "SPIKE",
+      "period": "SPIKE 五 16:10-17:40 松山",
+      "remaining": 1,
+      "userId": "U49e6fc37995b7a41c6f10a58ff5d5d44",
+      "coursePlan": "",
+      "remainingFromCourseSheet": null,
+      "attendance": [
+        {
+          "date": "2025-09-12",
+          "present": true
+        },
+        {
+          "date": "2025-09-26",
+          "present": false
+        },
+        {
+          "date": "2025-10-03",
+          "present": true
+        },
+        {
+          "date": "2025-10-17",
+          "present": true
+        },
+        {
+          "date": "2025-10-31",
+          "present": true
+        },
+        {
+          "date": "2025-11-07",
+          "present": true
+        },
+        {
+          "date": "2025-11-14",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        },
+        {
+          "date": "2025-11-28",
+          "present": false
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "五"
+        ],
+        "startTime": "16:10",
+        "endTime": "17:40",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 五 16:10-17:40 松山"
+      }
+    },
+    {
+      "name": "張丞沂",
+      "course": "SPIKE",
+      "period": "SPIKE 五 16:10-17:40 松山",
+      "remaining": 1,
+      "userId": "",
+      "coursePlan": "",
+      "remainingFromCourseSheet": null,
+      "attendance": [
+        {
+          "date": "2025-09-12",
+          "present": true
+        },
+        {
+          "date": "2025-09-19",
+          "present": true
+        },
+        {
+          "date": "2025-09-26",
+          "present": false
+        },
+        {
+          "date": "2025-10-03",
+          "present": true
+        },
+        {
+          "date": "2025-10-17",
+          "present": true
+        },
+        {
+          "date": "2025-10-31",
+          "present": true
+        },
+        {
+          "date": "2025-11-07",
+          "present": true
+        },
+        {
+          "date": "2025-11-14",
+          "present": true
+        },
+        {
+          "date": "2025-11-28",
+          "present": false
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "五"
+        ],
+        "startTime": "16:10",
+        "endTime": "17:40",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 五 16:10-17:40 松山"
+      }
+    },
+    {
+      "name": "簡筠恩",
+      "course": "SPIKE",
+      "period": "SPIKE 六 16:00-18:00",
+      "remaining": 11,
+      "userId": "U68ad9859c46189ad28687e9bbebda595",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-27",
+          "present": true
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": true
+        },
+        {
+          "date": "2025-11-08",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-15",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "16:00",
+        "endTime": "18:00",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 六 16:00-18:00"
+      }
+    },
+    {
+      "name": "葉晉睿",
+      "course": "SPIKE",
+      "period": "SPIKE PRO 日 10:00-12:00",
+      "remaining": 14,
+      "userId": "U2c78a51c12c5b5c584514df7519f4d5f",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-02",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": false
+        },
+        {
+          "date": "2025-11-30",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "10:00",
+        "endTime": "12:00",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE PRO 日 10:00-12:00"
+      }
+    },
+    {
+      "name": "陳沐軒",
+      "course": "SPIKE",
+      "period": "SPIKE 日 15:15-17:15",
+      "remaining": 13,
+      "userId": "U2b5a6041165d027d66fddf4b97ba1938",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "15:15",
+        "endTime": "17:15",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 日 15:15-17:15"
+      }
+    },
+    {
+      "name": "王小美",
+      "course": "BOOST",
+      "period": "",
+      "remaining": 14,
+      "userId": "",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-01-20",
+          "present": true
+        },
+        {
+          "date": "2025-07-02",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "陳小強",
+      "course": "BOOST",
+      "period": "",
+      "remaining": 15,
+      "userId": "",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-07-02",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "Louis （封）",
+      "course": "BOOST",
+      "period": "BOOST 六15:30-17:00 到府",
+      "remaining": 0,
+      "userId": "",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-06-28",
+          "present": true
+        },
+        {
+          "date": "2025-07-05",
+          "present": true
+        },
+        {
+          "date": "2025-07-12",
+          "present": true
+        },
+        {
+          "date": "2025-07-26",
+          "present": true
+        },
+        {
+          "date": "2025-08-30",
+          "present": true
+        },
+        {
+          "date": "2025-09-06",
+          "present": true
+        },
+        {
+          "date": "2025-09-13",
+          "present": true
+        },
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-09-27",
+          "present": true
+        },
+        {
+          "date": "2025-10-04",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "15:30",
+        "endTime": "17:00",
+        "location": "到府",
+        "note": null,
+        "raw": "BOOST 六15:30-17:00 到府"
+      }
+    },
+    {
+      "name": "George （封）",
+      "course": "BOOST",
+      "period": "BOOST 六15:30-17:00 到府",
+      "remaining": -1,
+      "userId": "U13b986e1bd2e0c4c7fb8d07e3be8d40f",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-06-28",
+          "present": true
+        },
+        {
+          "date": "2025-07-05",
+          "present": true
+        },
+        {
+          "date": "2025-07-12",
+          "present": true
+        },
+        {
+          "date": "2025-07-26",
+          "present": true
+        },
+        {
+          "date": "2025-08-30",
+          "present": true
+        },
+        {
+          "date": "2025-09-06",
+          "present": true
+        },
+        {
+          "date": "2025-09-13",
+          "present": true
+        },
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-09-27",
+          "present": true
+        },
+        {
+          "date": "2025-10-04",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "15:30",
+        "endTime": "17:00",
+        "location": "到府",
+        "note": null,
+        "raw": "BOOST 六15:30-17:00 到府"
+      }
+    },
+    {
+      "name": "倪子竣 owen",
+      "course": "BOOST",
+      "period": "",
+      "remaining": 0,
+      "userId": "U10b1cb0c7be01d1832fe54e00093e962",
+      "coursePlan": "",
+      "remainingFromCourseSheet": null,
+      "attendance": [
+        {
+          "date": "2025-07-21",
+          "present": true
+        },
+        {
+          "date": "2025-07-22",
+          "present": true
+        },
+        {
+          "date": "2025-07-23",
+          "present": true
+        },
+        {
+          "date": "2025-07-28",
+          "present": true
+        },
+        {
+          "date": "2025-08-19",
+          "present": true
+        },
+        {
+          "date": "2025-08-20",
+          "present": true
+        },
+        {
+          "date": "2025-08-21",
+          "present": true
+        },
+        {
+          "date": "2025-08-22",
+          "present": true
+        },
+        {
+          "date": "2025-08-25",
+          "present": true
+        },
+        {
+          "date": "2025-08-28",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "Andy",
+      "course": "BOOST",
+      "period": "BOOST 六 12:30-14:00",
+      "remaining": 10,
+      "userId": "U34331b52382f53ead738bb84e120a1ec",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-10-04",
+          "present": true
+        },
+        {
+          "date": "2025-10-11",
+          "present": true
+        },
+        {
+          "date": "2025-10-25",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": true
+        },
+        {
+          "date": "2025-11-08",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "12:30",
+        "endTime": "14:00",
+        "location": null,
+        "note": null,
+        "raw": "BOOST 六 12:30-14:00"
+      }
+    },
+    {
+      "name": "Jolie",
+      "course": "BOOST",
+      "period": "BOOST 六 12:30-14:00",
+      "remaining": 10,
+      "userId": "U34331b52382f53ead738bb84e120a1ec",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-10-04",
+          "present": true
+        },
+        {
+          "date": "2025-10-11",
+          "present": true
+        },
+        {
+          "date": "2025-10-25",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": true
+        },
+        {
+          "date": "2025-11-08",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "12:30",
+        "endTime": "14:00",
+        "location": null,
+        "note": null,
+        "raw": "BOOST 六 12:30-14:00"
+      }
+    },
+    {
+      "name": "Byron",
+      "course": "BOOST",
+      "period": "BOOST 六 12:30-14:00",
+      "remaining": 5,
+      "userId": "Ubb79b9bed6c8943df2034c2c33731b3c",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-20",
+          "present": "leave"
+        },
+        {
+          "date": "2025-10-04",
+          "present": true
+        },
+        {
+          "date": "2025-10-11",
+          "present": true
+        },
+        {
+          "date": "2025-10-25",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": true
+        },
+        {
+          "date": "2025-11-08",
+          "present": false
+        },
+        {
+          "date": "2025-11-22",
+          "present": "leave"
+        },
+        {
+          "date": "2025-12-20",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "12:30",
+        "endTime": "14:00",
+        "location": null,
+        "note": null,
+        "raw": "BOOST 六 12:30-14:00"
+      }
+    },
+    {
+      "name": "Wesly",
+      "course": "BOOST",
+      "period": "BOOST 六 12:30-14:00",
+      "remaining": 6,
+      "userId": "U7ea04572c978e13d0246bbe04ab61fd3",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-10-04",
+          "present": true
+        },
+        {
+          "date": "2025-10-11",
+          "present": true
+        },
+        {
+          "date": "2025-10-25",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-01",
+          "present": false
+        },
+        {
+          "date": "2025-11-08",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "12:30",
+        "endTime": "14:00",
+        "location": null,
+        "note": null,
+        "raw": "BOOST 六 12:30-14:00"
+      }
+    },
+    {
+      "name": "陳宥愷",
+      "course": "BOOST",
+      "period": "BOOST 六 10:30-12:00",
+      "remaining": 11,
+      "userId": "U0c347993f930ee78f8b5c0a0fbe8e1f0",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-13",
+          "present": false
+        },
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-09-27",
+          "present": true
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": true
+        },
+        {
+          "date": "2025-11-15",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "10:30",
+        "endTime": "12:00",
+        "location": null,
+        "note": null,
+        "raw": "BOOST 六 10:30-12:00"
+      }
+    },
+    {
+      "name": "尉遲澤羲",
+      "course": "BOOST",
+      "period": "",
+      "remaining": 2,
+      "userId": "U95b6a697339662063ab59893fdaa3d3d",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-13",
+          "present": false
+        },
+        {
+          "date": "2025-09-20",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "婁恒碩",
+      "course": "BOOST",
+      "period": "",
+      "remaining": 1,
+      "userId": "U367b6527bb3056aaf32c90fc78582f56",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-13",
+          "present": false
+        },
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-09-27",
+          "present": false
+        },
+        {
+          "date": "2025-10-18",
+          "present": false
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "George",
+      "course": "BOOST",
+      "period": "BOOST 六15:30-17:00 到府",
+      "remaining": 14,
+      "userId": "U13b986e1bd2e0c4c7fb8d07e3be8d40f",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-15",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "15:30",
+        "endTime": "17:00",
+        "location": "到府",
+        "note": null,
+        "raw": "BOOST 六15:30-17:00 到府"
+      }
+    },
+    {
+      "name": "Louis",
+      "course": "BOOST",
+      "period": "BOOST 六15:30-17:00 到府",
+      "remaining": 13,
+      "userId": "Cb18eff3a484d17f605da21fe639daa8a",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-15",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "15:30",
+        "endTime": "17:00",
+        "location": "到府",
+        "note": null,
+        "raw": "BOOST 六15:30-17:00 到府"
+      }
+    },
+    {
+      "name": "李浩永",
+      "course": "SPM",
+      "period": "SPM 六 9:30-11:00",
+      "remaining": 6,
+      "userId": "Ud6eb7ddfdff7e844bdc1ec77ca92a577",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-13",
+          "present": true
+        },
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-01-20",
+          "present": true
+        },
+        {
+          "date": "2025-09-27",
+          "present": false
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        },
+        {
+          "date": "2025-11-08",
+          "present": true
+        },
+        {
+          "date": "2025-11-15",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-27",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "09:30",
+        "endTime": "11:00",
+        "location": null,
+        "note": null,
+        "raw": "SPM 六 9:30-11:00"
+      }
+    },
+    {
+      "name": "奕甯",
+      "course": "SPM",
+      "period": "",
+      "remaining": -1.5,
+      "userId": "Ub00ee8da2b706d42b7c8d57fba761ec3",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-07-21",
+          "present": true
+        },
+        {
+          "date": "2025-07-28",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "承謙",
+      "course": "SPM",
+      "period": "SPM 日 10:00-11:30 到府",
+      "remaining": 9,
+      "userId": "Ua1463945aca6215b78c366e3bff2aa29",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-07",
+          "present": true
+        },
+        {
+          "date": "2025-09-21",
+          "present": true
+        },
+        {
+          "date": "2025-09-28",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "10:00",
+        "endTime": "11:30",
+        "location": "到府",
+        "note": null,
+        "raw": "SPM 日 10:00-11:30 到府"
+      }
+    },
+    {
+      "name": "王一凱",
+      "course": "SPM",
+      "period": "SPM 六 9:30-11:00",
+      "remaining": 10,
+      "userId": "Ua3aefecd4eaf3e4d2132de8e88c2b03c",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-13",
+          "present": true
+        },
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-09-27",
+          "present": true
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        },
+        {
+          "date": "2025-11-08",
+          "present": true
+        },
+        {
+          "date": "2025-11-15",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "09:30",
+        "endTime": "11:00",
+        "location": null,
+        "note": null,
+        "raw": "SPM 六 9:30-11:00"
+      }
+    },
+    {
+      "name": "黃琮天 哥SPM",
+      "course": "SPM",
+      "period": "SPM 一 1930-2030 到府",
+      "remaining": 1,
+      "userId": "Ubbec352c2035cc217a1ad950cfe6a214",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-08-04",
+          "present": true
+        },
+        {
+          "date": "2025-08-07",
+          "present": true
+        },
+        {
+          "date": "2025-08-11",
+          "present": true
+        },
+        {
+          "date": "2025-08-14",
+          "present": true
+        },
+        {
+          "date": "2025-08-18",
+          "present": true
+        },
+        {
+          "date": "2025-08-21",
+          "present": true
+        },
+        {
+          "date": "2025-08-25",
+          "present": true
+        },
+        {
+          "date": "2025-09-08",
+          "present": true
+        },
+        {
+          "date": "2025-09-22",
+          "present": true
+        },
+        {
+          "date": "2025-10-27",
+          "present": true
+        },
+        {
+          "date": "2025-11-03",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-10",
+          "present": true
+        },
+        {
+          "date": "2025-11-17",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-24",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "一"
+        ],
+        "startTime": "19:30",
+        "endTime": "20:30",
+        "location": "到府",
+        "note": null,
+        "raw": "SPM 一 1930-2030 到府"
+      }
+    },
+    {
+      "name": "王奕甯，王奕棋",
+      "course": "SPM",
+      "period": "SPM 三1630-1730 到府",
+      "remaining": 1,
+      "userId": "Ub00ee8da2b706d42b7c8d57fba761ec3",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-08-04",
+          "present": true
+        },
+        {
+          "date": "2025-08-11",
+          "present": true
+        },
+        {
+          "date": "2025-08-18",
+          "present": true
+        },
+        {
+          "date": "2025-08-25",
+          "present": true
+        },
+        {
+          "date": "2025-09-08",
+          "present": true
+        },
+        {
+          "date": "2025-09-17",
+          "present": true
+        },
+        {
+          "date": "2025-09-24",
+          "present": true
+        },
+        {
+          "date": "2025-10-01",
+          "present": true
+        },
+        {
+          "date": "2025-10-08",
+          "present": true
+        },
+        {
+          "date": "2025-10-15",
+          "present": true
+        },
+        {
+          "date": "2025-10-22",
+          "present": true
+        },
+        {
+          "date": "2025-10-29",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-05",
+          "present": true
+        },
+        {
+          "date": "2025-11-12",
+          "present": true
+        },
+        {
+          "date": "2025-11-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-26",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "三"
+        ],
+        "startTime": "16:30",
+        "endTime": "17:30",
+        "location": "到府",
+        "note": null,
+        "raw": "SPM 三1630-1730 到府"
+      }
+    },
+    {
+      "name": "沈嘉桐(桐桐)",
+      "course": "SPM",
+      "period": "SPM 六 9:30-11:00",
+      "remaining": 10,
+      "userId": "U22cbef945ead422024ed0ad42c71368f",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-13",
+          "present": true
+        },
+        {
+          "date": "2025-09-20",
+          "present": "leave"
+        },
+        {
+          "date": "2025-09-27",
+          "present": true
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        },
+        {
+          "date": "2025-11-08",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-15",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "09:30",
+        "endTime": "11:00",
+        "location": null,
+        "note": null,
+        "raw": "SPM 六 9:30-11:00"
+      }
+    },
+    {
+      "name": "童曦（妹妹）",
+      "course": "SPM",
+      "period": "SPM 六 9:30-11:00  到府",
+      "remaining": 10,
+      "userId": "U7164b5c963a47e35be37112558f8ede2",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-08-16",
+          "present": true
+        },
+        {
+          "date": "2025-08-23",
+          "present": true
+        },
+        {
+          "date": "2025-08-30",
+          "present": true
+        },
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        },
+        {
+          "date": "2025-11-08",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-15",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "09:30",
+        "endTime": "11:00",
+        "location": "到府",
+        "note": null,
+        "raw": "SPM 六 9:30-11:00  到府"
+      }
+    },
+    {
+      "name": "童允（哥哥）",
+      "course": "SPM",
+      "period": "SPM 六 9:30-11:00  到府",
+      "remaining": 10,
+      "userId": "U7164b5c963a47e35be37112558f8ede2",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-08-16",
+          "present": true
+        },
+        {
+          "date": "2025-08-23",
+          "present": true
+        },
+        {
+          "date": "2025-08-30",
+          "present": true
+        },
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        },
+        {
+          "date": "2025-11-08",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-15",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "09:30",
+        "endTime": "11:00",
+        "location": "到府",
+        "note": null,
+        "raw": "SPM 六 9:30-11:00  到府"
+      }
+    },
+    {
+      "name": "Raily",
+      "course": "SPM",
+      "period": "SPM 二 16:30-17:30 到府",
+      "remaining": 7,
+      "userId": "Ufb455cfdaa2e55b6164806cddae316aa",
+      "coursePlan": "",
+      "remainingFromCourseSheet": null,
+      "attendance": [
+        {
+          "date": "2025-09-02",
+          "present": true
+        },
+        {
+          "date": "2025-09-12",
+          "present": true
+        },
+        {
+          "date": "2025-09-16",
+          "present": true
+        },
+        {
+          "date": "2025-09-23",
+          "present": true
+        },
+        {
+          "date": "2025-10-14",
+          "present": true
+        },
+        {
+          "date": "2025-10-21",
+          "present": true
+        },
+        {
+          "date": "2025-10-28",
+          "present": true
+        },
+        {
+          "date": "2025-11-04",
+          "present": true
+        },
+        {
+          "date": "2025-11-11",
+          "present": true
+        },
+        {
+          "date": "2025-11-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-25",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "二"
+        ],
+        "startTime": "16:30",
+        "endTime": "17:30",
+        "location": "到府",
+        "note": null,
+        "raw": "SPM 二 16:30-17:30 到府"
+      }
+    },
+    {
+      "name": "楊又宇",
+      "course": "SPM",
+      "period": "SPM 日 13:30-15:00 松山",
+      "remaining": 7,
+      "userId": "U1f683fcb0b1d135e168c19ab5f956342",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-14",
+          "present": true
+        },
+        {
+          "date": "2025-09-14",
+          "present": true
+        },
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-09-21",
+          "present": true
+        },
+        {
+          "date": "2025-09-28",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "13:30",
+        "endTime": "15:00",
+        "location": null,
+        "note": null,
+        "raw": "SPM 日 13:30-15:00 松山"
+      }
+    },
+    {
+      "name": "一誠",
+      "course": "SPM",
+      "period": "SPM 二 14:30-15:30",
+      "remaining": 13,
+      "userId": "Ua214cfe871088e965ac1c6ca7be5685f",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-23",
+          "present": false
+        },
+        {
+          "date": "2025-10-28",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-04",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-11",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-20",
+          "present": true
+        },
+        {
+          "date": "2025-11-25",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "二"
+        ],
+        "startTime": "14:30",
+        "endTime": "15:30",
+        "location": null,
+        "note": null,
+        "raw": "SPM 二 14:30-15:30"
+      }
+    },
+    {
+      "name": "葉子誠",
+      "course": "SPM",
+      "period": "SPM 日 13:30-15:00 松山",
+      "remaining": 8,
+      "userId": "U8d76dd7c175eb2ea74d07250505592ca",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-14",
+          "present": true
+        },
+        {
+          "date": "2025-09-14",
+          "present": false
+        },
+        {
+          "date": "2025-09-20",
+          "present": false
+        },
+        {
+          "date": "2025-09-21",
+          "present": true
+        },
+        {
+          "date": "2025-09-28",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-01",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        },
+        {
+          "date": "2025-11-30",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "13:30",
+        "endTime": "15:00",
+        "location": null,
+        "note": null,
+        "raw": "SPM 日 13:30-15:00 松山"
+      }
+    },
+    {
+      "name": "Coby",
+      "course": "SPM",
+      "period": "SPM 日 16:00-17:00 到府",
+      "remaining": 1,
+      "userId": "Ub1d35aa5f243718ff0ee4c98694503e5",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-10-19",
+          "present": false
+        },
+        {
+          "date": "2025-11-02",
+          "present": true
+        },
+        {
+          "date": "2025-11-30",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "16:00",
+        "endTime": "17:00",
+        "location": "到府",
+        "note": null,
+        "raw": "SPM 日 16:00-17:00 到府"
+      }
+    },
+    {
+      "name": "Cody",
+      "course": "SPM",
+      "period": "SPM 日 16:00-17:00 到府",
+      "remaining": 0,
+      "userId": "Ub1d35aa5f243718ff0ee4c98694503e5",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-10-19",
+          "present": false
+        },
+        {
+          "date": "2025-11-02",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "16:00",
+        "endTime": "17:00",
+        "location": "到府",
+        "note": null,
+        "raw": "SPM 日 16:00-17:00 到府"
+      }
+    },
+    {
+      "name": "Essie",
+      "course": "SPM",
+      "period": "SPM 日 10:30-11:30 到府",
+      "remaining": 4,
+      "userId": "U89aaa9dfb9707b66ba5d282249dd39e4",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-21",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": "leave"
+        },
+        {
+          "date": "2025-10-24",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "10:30",
+        "endTime": "11:30",
+        "location": "到府",
+        "note": null,
+        "raw": "SPM 日 10:30-11:30 到府"
+      }
+    },
+    {
+      "name": "Luna",
+      "course": "SPM",
+      "period": "SPM 日 10:30-11:30 到府",
+      "remaining": 2,
+      "userId": "U89aaa9dfb9707b66ba5d282249dd39e4",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-21",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": "leave"
+        },
+        {
+          "date": "2025-10-24",
+          "present": false
+        },
+        {
+          "date": "2025-11-09",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "10:30",
+        "endTime": "11:30",
+        "location": "到府",
+        "note": null,
+        "raw": "SPM 日 10:30-11:30 到府"
+      }
+    },
+    {
+      "name": "楊子漾",
+      "course": "SPM",
+      "period": "SPM 日 13:30-15:00 松山",
+      "remaining": 2,
+      "userId": "Uf2fe2eeef134b21116739286a3f17185",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-02",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-23",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "13:30",
+        "endTime": "15:00",
+        "location": null,
+        "note": null,
+        "raw": "SPM 日 13:30-15:00 松山"
+      }
+    },
+    {
+      "name": "李愷軒",
+      "course": "SPM",
+      "period": "SPM 六 9:30-11:00",
+      "remaining": 11,
+      "userId": "U10437a75c6e4ff3af8e87a16164354b8",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-13",
+          "present": false
+        },
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-09-27",
+          "present": "leave"
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-08",
+          "present": true
+        },
+        {
+          "date": "2025-11-15",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "09:30",
+        "endTime": "11:00",
+        "location": null,
+        "note": null,
+        "raw": "SPM 六 9:30-11:00"
+      }
+    },
+    {
+      "name": "李愷紘",
+      "course": "SPM",
+      "period": "SPM 六 9:30-11:00",
+      "remaining": 11,
+      "userId": "U10437a75c6e4ff3af8e87a16164354b8",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-13",
+          "present": false
+        },
+        {
+          "date": "2025-09-20",
+          "present": true
+        },
+        {
+          "date": "2025-09-27",
+          "present": "leave"
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-01",
+          "present": true
+        },
+        {
+          "date": "2025-11-22",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-08",
+          "present": true
+        },
+        {
+          "date": "2025-11-15",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "09:30",
+        "endTime": "11:00",
+        "location": null,
+        "note": null,
+        "raw": "SPM 六 9:30-11:00"
+      }
+    },
+    {
+      "name": "Coper",
+      "course": "SPM",
+      "period": "SPM 四 17:30-18:30 到府",
+      "remaining": 12,
+      "userId": "Uca083ab862ed50591f9f86a44c2bd385",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-06",
+          "present": true
+        },
+        {
+          "date": "2025-11-13",
+          "present": true
+        },
+        {
+          "date": "2025-11-27",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "四"
+        ],
+        "startTime": "17:30",
+        "endTime": "18:30",
+        "location": "到府",
+        "note": null,
+        "raw": "SPM 四 17:30-18:30 到府"
+      }
+    },
+    {
+      "name": "方嘉樂",
+      "course": "SPM",
+      "period": "SPM 四 17:00-18:30",
+      "remaining": 15,
+      "userId": "U031966ba03c81328dd63c808a1058b07",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-27",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "四"
+        ],
+        "startTime": "17:00",
+        "endTime": "18:30",
+        "location": null,
+        "note": null,
+        "raw": "SPM 四 17:00-18:30"
+      }
+    },
+    {
+      "name": "睿睿",
+      "course": "Scratch",
+      "period": "SCRATCH 日 11:00-13:00",
+      "remaining": 0,
+      "userId": "U2d5b263cd52516ead0e3d2a473a9d848",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-06-08",
+          "present": true
+        },
+        {
+          "date": "2025-06-22",
+          "present": true
+        },
+        {
+          "date": "2025-07-07",
+          "present": true
+        },
+        {
+          "date": "2025-07-20",
+          "present": true
+        },
+        {
+          "date": "2025-08-03",
+          "present": true
+        },
+        {
+          "date": "2025-08-17",
+          "present": true
+        },
+        {
+          "date": "2025-09-28",
+          "present": true
+        },
+        {
+          "date": "2025-10-26",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "11:00",
+        "endTime": "13:00",
+        "location": null,
+        "note": null,
+        "raw": "SCRATCH 日 11:00-13:00"
+      }
+    },
+    {
+      "name": "Olivia",
+      "course": "Scratch",
+      "period": "SCRATCH 日 11:00-13:00",
+      "remaining": 2,
+      "userId": "U4f855e65ebad10a3faec569414eeb485",
+      "coursePlan": "",
+      "remainingFromCourseSheet": null,
+      "attendance": [
+        {
+          "date": "2025-06-08",
+          "present": true
+        },
+        {
+          "date": "2025-06-22",
+          "present": true
+        },
+        {
+          "date": "2025-07-07",
+          "present": true
+        },
+        {
+          "date": "2025-07-20",
+          "present": true
+        },
+        {
+          "date": "2025-08-03",
+          "present": true
+        },
+        {
+          "date": "2025-08-17",
+          "present": false
+        },
+        {
+          "date": "2025-09-28",
+          "present": true
+        },
+        {
+          "date": "2025-10-26",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-16",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "11:00",
+        "endTime": "13:00",
+        "location": null,
+        "note": null,
+        "raw": "SCRATCH 日 11:00-13:00"
+      }
+    },
+    {
+      "name": "菲菲",
+      "course": "Scratch",
+      "period": "SPIKE 一 1930-2100 客製化",
+      "remaining": -1,
+      "userId": "U0515c978a75a2d86e74c5fc4a48f3faf",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-07-21",
+          "present": true
+        },
+        {
+          "date": "2025-07-28",
+          "present": true
+        },
+        {
+          "date": "2025-08-04",
+          "present": true
+        },
+        {
+          "date": "2025-08-11",
+          "present": true
+        },
+        {
+          "date": "2025-08-18",
+          "present": true
+        },
+        {
+          "date": "2025-09-08",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "一"
+        ],
+        "startTime": "19:30",
+        "endTime": "21:00",
+        "location": null,
+        "note": null,
+        "raw": "SPIKE 一 1930-2100 客製化"
+      }
+    },
+    {
+      "name": "曹坤鎰 (Ivan）",
+      "course": "ESM",
+      "period": "ESM 日 9:30-10:30",
+      "remaining": 3,
+      "userId": "Uf6edabb5bedd66a58272afeb64c6c052",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-07-10",
+          "present": true
+        },
+        {
+          "date": "2025-07-11",
+          "present": true
+        },
+        {
+          "date": "2025-07-12",
+          "present": true
+        },
+        {
+          "date": "2025-07-13",
+          "present": true
+        },
+        {
+          "date": "2025-07-14",
+          "present": true
+        },
+        {
+          "date": "2025-07-15",
+          "present": false
+        },
+        {
+          "date": "2025-07-16",
+          "present": false
+        },
+        {
+          "date": "2025-07-17",
+          "present": true
+        },
+        {
+          "date": "2025-09-28",
+          "present": true
+        },
+        {
+          "date": "2025-10-05",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": false
+        },
+        {
+          "date": "2025-11-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "09:30",
+        "endTime": "10:30",
+        "location": null,
+        "note": null,
+        "raw": "ESM 日 9:30-10:30"
+      }
+    },
+    {
+      "name": "Audrey",
+      "course": "ESM",
+      "period": "ESM 四 17:30-18:30 到府",
+      "remaining": 12,
+      "userId": "Uca083ab862ed50591f9f86a44c2bd385",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-14",
+          "present": true
+        },
+        {
+          "date": "2025-07-29",
+          "present": true
+        },
+        {
+          "date": "2025-09-25",
+          "present": true
+        },
+        {
+          "date": "2025-10-02",
+          "present": true
+        },
+        {
+          "date": "2025-10-09",
+          "present": true
+        },
+        {
+          "date": "2025-10-16",
+          "present": true
+        },
+        {
+          "date": "2025-10-30",
+          "present": true
+        },
+        {
+          "date": "2025-11-06",
+          "present": true
+        },
+        {
+          "date": "2025-11-13",
+          "present": true
+        },
+        {
+          "date": "2025-11-27",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "四"
+        ],
+        "startTime": "17:30",
+        "endTime": "18:30",
+        "location": "到府",
+        "note": null,
+        "raw": "ESM 四 17:30-18:30 到府"
+      }
+    },
+    {
+      "name": "桐桐",
+      "course": "ESM",
+      "period": "ESM 日 9:30-10:30",
+      "remaining": 0,
+      "userId": "U22cbef945ead422024ed0ad42c71368f",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "09:30",
+        "endTime": "10:30",
+        "location": null,
+        "note": null,
+        "raw": "ESM 日 9:30-10:30"
+      }
+    },
+    {
+      "name": "王琮天，王宥勝",
+      "course": "ESM",
+      "period": "SPM 一 1930-2030 到府",
+      "remaining": -4,
+      "userId": "Ubbec352c2035cc217a1ad950cfe6a214",
+      "coursePlan": "",
+      "remainingFromCourseSheet": null,
+      "attendance": [
+        {
+          "date": "2025-07-17",
+          "present": true
+        },
+        {
+          "date": "2025-07-17",
+          "present": true
+        },
+        {
+          "date": "2025-07-24",
+          "present": true
+        },
+        {
+          "date": "2025-07-31",
+          "present": true
+        },
+        {
+          "date": "2025-08-14",
+          "present": true
+        },
+        {
+          "date": "2025-09-04",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "一"
+        ],
+        "startTime": "19:30",
+        "endTime": "20:30",
+        "location": "到府",
+        "note": null,
+        "raw": "SPM 一 1930-2030 到府"
+      }
+    },
+    {
+      "name": "世韋浩威",
+      "course": "ESM",
+      "period": "ESM 六 9:30-10:30 到府",
+      "remaining": -1,
+      "userId": "Uda94f8cff039fe3d36da5c7d60a7b739",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-10-04",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "09:30",
+        "endTime": "10:30",
+        "location": "到府",
+        "note": null,
+        "raw": "ESM 六 9:30-10:30 到府"
+      }
+    },
+    {
+      "name": "Raily 113-2",
+      "course": "ESM",
+      "period": "ESM 二 16:30-17:30 到府",
+      "remaining": -1,
+      "userId": "Ufb455cfdaa2e55b6164806cddae316aa",
+      "coursePlan": "",
+      "remainingFromCourseSheet": null,
+      "attendance": [
+        {
+          "date": "2025-07-28",
+          "present": true
+        },
+        {
+          "date": "2025-07-31",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "二"
+        ],
+        "startTime": "16:30",
+        "endTime": "17:30",
+        "location": "到府",
+        "note": null,
+        "raw": "ESM 二 16:30-17:30 到府"
+      }
+    },
+    {
+      "name": "王宥勝 弟ESM",
+      "course": "ESM",
+      "period": "",
+      "remaining": 1,
+      "userId": "Ubbec352c2035cc217a1ad950cfe6a214",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-07-19",
+          "present": true
+        },
+        {
+          "date": "2025-07-26",
+          "present": true
+        },
+        {
+          "date": "2025-08-02",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "世韋浩俞 續",
+      "course": "ESM",
+      "period": "ESM 六 9:30-10:30 到府",
+      "remaining": 10,
+      "userId": "Uda94f8cff039fe3d36da5c7d60a7b739",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-07-21",
+          "present": true
+        },
+        {
+          "date": "2025-08-16",
+          "present": true
+        },
+        {
+          "date": "2025-09-27",
+          "present": true
+        },
+        {
+          "date": "2025-10-04",
+          "present": true
+        },
+        {
+          "date": "2025-10-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-08",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "09:30",
+        "endTime": "10:30",
+        "location": "到府",
+        "note": null,
+        "raw": "ESM 六 9:30-10:30 到府"
+      }
+    },
+    {
+      "name": "Bay",
+      "course": "ESM",
+      "period": "ESM 二 16:30-17:30 到府",
+      "remaining": 11,
+      "userId": "Ufb455cfdaa2e55b6164806cddae316aa",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-16",
+          "present": true
+        },
+        {
+          "date": "2025-09-23",
+          "present": true
+        },
+        {
+          "date": "2025-10-21",
+          "present": true
+        },
+        {
+          "date": "2025-10-28",
+          "present": true
+        },
+        {
+          "date": "2025-11-04",
+          "present": true
+        },
+        {
+          "date": "2025-11-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-25",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "二"
+        ],
+        "startTime": "16:30",
+        "endTime": "17:30",
+        "location": "到府",
+        "note": null,
+        "raw": "ESM 二 16:30-17:30 到府"
+      }
+    },
+    {
+      "name": "一平",
+      "course": "ESM",
+      "period": "ESM 二 14:30-15:30",
+      "remaining": 14,
+      "userId": "Ua214cfe871088e965ac1c6ca7be5685f",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-23",
+          "present": false
+        },
+        {
+          "date": "2025-10-28",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-04",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-11",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-20",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "二"
+        ],
+        "startTime": "14:30",
+        "endTime": "15:30",
+        "location": null,
+        "note": null,
+        "raw": "ESM 二 14:30-15:30"
+      }
+    },
+    {
+      "name": "玫玫",
+      "course": "ESM",
+      "period": "ESM 日 15:00-16:00 到府",
+      "remaining": 0,
+      "userId": "Ub1d35aa5f243718ff0ee4c98694503e5",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-07",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": false
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "15:00",
+        "endTime": "16:00",
+        "location": "到府",
+        "note": null,
+        "raw": "ESM 日 15:00-16:00 到府"
+      }
+    },
+    {
+      "name": "柔柔",
+      "course": "ESM",
+      "period": "ESM 日 15:00-16:00 到府",
+      "remaining": 0,
+      "userId": "Ub1d35aa5f243718ff0ee4c98694503e5",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-07",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": false
+        },
+        {
+          "date": "2025-11-02",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "15:00",
+        "endTime": "16:00",
+        "location": "到府",
+        "note": null,
+        "raw": "ESM 日 15:00-16:00 到府"
+      }
+    },
+    {
+      "name": "傅柏睿 弟弟",
+      "course": "ESM",
+      "period": "ESM 日 16:00-17:00",
+      "remaining": 9,
+      "userId": "Ufcbfc6302b5354bbe39c985a117711da",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-07",
+          "present": true
+        },
+        {
+          "date": "2025-09-28",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-30",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "16:00",
+        "endTime": "17:00",
+        "location": null,
+        "note": null,
+        "raw": "ESM 日 16:00-17:00"
+      }
+    },
+    {
+      "name": "呂墨呈",
+      "course": "ESM",
+      "period": "ESM 日 16:00-17:00",
+      "remaining": 3,
+      "userId": "U42cc954296e3414f83ec73dee085bba1",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-07",
+          "present": true
+        },
+        {
+          "date": "2025-09-21",
+          "present": false
+        },
+        {
+          "date": "2025-09-28",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": false
+        },
+        {
+          "date": "2025-11-23",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "16:00",
+        "endTime": "17:00",
+        "location": null,
+        "note": null,
+        "raw": "ESM 日 16:00-17:00"
+      }
+    },
+    {
+      "name": "郭允澤",
+      "course": "ESM",
+      "period": "ESM 日 16:00-17:00",
+      "remaining": 4,
+      "userId": "Uebf906689e5a60cd752cb3b58178f23d",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-21",
+          "present": false
+        },
+        {
+          "date": "2025-09-28",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": false
+        },
+        {
+          "date": "2025-11-23",
+          "present": "leave"
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "16:00",
+        "endTime": "17:00",
+        "location": null,
+        "note": null,
+        "raw": "ESM 日 16:00-17:00"
+      }
+    },
+    {
+      "name": "蘇禹之",
+      "course": "ESM",
+      "period": "",
+      "remaining": 2,
+      "userId": "Uf22ff876671bca72485c43bb922df865",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-14",
+          "present": true
+        },
+        {
+          "date": "2025-09-21",
+          "present": false
+        },
+        {
+          "date": "2025-09-28",
+          "present": false
+        },
+        {
+          "date": "2025-10-19",
+          "present": false
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    },
+    {
+      "name": "王尚希",
+      "course": "ESM",
+      "period": "ESM 日 16:00-17:00",
+      "remaining": 8,
+      "userId": "Ua024eb81d252ebc523450bb8591aae07",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-09-14",
+          "present": true
+        },
+        {
+          "date": "2025-09-21",
+          "present": true
+        },
+        {
+          "date": "2025-09-28",
+          "present": true
+        },
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "16:00",
+        "endTime": "17:00",
+        "location": null,
+        "note": null,
+        "raw": "ESM 日 16:00-17:00"
+      }
+    },
+    {
+      "name": "呂璦曦",
+      "course": "ESM",
+      "period": "ESM 日 13:30-14:30",
+      "remaining": 13,
+      "userId": "Uf45bb8f00652dc0d22acbb079e5dfc04",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-02",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "13:30",
+        "endTime": "14:30",
+        "location": null,
+        "note": null,
+        "raw": "ESM 日 13:30-14:30"
+      }
+    },
+    {
+      "name": "蔡如恩",
+      "course": "ESM",
+      "period": "ESM 日 13:30-14:30",
+      "remaining": 15,
+      "userId": "Ud1de0ed78738be88df2981ff1f7caa42",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-02",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-02",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-16",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-30",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "13:30",
+        "endTime": "14:30",
+        "location": null,
+        "note": null,
+        "raw": "ESM 日 13:30-14:30"
+      }
+    },
+    {
+      "name": "黃禹皓",
+      "course": "ESM",
+      "period": "ESM 六 13:30-14:30",
+      "remaining": 15,
+      "userId": "U5d31cbf6695ef34060f4fef27e336342",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-15",
+          "present": "leave"
+        },
+        {
+          "date": "2025-11-22",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "13:30",
+        "endTime": "14:30",
+        "location": null,
+        "note": null,
+        "raw": "ESM 六 13:30-14:30"
+      }
+    },
+    {
+      "name": "黃宥睿",
+      "course": "ESM",
+      "period": "ESM 日 9:30-10:30",
+      "remaining": 12,
+      "userId": "U1e767b6f5c03cc55af815cac1367ec99",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-10-19",
+          "present": true
+        },
+        {
+          "date": "2025-11-02",
+          "present": true
+        },
+        {
+          "date": "2025-11-16",
+          "present": false
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "09:30",
+        "endTime": "10:30",
+        "location": null,
+        "note": null,
+        "raw": "ESM 日 9:30-10:30"
+      }
+    },
+    {
+      "name": "伍辰晏",
+      "course": "ESM",
+      "period": "ESM 日 9:30-10:30",
+      "remaining": 13,
+      "userId": "Ubc2d59d28bebcb6ea1e7f4290ee1ba11",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-16",
+          "present": true
+        },
+        {
+          "date": "2025-11-09",
+          "present": true
+        },
+        {
+          "date": "2025-11-23",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "日"
+        ],
+        "startTime": "09:30",
+        "endTime": "10:30",
+        "location": null,
+        "note": null,
+        "raw": "ESM 日 9:30-10:30"
+      }
+    },
+    {
+      "name": "王沐善",
+      "course": "ESM",
+      "period": "ESM 二 18:00-19:00",
+      "remaining": 14,
+      "userId": "Udc0d2ddd4e877b912dd626174fb99190",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-18",
+          "present": true
+        },
+        {
+          "date": "2025-11-25",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "二"
+        ],
+        "startTime": "18:00",
+        "endTime": "19:00",
+        "location": null,
+        "note": null,
+        "raw": "ESM 二 18:00-19:00"
+      }
+    },
+    {
+      "name": "Nono",
+      "course": "ESM",
+      "period": "ESM 六 13:30-14:30",
+      "remaining": 15,
+      "userId": "U5d31cbf6695ef34060f4fef27e336342",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [
+        {
+          "date": "2025-11-22",
+          "present": true
+        }
+      ],
+      "periodParsed": {
+        "weekdays": [
+          "六"
+        ],
+        "startTime": "13:30",
+        "endTime": "14:30",
+        "location": null,
+        "note": null,
+        "raw": "ESM 六 13:30-14:30"
+      }
+    },
+    {
+      "name": "簡毓展",
+      "course": "SPIKEpro",
+      "period": "",
+      "remaining": 2,
+      "userId": "Uca30c344ea5acf82f467e687549a812b",
+      "coursePlan": "",
+      "remainingFromCourseSheet": 0,
+      "attendance": [],
+      "periodParsed": {
+        "weekdays": [],
+        "startTime": null,
+        "endTime": null,
+        "location": null,
+        "note": null,
+        "raw": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-11-28T13:21:21.221Z",
+  "updateNote": "// 最後更新時間: 2025/11/28 下午9:21:21"
+}

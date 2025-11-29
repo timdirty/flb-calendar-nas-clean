@@ -1,0 +1,450 @@
+/* =====================================================
+   🎯 學習歷程上傳 - 組件樣式
+   提取自 HTML 中的剩餘內嵌樣式
+   版本：v1.0.0 (2025-11-23)
+   ===================================================== */
+
+/* =====================================================
+   Section 1: 模板面板手機優化
+   ===================================================== */
+
+/* 📱 模板面板手機優化：縮小字體、避免換行 */
+@media (max-width: 480px) {
+    #commentTemplatesPanel .nav-btn,
+    #videoTemplatesPanel .nav-btn {
+        font-size: 13px;
+        padding: 8px 10px;
+        white-space: nowrap;
+    }
+
+    #commentTemplatesPanel .template-item .template-title,
+    #videoTemplatesPanel .template-item .template-title {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #templateTargetList label span,
+    #videoTemplateTargetList label span {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: calc(100% - 28px);
+        display: inline-block;
+    }
+
+    /* 標題與按鈕在窄螢幕自動換行 */
+    #commentTemplatesPanel .panel-header,
+    #videoTemplatesPanel .panel-header {
+        flex-wrap: wrap !important;
+        gap: 8px;
+    }
+
+    #commentTemplatesPanel .panel-header .panel-actions,
+    #videoTemplatesPanel .panel-header .panel-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    #commentTemplatesPanel .panel-grid,
+    #videoTemplatesPanel .panel-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 超窄螢幕 <= 360px：再縮小一階 */
+@media (max-width: 360px) {
+    #commentTemplatesPanel .nav-btn,
+    #videoTemplatesPanel .nav-btn {
+        font-size: 12px;
+        padding: 7px 8px;
+    }
+
+    #commentTemplatesPanel .template-title,
+    #videoTemplatesPanel .template-title {
+        font-size: 13px;
+    }
+}
+
+/* 桌面也盡量避免長字換行，維持一致外觀 */
+#commentTemplatesPanel .nav-btn,
+#videoTemplatesPanel .nav-btn {
+    white-space: nowrap;
+}
+
+#templateTargetList label span,
+#videoTemplateTargetList label span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 🎞️ 影片模板列表：縮小每個預覽的視窗高度 */
+#videoTemplatesPanel #videoTemplateList .template-item video {
+    display: block;
+    width: 100%;
+    height: 140px;
+    object-fit: contain;
+    background: #0b1220;
+    border-radius: 8px;
+}
+
+@media (max-width: 480px) {
+    #videoTemplatesPanel #videoTemplateList .template-item video {
+        height: 110px;
+    }
+}
+
+/* 📱 極窄螢幕 360–420px */
+@media (min-width: 360px) and (max-width: 420px) {
+    #commentTemplatesPanel .panel-header,
+    #videoTemplatesPanel .panel-header {
+        padding: 10px 12px !important;
+        flex-wrap: wrap !important;
+        gap: 8px;
+    }
+
+    #commentTemplatesPanel .panel-header .panel-actions,
+    #videoTemplatesPanel .panel-header .panel-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    #commentTemplatesPanel .nav-btn,
+    #videoTemplatesPanel .nav-btn {
+        font-size: 12.5px;
+        padding: 7px 10px;
+    }
+}
+
+/* 📱 中等螢幕 420–520px */
+@media (min-width: 420px) and (max-width: 520px) {
+    #commentTemplatesPanel .panel-header,
+    #videoTemplatesPanel .panel-header {
+        padding: 12px 14px !important;
+    }
+
+    #commentTemplatesPanel .nav-btn,
+    #videoTemplatesPanel .nav-btn {
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+
+    #commentTemplatesPanel .template-title,
+    #videoTemplatesPanel .template-title {
+        font-size: 15px;
+    }
+}
+
+/* =====================================================
+   Section 2: 星期快速篩選按鈕
+   ===================================================== */
+
+/* 📅 星期快速篩選按鈕（桌面版和手機版共用） */
+.wd-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    color: #1e40af;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    white-space: nowrap;
+}
+
+/* 手機版星期篩選按鈕 - 略微不同的樣式 */
+#m_weekdayFilterBar .wd-btn {
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    color: #1e40af;
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* 選中狀態 */
+.wd-btn.active {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border-color: #1d4ed8;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+    transform: translateY(-1px);
+}
+
+#m_weekdayFilterBar .wd-btn.active {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border-color: #1d4ed8;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+}
+
+/* Hover 效果 */
+.wd-btn:hover:not(.active) {
+    background: rgba(219, 234, 254, 0.95);
+    border-color: rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+#m_weekdayFilterBar .wd-btn:hover:not(.active) {
+    background: rgba(219, 234, 254, 0.98);
+    border-color: rgba(59, 130, 246, 0.45);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+/* Active 點擊效果 */
+.wd-btn:active {
+    transform: scale(0.96);
+}
+
+/* =====================================================
+   Section 3: 模式切換按鈕動畫
+   ===================================================== */
+
+/* 模式切換按鈕動畫效果 */
+#modeSwitchBar .nav-btn,
+#modeSwitchBarOv .nav-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#modeSwitchBar .nav-btn::before,
+#modeSwitchBarOv .nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.5s ease, height 0.5s ease;
+}
+
+#modeSwitchBar .nav-btn:hover::before,
+#modeSwitchBarOv .nav-btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+#modeSwitchBar .nav-btn.active::before,
+#modeSwitchBarOv .nav-btn.active::before {
+    width: 0;
+    height: 0;
+}
+
+/* 防止按鈕內文字被遮擋 */
+#modeSwitchBar .nav-btn span,
+#modeSwitchBarOv .nav-btn span {
+    position: relative;
+    z-index: 1;
+}
+
+/* =====================================================
+   Section 4: 響應式微調
+   ===================================================== */
+
+@media (max-width: 768px) {
+    /* 手機端星期篩選按鈕間距 */
+    #weekdayFilterBar,
+    #m_weekdayFilterBar {
+        gap: 6px !important;
+    }
+    
+    .wd-btn {
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+    
+    #m_weekdayFilterBar .wd-btn {
+        padding: 6px 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* 極小螢幕進一步縮小 */
+    .wd-btn,
+    #m_weekdayFilterBar .wd-btn {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+}
+
+/* =====================================================
+   Section 5: 模式切換按鈕進度條
+   ===================================================== */
+
+/* 模式切換按鈕 - 使用 flex wrap 讓進度條換行 */
+.mode-switch-inner .nav-btn {
+    display: inline-flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 8px;
+    padding: 10px 14px;
+}
+
+/* 圖標正常顯示 */
+.mode-switch-inner .nav-btn > i {
+    font-size: 14px;
+}
+
+/* 進度條容器 - 強制換到新行並橫向排列 */
+.mode-switch-inner .nav-btn .capbar {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-basis: 100%;  /* 強制換行 */
+    justify-content: center;
+    margin-top: 2px;
+}
+
+/* 進度條軌道容器 - 固定寬度 */
+.mode-switch-inner .nav-btn .capbar .fill {
+    position: relative;
+    width: 80px;  /* 固定軌道寬度 */
+    height: 6px;
+    background: rgba(16, 185, 129, 0.15);  /* 軌道背景 */
+    border-radius: 999px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+/* 實際的進度填充 - 使用偽元素和 CSS 變數 */
+.mode-switch-inner .nav-btn .capbar .fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--progress-width, 0%);  /* 從 JS 設置的 CSS 變數讀取 */
+    background: linear-gradient(90deg, #10b981, #059669);
+    border-radius: 999px;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+    transition: width 0.3s ease;
+}
+
+/* 進度百分比文字 */
+.mode-switch-inner .nav-btn .capbar .pct {
+    font-size: 11px;
+    font-weight: 700;
+    color: #047857;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 55px;
+}
+
+/* 同步狀態進度條（課程總覽） */
+#overviewSyncBar,
+#overviewSyncStatus {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, rgba(209, 250, 229, 0.88), rgba(167, 243, 208, 0.55));
+    border: 1.5px solid rgba(16, 185, 129, 0.3);
+    padding: 8px 12px;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.18);
+}
+
+#overviewSyncStatus .sync-icon {
+    font-size: 16px;
+    color: #10b981;
+}
+
+#overviewSyncStatus .sync-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #065f46;
+    white-space: nowrap;
+}
+
+#overviewSyncStatus .capbar {
+    flex: 1;
+    height: 6px;
+    background: rgba(16, 185, 129, 0.15);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+}
+
+#overviewSyncStatus .capfill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #10b981, #059669);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    transition: width 0.2s ease;
+    width: 0%;
+}
+
+#overviewSyncStatus .pct {
+    font-size: 12px;
+    font-weight: 700;
+    color: #047857;
+    min-width: 42px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* 🔥 [修復 2025-11-23] 確保膠囊進度條在所有情況下都顯示（最高優先級） */
+.lr-capsule,
+.capsule-progress,
+.lr-capsule .capsule-stats,
+.lr-capsule .capsule-progress {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.capsule-progress .bar,
+.capsule-progress .percent {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* 手機端優化：隱藏進度詳情 */
+@media (max-width: 480px) {
+    /* 課程總覽/模式切換的進度條可以隱藏（節省空間） */
+    .mode-switch-inner .nav-btn .capbar {
+        display: none;
+    }
+    
+    #overviewSyncStatus .capbar {
+        display: none;
+    }
+    
+    #overviewSyncStatus .pct {
+        display: none;
+    }
+    
+    /* 🔥 [修復 2025-11-23] 但學生卡片的膠囊進度條必須顯示 */
+    .student-card .lr-capsule,
+    .student-card .capsule-progress,
+    .student-card .lr-capsule .capsule-stats,
+    .student-card .lr-capsule .capsule-progress {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .student-card .capsule-progress .bar,
+    .student-card .capsule-progress .percent {
+        display: block !important;
+        visibility: visible !important;
+    }
+}

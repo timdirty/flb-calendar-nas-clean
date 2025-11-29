@@ -1,0 +1,543 @@
+/* 📱 手機端觸控優化 - 2025-11-16 */
+
+/* ==================== 觸控目標尺寸規範 ==================== */
+/* 依據 WCAG 2.1 標準：所有可點擊元素至少 44x44px */
+
+/* 按鈕尺寸優化 */
+.upload-btn,
+.nav-btn,
+.submit-btn,
+.action-btn,
+button:not(.icon-only) {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 20px !important;
+    font-size: 15px !important;
+    border-radius: 10px;
+    touch-action: manipulation;
+    /* 防止雙擊縮放 */
+}
+
+/* 圖示按鈕 */
+.icon-btn,
+.close-btn,
+button.icon-only {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+/* 檔案預覽的刪除按鈕 - 特別處理，不需要那麼大 */
+.file-preview .remove-preview,
+.file-preview .remove-btn {
+    min-width: 28px !important;
+    min-height: 28px !important;
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    /* 其他樣式在下方的「檔案預覽優化」區塊 */
+}
+
+/* 課程卡片點擊區域 */
+.course-card,
+.student-card {
+    min-height: 60px;
+    padding: 16px !important;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+/* Tab 按鈕 */
+#topTabs button,
+#bottomTabs button,
+.tab-button {
+    min-width: 60px;
+    min-height: 48px;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+}
+
+/* 底部導航優化 */
+#bottomTabs {
+    padding: 12px 16px !important;
+    height: auto;
+    min-height: 68px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ==================== 按鈕間距優化 ==================== */
+
+.button-group,
+.action-group {
+    display: flex;
+    gap: 12px;
+    /* 至少 8px 間距 */
+    flex-wrap: wrap;
+}
+
+/* 防止按鈕過於緊密 */
+.glass-card button+button,
+.panel button+button {
+    margin-left: 12px;
+}
+
+/* ==================== 表單控制元件優化 ==================== */
+
+/* 輸入框 */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+select,
+textarea {
+    min-height: 44px;
+    padding: 12px 16px !important;
+    font-size: 16px !important;
+    /* 防止 iOS 自動縮放 */
+    border-radius: 10px;
+    touch-action: manipulation;
+}
+
+/* Textarea 特別處理 */
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.comment-area {
+    min-height: 140px !important;
+    padding: 14px 16px !important;
+    font-size: 16px !important;
+    line-height: 1.6;
+}
+
+/* Checkbox 和 Radio */
+input[type="checkbox"],
+input[type="radio"] {
+    min-width: 24px;
+    min-height: 24px;
+    margin-right: 10px;
+}
+
+/* Label 點擊區域 */
+label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 8px 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* ==================== 檔案預覽優化 ==================== */
+
+.file-preview {
+    position: relative;
+    min-height: 100px;
+    border-radius: 12px;
+    overflow: hidden;
+    touch-action: pan-y;
+    /* 允許垂直滾動，防止意外縮放 */
+}
+
+/* 移除預覽按鈕 */
+.file-preview .remove-preview,
+.file-preview .remove-btn {
+    position: absolute !important;
+    top: 4px !important;
+    right: 4px !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    background: rgba(239, 68, 68, 0.95) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 12px !important;
+    cursor: pointer !important;
+    z-index: 10 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+}
+
+.file-preview .remove-preview:active,
+.file-preview .remove-btn:active {
+    transform: scale(0.9) !important;
+    background: #dc2626 !important;
+}
+
+.file-preview .remove-preview:hover,
+.file-preview .remove-btn:hover {
+    transform: scale(1.05) !important;
+    background: #ef4444 !important;
+    box-shadow: 0 3px 8px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* 🔥 [修復 2025-11-16] 上傳完成後禁用 hover 效果，但保留刪除按鈕 */
+.file-preview.upload-success .remove-preview,
+.file-preview.upload-success .remove-btn,
+.file-preview.synced-preview .remove-preview,
+.file-preview.synced-preview .remove-btn,
+.file-preview.synced .remove-preview,
+.file-preview.synced .remove-btn,
+.file-preview.existing .remove-preview,
+.file-preview.existing .remove-btn,
+.file-preview.loaded .remove-preview,
+.file-preview.loaded .remove-btn {
+    /* 保留按鈕可見，但禁用 hover 效果 */
+    pointer-events: auto !important;
+}
+
+/* 上傳完成項目的 hover 效果覆蓋 */
+.file-preview.upload-success .remove-preview:hover,
+.file-preview.upload-success .remove-btn:hover,
+.file-preview.synced-preview .remove-preview:hover,
+.file-preview.synced-preview .remove-btn:hover,
+.file-preview.synced .remove-preview:hover,
+.file-preview.synced .remove-btn:hover,
+.file-preview.existing .remove-preview:hover,
+.file-preview.existing .remove-btn:hover,
+.file-preview.loaded .remove-preview:hover,
+.file-preview.loaded .remove-btn:hover,
+.remove-btn[data-hover-disabled="true"]:hover {
+    transform: none !important;
+    background: #dc2626 !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+/* ==================== 下拉選單優化 ==================== */
+
+.dropdown-menu,
+select {
+    max-height: 300px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    /* iOS 平滑滾動 */
+}
+
+.dropdown-item,
+option {
+    min-height: 44px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+}
+
+/* ==================== 滑動手勢優化 ==================== */
+
+.student-slide-viewport {
+    touch-action: auto;
+    /* 🔥 允許水平切換學生 + 垂直滾動頁面 */
+    -webkit-overflow-scrolling: touch;
+}
+
+.swipeable {
+    touch-action: pan-y;
+    /* 垂直滾動優先 */
+}
+
+/* 滑動指示器 */
+.swipe-indicator {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.swipe-indicator.left {
+    left: 12px;
+}
+
+.swipe-indicator.right {
+    right: 12px;
+}
+
+.student-slide-viewport:active .swipe-indicator {
+    opacity: 1;
+}
+
+/* ==================== 手機專用優化 ==================== */
+
+@media (max-width: 768px) {
+
+    /* 增大所有點擊目標（排除特定元素） */
+    a:not(.file-preview .remove-preview),
+    button:not(.file-preview .remove-preview),
+    .clickable {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* 手機端刪除按鈕稍微大一點，但不要太大 */
+    .file-preview .remove-preview,
+    .file-preview .remove-btn {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+        max-width: 32px !important;
+        max-height: 32px !important;
+        font-size: 13px !important;
+        top: 6px !important;
+        right: 6px !important;
+    }
+
+    /* 課程列表 */
+    .course-card {
+        padding: 18px !important;
+        margin-bottom: 12px;
+    }
+
+    /* 學生卡片 */
+    .student-card {
+        padding: 20px !important;
+    }
+
+    /* 進度指示器 */
+    .progress-indicators {
+        gap: 16px;
+        flex-direction: column;
+    }
+
+    .indicator {
+        min-height: 50px;
+        padding: 12px 16px;
+    }
+
+    /* 上傳區域 */
+    .file-drop-zone {
+        min-height: 120px;
+        padding: 24px 16px;
+        font-size: 15px;
+    }
+
+    /* 導航按鈕 */
+    .nav-arrow {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+}
+
+/* ==================== 超小螢幕優化 (< 375px) ==================== */
+
+@media (max-width: 375px) {
+
+    /* 字體縮放 */
+    body {
+        font-size: 14px;
+    }
+
+    /* 按鈕文字縮小 */
+    .upload-btn,
+    .nav-btn {
+        font-size: 14px !important;
+        padding: 10px 16px !important;
+    }
+
+    /* Tab 按鈕 */
+    #topTabs button,
+    #bottomTabs button {
+        font-size: 13px !important;
+        min-width: 52px;
+        padding: 8px 10px !important;
+    }
+
+    /* 課程卡片 */
+    .course-card {
+        padding: 14px !important;
+    }
+}
+
+/* ==================== 觸控反饋增強 ==================== */
+
+/* 點擊時視覺反饋 */
+button:active,
+.clickable:active,
+a:active {
+    transform: scale(0.97);
+    opacity: 0.8;
+    transition: all 0.1s ease;
+}
+
+/* 防止點擊時的高亮 */
+* {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-touch-callout: none;
+}
+
+/* 長按選單禁用 */
+img,
+.file-preview img,
+.file-preview video {
+    -webkit-user-select: none;
+    user-select: none;
+    pointer-events: none;
+}
+
+.file-preview .remove-preview {
+    pointer-events: auto;
+}
+
+/* ==================== 橫向模式優化 ==================== */
+
+@media (max-width: 768px) and (orientation: landscape) {
+
+    /* 減少垂直空間佔用 */
+    .header {
+        padding: 16px !important;
+    }
+
+    #bottomTabs {
+        min-height: 56px;
+        padding: 8px 16px !important;
+    }
+
+    .student-card {
+        padding: 16px !important;
+    }
+
+    /* 評語區域高度調整 */
+    .comment-area {
+        min-height: 100px !important;
+    }
+}
+
+/* ==================== 捲動優化 ==================== */
+
+/* 平滑捲動 */
+html {
+    scroll-behavior: smooth;
+}
+
+/* iOS 彈性捲動 */
+.scrollable,
+.overflow-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+/* 捲動條樣式（WebKit） */
+.scrollable::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.scrollable::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.scrollable::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ==================== 鍵盤彈出處理 ==================== */
+
+/* 輸入框獲得焦點時的視覺回饋 */
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 確保輸入框在鍵盤彈出時可見 */
+@supports (padding: env(safe-area-inset-bottom)) {
+    .fixed-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* ==================== Safe Area 支援（iPhone X+） ==================== */
+
+@supports (padding: max(0px)) {
+    body {
+        padding-left: max(0px, env(safe-area-inset-left));
+        padding-right: max(0px, env(safe-area-inset-right));
+    }
+
+    #bottomTabs {
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+}
+
+/* ==================== 效能優化 ==================== */
+
+/* 硬體加速 */
+.file-preview,
+.student-slide-track,
+.toast-notification {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* 減少重繪 */
+button,
+.clickable {
+    will-change: auto;
+    /* 只在需要時啟用 */
+}
+
+/* 低階裝置優化 */
+body.low-end button:active,
+body.low-end .clickable:active {
+    transform: none;
+    transition: none;
+}
+
+body.low-end .swipe-indicator {
+    display: none;
+}
+
+/* ==================== 無障礙增強 ==================== */
+
+/* 聚焦指示器 */
+:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* 隱藏原生 outline，改用 box-shadow */
+button:focus,
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+}
+
+button:focus-visible,
+a:focus-visible {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}

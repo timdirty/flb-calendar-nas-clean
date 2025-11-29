@@ -1,0 +1,218 @@
+=== 🔧 修復提醒顯示時間問題 ===
+
+問題：course-reminder-management.html 頁面顯示的 scheduledTime 時間不正確
+
+核心問題：
+1. 後端返回的 scheduledTime 可能是 UTC 時間
+2. 前端顯示時沒有正確轉換為台灣時間
+3. courseDate 和 courseTime 的顯示也可能有時區問題
+
+=== 立即修復方案 ===
+
+在 course-reminder-management.html 中找到顯示時間的部分，確保所有時間都使用台灣時區格式化：
+
+修復關鍵點：
+1. 所有顯示 scheduledTime 的地方，使用 formatToTaiwanTime() 函數
+2. 所有顯示 courseDate + courseTime 的地方，確保是台灣時間
+3. 倒數計時器要使用台灣時間計算
+
+=== 檢查後端 API ===
+
+ssh ftpuser@192.168.50.242
+cd /volume1/docker/flb-calendar-nas
+docker exec -it flb-calendar-nas /bin/sh
+
+# 檢查 server.js 中 /api/reminders 端點
+cat server.js | grep -A 50 "app.get('/api/reminders'"
+
+# 確認返回的數據格式
+curl http://localhost:3000/api/reminders | jq '.data[0] | {id, courseDate, courseTime, scheduledTime, type}'
+
+=== 前端修復 ===
+
+在 course-reminder-management.html 中添加或修改以下函數：
+
+```javascript
+// 格式化台灣時間顯示
+function formatToTaiwanTime(dateStr) {
+    if (!dateStr) return '未設定';
+    
+    try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        
+        return date.toLocaleString('zh-TW', {
+            timeZone: 'Asia/Taipei',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+    } catch (error) {
+        console.error('時間格式化錯誤:', error);
+        return dateStr;
+    }
+}
+
+// 格式化課程時間顯示
+function formatCourseDateTime(courseDate, courseTime) {
+    if (!courseDate) return '未設定';
+    
+    try {
+        // courseDate 格式: "2025-10-11"
+        // courseTime 格式: "10:00" 或 "10:00:00"
+        
+        const [year, month, day] = courseDate.split('-').map(Number);
+        const timeParts = courseTime.split(':');
+        const hour = parseInt(timeParts[0]);
+        const minute = parseInt(timeParts[1]);
+        
+        // 創建本地時間（已經是台灣時間）
+        const dateTime = new Date(year, month - 1, day, hour, minute, 0);
+        
+        return dateTime.toLocaleString('zh-TW', {
+            timeZone: 'Asia/Taipei',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
+    } catch (error) {
+        console.error('課程時間格式化錯誤:', error);
+        return `${courseDate} ${courseTime}`;
+    }
+}
+```
+
+=== 修改顯示部分 ===
+
+找到所有顯示時間的地方，替換為：
+
+1. 顯示 scheduledTime：
+```javascript
+// 舊的
+<p><strong>排程時間:</strong> ${reminder.scheduledTime}</p>
+
+// 新的
+<p><strong>排程時間:</strong> ${formatToTaiwanTime(reminder.scheduledTime)}</p>
+```
+
+2. 顯示課程時間：
+```javascript
+// 舊的
+<p><strong>時間:</strong> ${reminder.courseDate} ${reminder.courseTime}</p>
+
+// 新的
+<p><strong>時間:</strong> ${formatCourseDateTime(reminder.courseDate, reminder.courseTime)}</p>
+```
+
+3. 倒數計時器：
+```javascript
+function updateCountdown() {
+    const now = getTaiwanNow(); // 使用台灣時間
+    
+    reminders.forEach(reminder => {
+        if (!reminder.scheduledTime) return;
+        
+        // 將 scheduledTime 轉為台灣時間
+        const scheduledDate = new Date(reminder.scheduledTime);
+        const diff = scheduledDate.getTime() - now.getTime();
+        
+        // 計算時分秒
+        const hours = Math.floor(diff / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        
+        // 更新顯示
+        const countdownEl = document.querySelector(`[data-countdown="${reminder.id}"]`);
+        if (countdownEl) {
+            if (diff > 0) {
+                countdownEl.textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                countdownEl.textContent = '已到時間';
+            }
+        }
+    });
+}
+```
+
+=== 後端修復（如果需要）===
+
+如果後端返回的 scheduledTime 是錯誤的，需要修改 server.js：
+
+```javascript
+// 在返回提醒數據前，確保 scheduledTime 是正確的台灣時間
+reminders = reminders.map(reminder => {
+    if (reminder.scheduledTime) {
+        // 如果是字串，轉為 Date 對象
+        const scheduledDate = new Date(reminder.scheduledTime);
+        
+        // 轉換為 ISO 字串（包含時區信息）
+        reminder.scheduledTime = scheduledDate.toISOString();
+    }
+    
+    return reminder;
+});
+```
+
+=== 快速驗證 ===
+
+1. 在瀏覽器控制台執行：
+```javascript
+// 檢查現在的時間顯示
+document.querySelectorAll('.reminder-details').forEach(el => {
+    console.log(el.textContent);
+});
+
+// 檢查 reminders 數據
+console.log('提醒數據:', reminders.slice(0, 3));
+```
+
+2. 確認時間格式：
+- scheduledTime 應該顯示完整的台灣時間，如："2025/10/11 02:00:00"
+- courseDate + courseTime 應該顯示為："2025/10/11 10:00"
+
+=== 完整測試 ===
+
+1. 重新載入頁面
+2. 檢查「待發送」標籤中的提醒時間
+3. 檢查倒數計時器是否正確
+4. 檢查「已發送」標籤中的提醒時間
+5. 檢查系統日誌中的時間記錄
+
+=== 如果問題持續 ===
+
+執行完整的時區檢查：
+
+```bash
+# 在 Docker 容器中
+docker exec -it flb-calendar-nas node -e "
+const fs = require('fs');
+const reminders = JSON.parse(fs.readFileSync('./data/reminders.json', 'utf8'));
+
+console.log('檢查前 3 個提醒的時間:');
+reminders.slice(0, 3).forEach(r => {
+    console.log('ID:', r.id);
+    console.log('courseDate:', r.courseDate);
+    console.log('courseTime:', r.courseTime);
+    console.log('scheduledTime:', r.scheduledTime);
+    console.log('scheduledTime 類型:', typeof r.scheduledTime);
+    console.log('轉換後:', new Date(r.scheduledTime).toLocaleString('zh-TW', {timeZone: 'Asia/Taipei'}));
+    console.log('---');
+});
+"
+```
+
+=== 需要幫助嗎？===
+
+如果上述方法無法解決問題，請提供：
+1. 截圖顯示錯誤的時間
+2. 瀏覽器控制台中 reminders 數組的內容
+3. 後端 /api/reminders 返回的原始 JSON 數據
+
+

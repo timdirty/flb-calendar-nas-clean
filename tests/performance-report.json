@@ -1,0 +1,180 @@
+{
+  "timestamp": "2025-11-18T10:28:01.109Z",
+  "summary": {
+    "avgPerformance": 0.0007832704636352983,
+    "maxPerformance": 0.002125612499983981,
+    "minPerformance": 0.00009132080003619194,
+    "grade": "A",
+    "memoryUsage": {
+      "rss": 1.328125,
+      "heapUsed": 1.9644622802734375,
+      "external": 0
+    }
+  },
+  "details": {
+    "semesterCalculation": [
+      {
+        "name": "getCurrentSemester",
+        "iterations": 10000,
+        "totalTime": 2.715749999973923,
+        "avgTime": 0.0002715749999973923,
+        "memoryDelta": {
+          "rss": 2621440,
+          "heapUsed": 215712,
+          "external": -53598
+        }
+      },
+      {
+        "name": "isSemesterFormat",
+        "iterations": 10000,
+        "totalTime": 0.9132080003619194,
+        "avgTime": 0.00009132080003619194,
+        "memoryDelta": {
+          "rss": 180224,
+          "heapUsed": -467312,
+          "external": 0
+        }
+      }
+    ],
+    "dateFormatting": [
+      {
+        "name": "formatDateYYYYMMDD",
+        "iterations": 10000,
+        "totalTime": 2.0424170000478625,
+        "avgTime": 0.00020424170000478626,
+        "memoryDelta": {
+          "rss": 49152,
+          "heapUsed": 164408,
+          "external": 0
+        }
+      },
+      {
+        "name": "formatDateDisplay",
+        "iterations": 10000,
+        "totalTime": 2.4369999999180436,
+        "avgTime": 0.00024369999999180437,
+        "memoryDelta": {
+          "rss": 16384,
+          "heapUsed": -291680,
+          "external": 0
+        }
+      }
+    ],
+    "courseNameCleaning": [
+      {
+        "name": "cleanCourseName",
+        "iterations": 10000,
+        "totalTime": 7.40120799979195,
+        "avgTime": 0.000740120799979195,
+        "memoryDelta": {
+          "rss": 147456,
+          "heapUsed": 809080,
+          "external": 0
+        }
+      },
+      {
+        "name": "isSameCourse",
+        "iterations": 10000,
+        "totalTime": 5.550166999921203,
+        "avgTime": 0.0005550166999921202,
+        "memoryDelta": {
+          "rss": 868352,
+          "heapUsed": -616272,
+          "external": 0
+        }
+      }
+    ],
+    "pathBuilding": [
+      {
+        "name": "buildPath",
+        "iterations": 10000,
+        "totalTime": 16.01037500007078,
+        "avgTime": 0.001601037500007078,
+        "memoryDelta": {
+          "rss": 65536,
+          "heapUsed": 670720,
+          "external": 0
+        }
+      },
+      {
+        "name": "normalizeRelativePath",
+        "iterations": 10000,
+        "totalTime": 18.09891699999571,
+        "avgTime": 0.0018098916999995708,
+        "memoryDelta": {
+          "rss": 1376256,
+          "heapUsed": 72440,
+          "external": 0
+        }
+      }
+    ],
+    "metadataProcessing": [
+      {
+        "name": "normalize",
+        "iterations": 10000,
+        "totalTime": 8.569292000029236,
+        "avgTime": 0.0008569292000029236,
+        "memoryDelta": {
+          "rss": 49152,
+          "heapUsed": -7872,
+          "external": 0
+        }
+      },
+      {
+        "name": "merge",
+        "iterations": 10000,
+        "totalTime": 21.256124999839813,
+        "avgTime": 0.002125612499983981,
+        "memoryDelta": {
+          "rss": 425984,
+          "heapUsed": 407032,
+          "external": 0
+        }
+      },
+      {
+        "name": "validate",
+        "iterations": 10000,
+        "totalTime": 1.1652919999323785,
+        "avgTime": 0.00011652919999323785,
+        "memoryDelta": {
+          "rss": 0,
+          "heapUsed": -549272,
+          "external": 0
+        }
+      }
+    ],
+    "memoryUsage": {
+      "before": {
+        "rss": 53411840,
+        "heapTotal": 7438336,
+        "heapUsed": 5018888,
+        "external": 503887,
+        "arrayBuffers": 11182
+      },
+      "after": {
+        "rss": 54804480,
+        "heapTotal": 10076160,
+        "heapUsed": 7078776,
+        "external": 503887,
+        "arrayBuffers": 11182
+      },
+      "delta": {
+        "rss": 1.328125,
+        "heapUsed": 1.9644622802734375,
+        "external": 0
+      },
+      "objectsCreated": 1000
+    },
+    "batchProcessing": {
+      "name": "batchProcessing",
+      "iterations": 1000,
+      "totalTime": 3.7953330003656447,
+      "avgTime": 0.0037953330003656447,
+      "memoryDelta": {
+        "rss": 0,
+        "heapUsed": -96808,
+        "external": 0
+      }
+    }
+  }
+}

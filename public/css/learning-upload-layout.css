@@ -1,0 +1,435 @@
+/* =====================================================
+   🎨 學習歷程上傳 - 佈局與內嵌樣式
+   提取自 learning-record-upload.html 內嵌樣式
+   版本：v1.0.0 (2025-11-23)
+   ===================================================== */
+
+/* =====================================================
+   Section 1: 課程總覽佈局（橫向排列）
+   ===================================================== */
+
+/* 課程總覽照片容器 - 強制橫向排列 */
+body #overviewPhotosPreviews,
+body #overviewExistingPreviews {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    margin-top: 10px !important;
+    padding: 12px !important;
+    overflow: visible !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    align-content: flex-start !important;
+    width: 100% !important;
+}
+
+/* 課程總覽預覽項目 */
+body #overviewPhotosPreviews .file-preview,
+body #overviewExistingPreviews .file-preview {
+    display: inline-flex !important;
+    width: 80px !important;
+    height: 80px !important;
+    min-width: 80px !important;
+    min-height: 80px !important;
+    max-width: 80px !important;
+    max-height: 80px !important;
+    margin: 0 !important;
+    position: relative !important;
+    flex-shrink: 0 !important;
+}
+
+/* 新增按鈕 */
+body #overviewPhotosPreviews .add-more-btn,
+body #overviewExistingPreviews .add-more-btn {
+    display: inline-flex !important;
+    width: 60px !important;
+    height: 60px !important;
+    min-width: 60px !important;
+    min-height: 60px !important;
+    margin: 0 !important;
+    position: relative !important;
+    flex-shrink: 0 !important;
+}
+
+/* =====================================================
+   Section 2: 學生照片/影片容器（統一 Flex 佈局）
+   ===================================================== */
+
+.student-photos,
+.student-videos,
+.file-previews {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    overflow: visible !important;
+    padding: 2px !important;
+}
+
+/* 學生卡片容器 */
+.student-card {
+    position: relative !important;
+    overflow: visible !important;
+}
+
+/* 各別縮圖框 */
+.file-preview {
+    position: relative !important;
+    overflow: visible !important;
+}
+
+/* =====================================================
+   Section 3: 模式切換條（藍色調）
+   ===================================================== */
+
+.mode-switch-bar {
+    position: sticky;
+    top: 8px;
+    z-index: 6;
+    margin-bottom: 10px;
+}
+
+/* 當學生籤列吸附時，模式切換往下讓位 */
+body.with-sticky-tabs #modeSwitchBar,
+body.with-sticky-tabs #modeSwitchBarOv {
+    top: 64px;
+}
+
+/* 層級：學生籤列在上，模式切換其下 */
+.lr-top-tabs.is-sticky {
+    position: sticky;
+    top: 8px;
+    z-index: 8;
+}
+
+#modeSwitchBar,
+#modeSwitchBarOv {
+    z-index: 7;
+}
+
+.mode-switch-inner {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    background: rgba(239, 246, 255, 0.9);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    padding: 8px 10px;
+    border-radius: 16px;
+    box-shadow: 0 8px 18px rgba(59, 130, 246, 0.18);
+}
+
+.mode-switch-inner .nav-btn {
+    flex: 1 1 0;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 14px;
+    line-height: 1;
+    border: 1.5px solid rgba(59, 130, 246, 0.55);
+    background: linear-gradient(180deg, #eaf2ff, #dbeafe);
+    color: #0f2a59;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.mode-switch-inner .nav-btn.active {
+    border-color: #3b82f6;
+    box-shadow: 0 14px 26px rgba(59, 130, 246, 0.32);
+    background: linear-gradient(180deg, #dbeafe, #bfdbfe);
+    color: #0b1f46;
+    transform: translateY(-1px);
+}
+
+/* =====================================================
+   Section 4: 頂部學生籤列（玻璃膠囊質感）
+   ===================================================== */
+
+.lr-top-tabs .tab-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    margin-right: 10px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(255, 255, 255, 0.45);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(226, 232, 240, 0.45));
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease;
+    white-space: nowrap;
+}
+
+.lr-top-tabs .tab-item:last-child {
+    margin-right: 0;
+}
+
+.lr-top-tabs .tab-item .tab-shell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.lr-top-tabs .tab-item .att-icon {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.lr-top-tabs .tab-item .name {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.lr-top-tabs .tab-item .suggest-badge {
+    padding: 2px 6px;
+    font-size: 11px;
+    line-height: 1;
+    border-radius: 999px;
+    color: #854d0e;
+    background: rgba(251, 191, 36, 0.2);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.lr-top-tabs .tab-item.needs-video .tab-shell {
+    gap: 6px;
+}
+
+.lr-top-tabs .tab-item.active {
+    transform: translateY(-1px) scale(1.03);
+    border-color: rgba(59, 130, 246, 0.65);
+    box-shadow: 0 18px 36px rgba(59, 130, 246, 0.24);
+}
+
+/* 出席狀態顏色 */
+.lr-top-tabs .tab-item.att-present {
+    border-color: rgba(34, 197, 94, 0.45);
+    color: #047857;
+    box-shadow: 0 16px 34px rgba(16, 185, 129, 0.16);
+}
+
+.lr-top-tabs .tab-item.att-present.active {
+    box-shadow: 0 20px 42px rgba(16, 185, 129, 0.26);
+}
+
+.lr-top-tabs .tab-item.att-leave {
+    border-color: rgba(59, 130, 246, 0.45);
+    color: #1d4ed8;
+}
+
+.lr-top-tabs .tab-item.att-absent {
+    border-color: rgba(248, 113, 113, 0.55);
+    color: #b91c1c;
+}
+
+.lr-top-tabs .tab-item.att-unknown {
+    border-color: rgba(148, 163, 184, 0.45);
+    color: #0f172a;
+}
+
+.lr-top-tabs .tab-item.done:not(.att-absent):not(.att-leave) {
+    box-shadow: inset 0 0 0 1.5px rgba(34, 197, 94, 0.3);
+}
+
+/* =====================================================
+   Section 5: 液態玻璃 FAB 按鈕
+   ===================================================== */
+
+.glass-fab {
+    position: fixed;
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    border: 1.5px solid var(--glass-border, rgba(255, 255, 255, 0.55));
+    background: linear-gradient(135deg, var(--glass-bg-start, rgba(255, 255, 255, 0.82)), var(--glass-bg-end, rgba(226, 232, 240, 0.45)));
+    color: var(--glass-ink, #0f172a);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    transition: transform .2s ease, box-shadow .2s ease;
+    z-index: 1000;
+}
+
+.glass-fab:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 40px rgba(15, 23, 42, 0.22);
+}
+
+.glass-fab:active {
+    transform: scale(0.94);
+}
+
+/* FAB 顏色變體 */
+.glass-fab--slate {
+    --glass-border: rgba(148, 163, 184, 0.55);
+    --glass-bg-start: rgba(226, 232, 240, 0.82);
+    --glass-bg-end: rgba(203, 213, 225, 0.45);
+    --glass-ink: #0f172a;
+}
+
+.glass-fab--sky {
+    --glass-border: rgba(96, 165, 250, 0.55);
+    --glass-bg-start: rgba(219, 234, 254, 0.82);
+    --glass-bg-end: rgba(191, 219, 254, 0.46);
+    --glass-ink: #0b1f46;
+}
+
+.glass-fab--teal {
+    --glass-border: rgba(94, 234, 212, 0.55);
+    --glass-bg-start: rgba(204, 251, 241, 0.82);
+    --glass-bg-end: rgba(153, 246, 228, 0.42);
+    --glass-ink: #0f766e;
+}
+
+.glass-fab--violet {
+    --glass-border: rgba(167, 139, 250, 0.6);
+    --glass-bg-start: rgba(224, 231, 255, 0.84);
+    --glass-bg-end: rgba(199, 210, 254, 0.46);
+    --glass-ink: #312e81;
+}
+
+.glass-fab--green {
+    --glass-border: rgba(34, 197, 94, 0.6);
+    --glass-bg-start: rgba(220, 252, 231, 0.84);
+    --glass-bg-end: rgba(187, 247, 208, 0.46);
+    --glass-ink: #14532d;
+}
+
+/* =====================================================
+   Section 6: 上傳中心 FAB 進度環
+   ===================================================== */
+
+#uploadCenterFab.progress {
+    position: fixed;
+}
+
+#uploadCenterFab.progress::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    background: conic-gradient(#10b981 var(--ucp, 0%), #e5e7eb 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent 70%, #000 71%);
+    mask: radial-gradient(farthest-side, transparent 70%, #000 71%);
+    pointer-events: none;
+}
+
+/* =====================================================
+   Section 7: 課程總覽輸入布局
+   ===================================================== */
+
+.ov-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.ov-col-2 {
+    grid-column: 1 / -1;
+}
+
+.ov-input {
+    height: 34px;
+}
+
+.comment-area.ov-input,
+input.comment-area.ov-input {
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 6px 10px !important;
+    line-height: 1.2 !important;
+}
+
+/* =====================================================
+   Section 8: 自動跳至總覽高亮效果
+   ===================================================== */
+
+.overview-highlight {
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, .35) inset, 0 0 0 0 rgba(16, 185, 129, .0);
+    animation: ovPulse 1.6s ease 2;
+}
+
+@keyframes ovPulse {
+    0% {
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, .35) inset;
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0) inset;
+    }
+}
+
+/* =====================================================
+   Section 9: 出席狀態顯示
+   ===================================================== */
+
+.attendance-status {
+    margin: 0 0 12px 0;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(226, 232, 240, 0.85);
+    color: #0f172a;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.attendance-status.status-present {
+    background: rgba(16, 185, 129, 0.15);
+    color: #047857;
+}
+
+.attendance-status.status-leave {
+    background: rgba(59, 130, 246, 0.15);
+    color: #1d4ed8;
+}
+
+.attendance-status.status-absent {
+    background: rgba(248, 113, 113, 0.15);
+    color: #b91c1c;
+}
+
+/* =====================================================
+   Section 10: 響應式設計 - 手機優化
+   ===================================================== */
+
+@media (max-width: 520px) {
+    .ov-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .mode-switch-inner {
+        gap: 8px;
+        padding: 6px 8px;
+    }
+    
+    .mode-switch-inner .nav-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 420px) {
+    .mode-switch-inner {
+        gap: 8px;
+        padding: 6px 8px;
+    }
+    
+    .mode-switch-inner .nav-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}

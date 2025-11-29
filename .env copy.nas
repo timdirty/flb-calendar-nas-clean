@@ -1,0 +1,30 @@
+# Node.js 環境
+NODE_ENV=development
+PORT=3002
+TZ=Asia/Taipei
+
+# Synology Calendar
+SYNOLOGY_HOST=funlearnbar.synology.me
+
+# Synology Drive（2025-11-08 新增）🆕
+SYNOLOGY_PORT=9102
+SYNOLOGY_PROTOCOL=https
+SYNOLOGY_USERNAME=ctctim14
+SYNOLOGY_PASSWORD=A880318TIMGOOD
+SYNOLOGY_DRIVE_ROOT=/Fun Learn Bar/FLB-Learning-Portfolio
+
+# LINE 整合
+LINE_CHANNEL_ACCESS_TOKEN=your-token-here
+LIFF_ID=your-liff-id-here
+
+# Google Sheets
+GOOGLE_SERVICE_ACCOUNT_PATH=./service-account.json
+
+# 學生上過課紀錄
+COURSE_HISTORY_SPREADSHEET_ID=
+COURSE_HISTORY_SHEET_NAME=學生上過的課
+DISABLE_COURSE_HISTORY_LOGGER=false
+
+# 開發模式控制
+DISABLE_AUTO_REMINDERS=true
+ENABLE_DAILY_REPORT=false

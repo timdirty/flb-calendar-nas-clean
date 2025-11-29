@@ -1,0 +1,190 @@
+✅ URL 傳遞講師參數 - 完成報告
+============================================
+
+🎯 目標：
+從主行事曆跳轉到學習歷程上傳時：
+1. 傳入日期、課程資訊、講師名稱
+2. 快速定位到特定課程
+3. 只顯示該講師的課程
+
+✅ 完成的修改：
+
+1️⃣ 主行事曆（perfect-calendar-optimized-complete2.html）
+
+修改位置 1：goToLearningRecordUpload 函數（第 10671 行）
+```javascript
+function goToLearningRecordUpload(eventId, date, time, instructor) {
+    // 在 URL 中傳遞講師名稱
+    let url = `/learning-record-upload.html?eventId=${...}&date=${...}&time=${...}`;
+    if (instructor) {
+        url += `&instructor=${encodeURIComponent(instructor)}`;
+    }
+    window.location.href = url;
+}
+```
+
+修改位置 2：上傳按鈕生成（第 10690-10717 行）
+```javascript
+// 從課程卡片讀取講師名稱
+const instructor = card ? card.dataset.instructor : '';
+
+// 在按鈕 onclick 中傳遞講師名稱
+goToLearningRecordUpload('${eventId}', '${dateStr}', '${timeStr}', '${instructor}')
+```
+
+2️⃣ 學習歷程頁面（learning-record-upload.html）
+
+修改位置 1：讀取 URL 參數（第 1513-1524 行）
+```javascript
+const urlInstructor = urlParams.get('instructor');
+console.log('🎯 接收到跳轉參數:', { 
+    targetEventId, targetDate, targetTime, urlInstructor 
+});
+```
+
+修改位置 2：設定講師篩選（第 1565-1569 行）
+```javascript
+if (urlInstructor) {
+    currentTeacher = { name: urlInstructor };
+    console.log('✅ 從 URL 設定講師篩選:', urlInstructor);
+}
+```
+
+修改位置 3：講師篩選邏輯（第 1641-1671 行）
+```javascript
+// 優先使用 URL 參數，退回使用 localStorage
+const effectiveTeacher = urlInstructor || (currentTeacher && currentTeacher.name);
+
+if (effectiveTeacher) {
+    // 只保留該講師的課程
+    allCourses = processedCourses.filter(course => {
+        return courseInstructor === teacherName;
+    });
+}
+```
+
+🔄 完整工作流程：
+
+步驟 1: 用戶在主行事曆查看課程
+   - 系統顯示所有課程
+   - 已結束的課程顯示「上傳學習歷程」按鈕
+
+步驟 2: 用戶點擊「上傳學習歷程」按鈕
+   - 系統讀取課程資訊：
+     • eventId: 課程唯一識別碼
+     • date: 課程日期（2025-10-15）
+     • time: 課程時間（16:30）
+     • instructor: 講師名稱（TIM）
+
+步驟 3: 跳轉到學習歷程頁面
+   - URL：/learning-record-upload.html?
+            eventId=XXX&
+            date=2025-10-15&
+            time=16:30&
+            instructor=TIM
+
+步驟 4: 學習歷程頁面處理
+   - 讀取所有 URL 參數
+   - 優先使用 URL 的 instructor 參數
+   - 篩選課程，只保留該講師的課程
+   - 自動定位到目標課程
+   - 顯示該課程的學生列表
+
+🧪 測試方法：
+
+測試 1: 正常跳轉測試
+1. 打開主行事曆
+2. 找到已結束的課程（例如 TIM 的課程）
+3. 點擊「上傳學習歷程」
+4. 查看 URL，應該包含：
+   ?eventId=...&date=...&time=...&instructor=TIM
+5. 查看 Console，應該顯示：
+   ✅ 從 URL 設定講師篩選: TIM
+   ✅ 講師篩選完成: { filterSource: 'URL參數', ... }
+6. 確認只顯示 TIM 的課程
+
+測試 2: 無講師參數測試
+1. 手動訪問：/learning-record-upload.html?date=2025-10-18
+2. 查看 Console，應該顯示：
+   ⚠️ 未設定講師篩選，顯示所有課程
+3. 應該顯示所有講師的課程
+
+測試 3: 自動定位測試
+1. 從主行事曆點擊特定課程的「上傳學習歷程」
+2. 跳轉後，該課程應該自動被選中
+3. 學生區塊應該自動展開
+4. 顯示該課程的學生列表
+
+📊 優先級邏輯：
+
+講師篩選來源的優先級（從高到低）：
+1. URL 參數的 instructor（最優先）
+2. localStorage 的 currentUser（次優先）
+3. 無篩選，顯示所有課程（最後）
+
+為什麼 URL 參數優先？
+✅ 更可靠：直接從點擊的課程獲取
+✅ 不依賴：不需要 localStorage 或 LINE 登入
+✅ 更準確：確保顯示正確講師的課程
+
+🔍 調試日誌：
+
+成功的日誌流程：
+```
+🎯 接收到跳轉參數: { 
+  targetEventId: "...", 
+  targetDate: "2025-10-15", 
+  targetTime: "16:30",
+  urlInstructor: "TIM" 
+}
+
+✅ 從 URL 設定講師篩選: TIM
+
+✅ 講師篩選完成: {
+  filterSource: "URL參數",
+  currentTeacher: "TIM",
+  originalCount: 12,
+  filteredCount: 3
+}
+
+🎯 開始自動選擇課程: { eventId: "...", coursesCount: 3 }
+✅ 通過 ID 找到課程: { ... }
+🎯 選擇課程: { courseTitle: "...", studentsCount: 20 }
+```
+
+⚠️ 潛在問題與解決方案：
+
+問題 1: instructor 參數是空值
+原因：課程卡片沒有 data-instructor 屬性
+解決：系統會退回使用 localStorage
+
+問題 2: 講師名稱不匹配
+原因：課程的 instructor 與 teacher_data 的 name 不一致
+解決：檢查大小寫，系統會轉為大寫比對
+
+問題 3: 找不到任何課程
+原因：該日期該講師沒有已結束的課程
+解決：調整日期篩選或狀態篩選
+
+💡 最佳實踐：
+
+1. 從主行事曆正常跳轉（推薦）
+   ✅ 自動傳遞所有參數
+   ✅ 正確篩選講師課程
+   ✅ 自動定位目標課程
+
+2. 直接訪問學習歷程頁面（需手動設定）
+   ⚠️ 沒有 URL 參數
+   ⚠️ 需要 localStorage 有 currentUser
+   ⚠️ 可能顯示所有講師的課程
+
+3. 測試環境（使用快速設定工具）
+   🧪 訪問：🧪快速修復-設定講師.html
+   🧪 設定講師身份
+   🧪 測試篩選功能
+
+🎉 功能完成！
+現在跳轉時會自動傳遞講師資訊，
+確保只顯示該講師的課程，
+並自動定位到目標課程！
+

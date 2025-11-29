@@ -1,0 +1,229 @@
+// ============================================
+// 🔥 核心配置與效能優化
+// ============================================
+// 版本：2024-10-26-MODULAR-FIX
+
+(function() {
+    'use strict';
+    
+    // 應用配置
+    window.APP_CONFIG = {
+        VERSION: '2025-10-28-color-unified',
+        DEBUG: true, // 🔥 生產環境設為 false，開發時設為 true
+        LOAD_STRATEGY: 'progressive',
+        ORIGINAL_VERSION: '2024-10-25-CORS-FIX'
+    };
+    
+    // 載入進度追蹤
+    window.LOAD_PROGRESS = {
+        total: 8, // Config, ErrorHandler, Performance, Matcher, Filter, Styles, Icons, Main
+        loaded: 0,
+        modules: {},
+        completed: false,
+        
+        updateProgress(moduleName) {
+            this.loaded++;
+            this.modules[moduleName] = true;
+            const percent = Math.round((this.loaded / this.total) * 100);
+            const progressEl = document.querySelector('.loading-progress');
+            if (progressEl) {
+                progressEl.textContent = `載入中... ${moduleName} (${percent}%)`;
+            }
+            console.error(`📦 模組載入: ${moduleName} [${this.loaded}/${this.total}]`);
+            
+            // 檢查是否全部載入完成
+            if (this.loaded >= this.total && !this.completed) {
+                this.onComplete();
+            }
+        },
+        
+        onComplete() {
+            if (this.completed) return;
+            this.completed = true;
+            console.error('✅ 所有模組載入完成！');
+            
+            // 🔥 在顯示主畫面前，強制確保手機端日曆隱藏
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                const calendarSection = document.getElementById('calendarSection');
+                if (calendarSection) {
+                    // 5 層保險！
+                    calendarSection.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important;';
+                    console.error('🔒 手機端：強制鎖定日曆隱藏狀態');
+                }
+            }
+            
+            // 隱藏載入畫面，顯示主要內容
+            setTimeout(() => {
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                const app = document.getElementById('app');
+                
+                // 添加淡出動畫
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('hidden');
+                    setTimeout(() => {
+                        forceHideOverlay(loadingOverlay);
+                    }, 800); // 等待淡出動畫完成
+                }
+                
+                // 🔥 顯示 #app（包含所有內容）
+                if (app) {
+                    app.style.display = 'block';
+                }
+                
+                console.error('🎉 系統已就緒！');
+            }, 300);
+        },
+        
+        // 🔥 安全機制：如果超時還沒完成，強制顯示內容
+        setupFallback() {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const timeout = isMobile ? 8000 : 5000;
+            
+            setTimeout(() => {
+                if (!this.completed) {
+                    console.error(`⚠️ 載入超時（${timeout/1000}秒），強制顯示內容`);
+                    console.error(`📊 已載入模組: ${Object.keys(this.modules).join(', ')}`);
+                    console.error(`📊 載入進度: ${this.loaded}/${this.total}`);
+                    this.onComplete();
+                }
+            }, timeout);
+        }
+    };
+    
+    // 啟動安全機制
+    window.LOAD_PROGRESS.setupFallback();
+    
+    // 顯示版本訊息
+    console.error(`✅ 版本：${window.APP_CONFIG.VERSION} - 模組化架構`);
+    console.error(`📦 原始版本：${window.APP_CONFIG.ORIGINAL_VERSION} - 已載入最新版本`);
+    
+    // Console 優化
+    if (!window.APP_CONFIG.DEBUG) {
+        const noop = () => {};
+        const originalConsole = window.console;
+        
+        window.console = {
+            ...originalConsole,
+            log: noop,
+            info: noop,
+            debug: noop,
+            warn: noop,
+            error: originalConsole.error.bind(originalConsole),
+            table: originalConsole.table ? originalConsole.table.bind(originalConsole) : noop
+        };
+        
+        console.error('🚀 生產模式：已停用 console.log/info/warn/debug，僅保留 error 和 table');
+    }
+    
+    // 標記配置模組已載入
+    window.LOAD_PROGRESS.updateProgress('Config');
+
+    // ✅ 共用：強制隱藏載入畫面（覆蓋 CSS !important 設定）
+    function forceHideOverlay(overlay) {
+        if (!overlay) return;
+        overlay.style.setProperty('display', 'none', 'important');
+        overlay.style.setProperty('opacity', '0', 'important');
+        overlay.style.setProperty('visibility', 'hidden', 'important');
+        overlay.style.setProperty('pointer-events', 'none', 'important');
+    }
+    
+    // 🔥 強制關閉載入畫面（用戶點擊載入畫面時）
+    window.forceHideLoading = function() {
+        console.error('🔥 用戶手動關閉載入畫面');
+        console.error('📱 視窗寬度:', window.innerWidth, 'x', window.innerHeight);
+        
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const app = document.getElementById('app');
+        const mainContainer = document.getElementById('mainContainer');
+        
+        // 🔥 步驟1：強制確保 HTML 和 Body 可以滾動
+        document.documentElement.style.overflow = 'auto';
+        document.documentElement.style.overflowY = 'auto';
+        document.documentElement.style.position = 'relative';
+        document.body.style.overflow = 'auto';
+        document.body.style.overflowY = 'auto';
+        document.body.style.position = 'relative';
+        document.body.style.height = 'auto';
+        document.body.style.minHeight = '100vh';
+        console.error('✅ HTML 和 Body 滾動已強制啟用');
+        
+        if (document.body) {
+            document.body.classList.remove('is-loading');
+            document.body.classList.add('is-ready');
+            document.body.dataset.loadingState = 'ready';
+            document.body.setAttribute('aria-busy', 'false');
+        }
+        if (document.documentElement) {
+            document.documentElement.dataset.loadingState = 'ready';
+        }
+        
+        // 🔥 步驟2：先顯示 #app 和 mainContainer（確保內容可見）
+        if (app) {
+            app.style.display = 'block';
+            app.style.opacity = '1';
+            app.style.visibility = 'visible';
+            void app.offsetHeight; // 強制重排
+            console.error('✅ #app 已顯示，高度:', app.offsetHeight, 'px');
+        }
+        
+        if (mainContainer) {
+            mainContainer.style.display = 'block';
+            mainContainer.style.opacity = '1';
+            mainContainer.style.visibility = 'visible';
+            void mainContainer.offsetHeight; // 強制重排
+            console.error('✅ mainContainer 已顯示，高度:', mainContainer.offsetHeight, 'px');
+        }
+        
+        // 🔥 步驟3：手機端專屬：在載入畫面關閉前確保日曆區塊被隱藏
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            const calendarSection = document.querySelector('.calendar-section');
+            const calendarSectionById = document.getElementById('calendarSection');
+            
+            if (calendarSection) {
+                calendarSection.style.display = 'none';
+                calendarSection.style.visibility = 'hidden';
+                calendarSection.style.opacity = '0';
+                calendarSection.style.position = 'absolute';
+                calendarSection.style.left = '-9999px';
+                console.error('📱 手機端：已強制隱藏日曆區塊 (.calendar-section)');
+            }
+            
+            if (calendarSectionById) {
+                calendarSectionById.style.display = 'none';
+                calendarSectionById.style.visibility = 'hidden';
+                calendarSectionById.style.opacity = '0';
+                calendarSectionById.style.position = 'absolute';
+                calendarSectionById.style.left = '-9999px';
+                console.error('📱 手機端：已強制隱藏日曆區塊 (#calendarSection)');
+            }
+        }
+        
+        // 🔥 步驟4：隱藏載入畫面
+        if (loadingOverlay) {
+            forceHideOverlay(loadingOverlay);
+            loadingOverlay.setAttribute('aria-hidden', 'true');
+            console.error('✅ 載入畫面已隱藏');
+        }
+        
+        // 🔥 步驟5：最終檢查
+        setTimeout(function() {
+            const bodyHeight = document.body.scrollHeight;
+            const windowHeight = window.innerHeight;
+            const canScroll = bodyHeight > windowHeight;
+            console.error('📏 Body 總高度:', bodyHeight, 'px');
+            console.error('📏 視窗高度:', windowHeight, 'px');
+            console.error('📜 可以滾動:', canScroll ? '是' : '否');
+            
+            if (!canScroll) {
+                console.warn('⚠️ 警告：頁面高度不足，無法滾動！');
+            } else {
+                console.error('✅ 頁面滾動已完全啟用');
+            }
+        }, 100);
+        
+        window.LOAD_PROGRESS.completed = true;
+    };
+    
+})();

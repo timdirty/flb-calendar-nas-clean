@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLB 行事曆系統</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .card i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .card p {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 50px;
+            opacity: 0.8;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-calendar-alt"></i> FLB 行事曆系統</h1>
+            <p>樂程坊計畫 - 全面的課程管理解決方案</p>
+            <div style="margin-top: 20px;">
+                <span class="badge"><i class="fas fa-check"></i> 即開即用</span>
+                <span class="badge"><i class="fas fa-cog"></i> 萬物可調</span>
+                <span class="badge"><i class="fas fa-mobile-alt"></i> 響應式設計</span>
+            </div>
+        </div>
+
+        <div class="cards">
+            <div class="card">
+                <i class="fas fa-calendar-check"></i>
+                <h2>行事曆檢視</h2>
+                <p>查看所有課程、講師行程、學生簽到，支援多種檢視模式與智能篩選功能。</p>
+                <a href="perfect-calendar-optimized-complete2.html" class="btn">
+                    <i class="fas fa-arrow-right"></i> 開啟行事曆
+                </a>
+            </div>
+
+            <div class="card">
+                <i class="fas fa-cog"></i>
+                <h2>管理控制台</h2>
+                <p>全面管理系統配置、講師、學生、通知設定。無需編寫代碼，一切都可從介面調整。</p>
+                <a href="admin-dashboard.html" class="btn">
+                    <i class="fas fa-arrow-right"></i> 開啟控制台
+                </a>
+            </div>
+
+            <div class="card">
+                <i class="fas fa-bell"></i>
+                <h2>課程提醒管理</h2>
+                <p>管理課程提醒、學生提醒、自動排程功能。支援 LINE 通知與 Google Sheets 整合。</p>
+                <a href="course-reminder-management.html" class="btn">
+                    <i class="fas fa-arrow-right"></i> 開啟提醒管理
+                </a>
+            </div>
+
+            <div class="card">
+                <i class="fas fa-user-shield"></i>
+                <h2>快速設定</h2>
+                <p>快速設定管理員 User ID，啟用系統通知功能。簡單三步驟即可完成設定。</p>
+                <a href="admin-setup-simple.html" class="btn">
+                    <i class="fas fa-arrow-right"></i> 快速設定
+                </a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><i class="fas fa-heart"></i> Made with love by FLB Team</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">
+                Version 2.0 | 2025 | 
+                <a href="https://github.com" style="color: white; text-decoration: none;">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

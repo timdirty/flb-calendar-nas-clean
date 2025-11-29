@@ -1,0 +1,10 @@
+# 需要删除的旧 API 端点行号范围
+# 这个文件用于记录需要删除的代码块
+
+1. 已注释的分片上传 API (16584-16857) - 直接删除整个注释块
+2. 旧版 POST /api/learning-records/upload (17267-17544)
+3. 旧版 GET /api/learning-records/history (17778-?)
+4. 旧版 DELETE /api/learning-records/:recordId (18703-?)
+5. 旧版 GET /api/learning-records/file (19061-?)
+6. 旧版 PUT /api/learning-records/:recordId (19344-?)
+

@@ -1,0 +1,697 @@
+# 📂 FLB 行事曆系統 - 專案結構說明
+
+**整理日期**: 2025-11-28  
+**版本**: 3.0（模組化重構後）  
+**架構**: Phase 1-6 模組化系統 + v2 向後相容
+
+---
+
+## 📋 目錄結構總覽
+
+```
+flb-calendar-nas/
+├── 📁 archive/                       # 舊版存檔（不要刪除）
+├── 📁 archived_docs/                 # 舊版文檔（不要刪除）
+├── 📁 archived_scripts/              # 舊版腳本（不要刪除）
+├── 📁 backups/                       # 所有備份檔案
+│   ├── server/                       # server.js 的歷史備份
+│   ├── configs/                      # 配置檔案備份
+│   └── project-snapshots/            # 完整專案快照
+├── 📁 data/                          # 運行時資料
+│   ├── attendance/                   # 簽到記錄
+│   ├── learning-portfolio/           # 學習歷程（本地）
+│   ├── leave-requests/               # 請假申請
+│   └── ...
+├── 📁 docs/                          # 所有文檔
+│   ├── api/                          # API 文檔
+│   ├── guides/                       # 使用指南
+│   ├── reports/                      # 修復報告、進度報告
+│   ├── synology-drive/               # Synology Drive 整合文檔
+│   ├── correct ver flex message/     # LINE Flex Message 範例
+│   └── google app script/            # Google Apps Script 相關
+├── 📁 logs/                          # 日誌檔案
+├── 📁 node_modules/                  # Node.js 依賴（自動生成）
+├── 📁 public/                        # 前端資源
+│   ├── css/                          # 樣式表
+│   ├── js/                           # JavaScript
+│   │   ├── core/                     # 核心模組
+│   │   ├── modules/                  # 功能模組
+│   │   ├── pages/                    # 頁面腳本
+│   │   └── workers/                  # Web Workers
+│   ├── learning-record-upload.html   # 學習歷程上傳頁面
+│   ├── perfect-calendar-modular.html # 主行事曆頁面
+│   └── ...
+├── 📁 scripts/                       # 工具腳本
+│   ├── deployment/                   # 部署相關腳本
+│   └── maintenance/                  # 維護工具
+├── 📁 services/                      # 業務邏輯服務
+│   └── media/                        # 媒體處理服務
+├── 📁 tests/                         # 測試檔案
+│   ├── integration/                  # 整合測試（Postman 等）
+│   ├── manual/                       # 手動測試腳本
+│   └── unit/                         # 單元測試
+├── 📁 utils/                         # 工具模組
+│   ├── attendance-batcher.js         # 簽到批次處理
+│   ├── logger.js                     # 日誌工具
+│   ├── media-processor.js            # 媒體處理
+│   ├── safe-file-operations.js       # 安全檔案操作
+│   └── smart-cache-manager.js        # 智能快取管理
+├── 📄 server.js                      # Express 主伺服器 ⭐
+├── 📄 package.json                   # Node.js 專案配置 ⭐
+├── 📄 .env.nas                       # 環境變數（不提交到 Git）⚠️
+├── 📄 docker-compose.yml             # Docker Compose 配置
+├── 📄 Dockerfile                     # Docker 映像配置
+├── 📄 README.md                      # 專案說明
+├── 📄 AGENTS.md                      # AI 代理指引 ⭐
+├── 📄 .cursorrules                   # Cursor 編碼規範 ⭐
+├── 📄 PROJECT-STRUCTURE.md           # 本文檔 ⭐
+├── 📄 attendance-queue-manager.js    # 簽到佇列管理器
+├── 📄 fast-attendance.js             # 快速簽到 API
+├── 📄 google-sheets-client.js        # Google Sheets 客戶端
+├── 📄 google-sheets-students.js      # 學生資料同步
+├── 📄 holiday-sync-manager.js        # 假期同步管理器
+├── 📄 learning-upload-helper.js      # 學習歷程上傳輔助 🆕
+├── 📄 notification-manager.js        # 通知管理器
+├── 📄 notion-course-sync-manager.js  # Notion 課程同步
+├── 📄 reminder-scheduler.js          # 提醒排程器
+├── 📄 synology-calendar-client.js    # Synology Calendar API 客戶端
+├── 📄 synology-drive-client.js       # Synology Drive API 客戶端 🆕
+├── 📄 drive-path-manager.js          # Drive 路徑管理器 🆕
+├── 📄 teacher-registry.js            # 講師註冊管理
+├── 📄 flex-message-templates.json    # LINE Flex Message 模板
+├── 📄 notification-config.json       # 通知配置
+├── 📄 pending-leave-requests.json    # 待處理請假
+├── 📄 student-reminder-settings.json # 學生提醒設定
+├── 📄 system-settings.json           # 系統設定
+├── 📄 teacher_data.json              # 講師資料
+└── 📄 service-account.json           # Google Service Account（不提交）⚠️
+```
+
+---
+
+## 📁 主要目錄說明
+
+### `/docs/` - 文檔中心
+
+#### `/docs/api/`
+- `Calendar_API_Guide.txt` - Synology Calendar API 官方文檔
+
+#### `/docs/guides/`
+- 各種使用指南和操作說明
+- 中文使用指南
+
+#### `/docs/reports/`
+- 所有修復報告
+- 優化進度報告
+- 測試報告
+- 部署檢查清單
+
+#### `/docs/synology-drive/`
+- `DRIVE-INTEGRATION-SUMMARY.md` - Drive 整合總結 ⭐
+- `DRIVE-UPLOAD-API-USAGE.md` - 上傳 API 使用說明 ⭐
+- `SYNOLOGY-DRIVE-IMPLEMENTATION-GUIDE.md` - 實施指南 ⭐
+- `SYNOLOGY-DRIVE-INTEGRATION-PROGRESS.md` - 進度追蹤
+- `UPLOAD-API-COMPLETION-REPORT.md` - 上傳 API 完成報告
+
+### `/backups/` - 備份中心
+
+#### `/backups/server/`
+- `server.js.backup-YYYYMMDD-HHMMSS` - server.js 的時間戳備份
+- 按日期排序，最新的在最上面
+
+#### `/backups/configs/`
+- 所有配置檔案的備份（.json, .js 等）
+- 損壞的檔案（.broken）
+
+#### `/backups/project-snapshots/`
+- `backup-YYYYMMDD-HHMMSS/` - 完整專案快照
+- 包含完整的檔案結構和說明文檔
+
+### `/tests/` - 測試中心
+
+#### `/tests/manual/`
+- `test-drive-upload.js` - Drive 上傳測試 🆕
+- `test-drive-connection.js` - Drive 連線測試（需創建）
+- 其他手動測試腳本
+
+#### `/tests/integration/`
+- Postman Collections
+- API 整合測試
+
+#### `/tests/unit/`
+- 單元測試（待新增）
+
+### `/scripts/` - 工具腳本
+
+#### `/scripts/deployment/`
+- `REBUILD-AND-RESTART.sh` - 重建並重啟 Docker
+- `restart-server.sh` - 重啟伺服器
+
+#### `/scripts/maintenance/`
+- 資料庫維護腳本
+- 日誌清理腳本
+- 其他維護工具
+
+---
+
+## 📄 核心檔案說明
+
+### 伺服器核心
+
+| 檔案 | 說明 | 重要性 |
+|------|------|--------|
+| `server.js` | Express 主伺服器（19000+ 行） | ⭐⭐⭐ |
+| `package.json` | Node.js 專案配置 | ⭐⭐⭐ |
+| `.env.nas` | 環境變數（敏感資訊）| ⭐⭐⭐ |
+| `nodemon.json` | Nodemon 配置 | ⭐ |
+| `Dockerfile` | Docker 映像配置 | ⭐⭐ |
+| `docker-compose.yml` | Docker Compose 配置 | ⭐⭐ |
+
+### Synology 整合
+
+| 檔案 | 說明 | 狀態 |
+|------|------|------|
+| `synology-calendar-client.js` | Calendar API 客戶端 | ✅ 穩定 |
+| `synology-drive-client.js` | Drive API 客戶端 | 🆕 新增 |
+| `drive-path-manager.js` | Drive 路徑管理 | 🆕 新增 |
+| `learning-upload-helper.js` | 學習歷程上傳輔助 | 🆕 新增 |
+
+### 業務邏輯模組
+
+| 檔案 | 說明 |
+|------|------|
+| `attendance-queue-manager.js` | 簽到佇列管理（防衝突）|
+| `fast-attendance.js` | 快速簽到 API |
+| `notification-manager.js` | LINE 通知管理 |
+| `reminder-scheduler.js` | 課程提醒排程 |
+| `holiday-sync-manager.js` | 假期同步管理 |
+| `teacher-registry.js` | 講師註冊管理 |
+| `google-sheets-students.js` | 學生資料同步 |
+| `google-sheets-client.js` | Google Sheets 客戶端 |
+| `notion-course-sync-manager.js` | Notion 課程同步 |
+
+### 配置檔案
+
+| 檔案 | 說明 |
+|------|------|
+| `notification-config.json` | 通知配置 |
+| `system-settings.json` | 系統設定 |
+| `teacher_data.json` | 講師資料與顏色 |
+| `flex-message-templates.json` | LINE Flex Message 模板 |
+| `student-reminder-settings.json` | 學生提醒設定 |
+| `pending-leave-requests.json` | 待處理請假申請 |
+
+---
+
+## 🔍 檔案命名規範
+
+### 備份檔案
+```
+[原檔名].backup-YYYYMMDD-HHMMSS[-描述]
+```
+例如：
+- `server.js.backup-20251108-004413`
+- `server.js.backup-20251105-before-multi-marker-support`
+
+### 測試檔案
+```
+test-[功能名稱].js
+quick-test-[功能名稱].js
+```
+例如：
+- `test-drive-upload.js`
+- `test-drive-connection.js`
+- `quick-test-multiple-events.js`
+
+### 文檔檔案
+```
+[主題]-[類型].md
+```
+例如：
+- `DRIVE-INTEGRATION-SUMMARY.md`
+- `UPLOAD-API-COMPLETION-REPORT.md`
+- `HISTORY-UI-OPTIMIZATION-FIX.md`
+
+---
+
+## 🚫 不應該出現在根目錄的檔案
+
+以下類型的檔案應該移到對應目錄：
+
+❌ **備份檔案** → 移到 `/backups/`
+- `*.backup`
+- `*.backup-*`
+- `*.broken`
+
+❌ **文檔檔案** → 移到 `/docs/`
+- `*-REPORT.md`
+- `*-GUIDE.md`
+- `*-SUMMARY.md`
+- `*FIX*.md`
+- `*指南*.md`
+- `*報告*.md`
+
+❌ **測試檔案** → 移到 `/tests/`
+- `test-*.js`
+- `quick-test-*.js`
+- `*.postman_collection.json`
+
+❌ **日誌檔案** → 移到 `/logs/`
+- `server_*.log`
+- `*.log`（除了 `server.log`）
+
+---
+
+## 📝 維護建議
+
+### 定期清理
+
+#### 每週
+- 檢查並清理臨時日誌檔案
+- 整理測試資料
+
+#### 每月
+- 清理舊的備份檔案（保留最近 3 個月）
+- 歸檔舊的報告文檔
+
+#### 每季
+- 審查並更新文檔
+- 清理不再使用的模組
+
+### 新增檔案指引
+
+#### 新增測試腳本
+```bash
+# 放到對應目錄
+touch tests/manual/test-new-feature.js
+```
+
+#### 新增文檔
+```bash
+# 根據類型選擇目錄
+touch docs/guides/NEW-FEATURE-GUIDE.md
+touch docs/reports/NEW-FIX-REPORT.md
+```
+
+#### 創建備份
+```bash
+# 使用時間戳命名
+cp server.js backups/server/server.js.backup-$(date +%Y%m%d-%H%M%S)
+```
+
+---
+
+## 🔧 快速指令
+
+### 查看專案結構
+```bash
+tree -L 2 -I 'node_modules|archive|archived_*'
+```
+
+### 清理舊備份（保留最近 30 天）
+```bash
+find backups/server -name "*.backup-*" -mtime +30 -delete
+```
+
+### 統計程式碼行數
+```bash
+# 主伺服器
+wc -l server.js
+
+# 所有 JS 檔案（不含 node_modules）
+find . -name "*.js" -not -path "./node_modules/*" -not -path "./archive/*" | xargs wc -l
+```
+
+---
+
+## 📚 相關文檔
+
+- **README.md** - 專案說明
+- **AGENTS.md** - AI 代理指引
+- **.cursorrules** - Cursor 編碼規範
+- **docs/synology-drive/** - Synology Drive 整合文檔
+
+---
+
+## ⚠️ 重要提醒
+
+1. **永遠不要刪除** `archive/`, `archived_docs/`, `archived_scripts/`
+2. **備份重要檔案** 在修改前創建時間戳備份
+3. **保持根目錄整潔** 新檔案應放到對應目錄
+4. **文檔同步更新** 修改功能時同步更新相關文檔
+5. **環境變數安全** `.env.nas` 和 `service-account.json` 不要提交到 Git
+
+---
+
+**維護者**: FLB Team  
+**最後更新**: 2025-11-08  
+**版本**: 2.0
+
+
+
+**整理日期**: 2025-11-08  
+**版本**: 2.0（重新整理後）
+
+---
+
+## 📋 目錄結構總覽
+
+```
+flb-calendar-nas/
+├── 📁 archive/                       # 舊版存檔（不要刪除）
+├── 📁 archived_docs/                 # 舊版文檔（不要刪除）
+├── 📁 archived_scripts/              # 舊版腳本（不要刪除）
+├── 📁 backups/                       # 所有備份檔案
+│   ├── server/                       # server.js 的歷史備份
+│   ├── configs/                      # 配置檔案備份
+│   └── project-snapshots/            # 完整專案快照
+├── 📁 data/                          # 運行時資料
+│   ├── attendance/                   # 簽到記錄
+│   ├── learning-portfolio/           # 學習歷程（本地）
+│   ├── leave-requests/               # 請假申請
+│   └── ...
+├── 📁 docs/                          # 所有文檔
+│   ├── api/                          # API 文檔
+│   ├── guides/                       # 使用指南
+│   ├── reports/                      # 修復報告、進度報告
+│   ├── synology-drive/               # Synology Drive 整合文檔
+│   ├── correct ver flex message/     # LINE Flex Message 範例
+│   └── google app script/            # Google Apps Script 相關
+├── 📁 logs/                          # 日誌檔案
+├── 📁 node_modules/                  # Node.js 依賴（自動生成）
+├── 📁 public/                        # 前端資源
+│   ├── css/                          # 樣式表
+│   ├── js/                           # JavaScript
+│   │   ├── core/                     # 核心模組
+│   │   ├── modules/                  # 功能模組
+│   │   ├── pages/                    # 頁面腳本
+│   │   └── workers/                  # Web Workers
+│   ├── learning-record-upload.html   # 學習歷程上傳頁面
+│   ├── perfect-calendar-modular.html # 主行事曆頁面
+│   └── ...
+├── 📁 scripts/                       # 工具腳本
+│   ├── deployment/                   # 部署相關腳本
+│   └── maintenance/                  # 維護工具
+├── 📁 services/                      # 業務邏輯服務
+│   └── media/                        # 媒體處理服務
+├── 📁 tests/                         # 測試檔案
+│   ├── integration/                  # 整合測試（Postman 等）
+│   ├── manual/                       # 手動測試腳本
+│   └── unit/                         # 單元測試
+├── 📁 utils/                         # 工具模組
+│   ├── attendance-batcher.js         # 簽到批次處理
+│   ├── logger.js                     # 日誌工具
+│   ├── media-processor.js            # 媒體處理
+│   ├── safe-file-operations.js       # 安全檔案操作
+│   └── smart-cache-manager.js        # 智能快取管理
+├── 📄 server.js                      # Express 主伺服器 ⭐
+├── 📄 package.json                   # Node.js 專案配置 ⭐
+├── 📄 .env.nas                       # 環境變數（不提交到 Git）⚠️
+├── 📄 docker-compose.yml             # Docker Compose 配置
+├── 📄 Dockerfile                     # Docker 映像配置
+├── 📄 README.md                      # 專案說明
+├── 📄 AGENTS.md                      # AI 代理指引 ⭐
+├── 📄 .cursorrules                   # Cursor 編碼規範 ⭐
+├── 📄 PROJECT-STRUCTURE.md           # 本文檔 ⭐
+├── 📄 attendance-queue-manager.js    # 簽到佇列管理器
+├── 📄 fast-attendance.js             # 快速簽到 API
+├── 📄 google-sheets-client.js        # Google Sheets 客戶端
+├── 📄 google-sheets-students.js      # 學生資料同步
+├── 📄 holiday-sync-manager.js        # 假期同步管理器
+├── 📄 learning-upload-helper.js      # 學習歷程上傳輔助 🆕
+├── 📄 notification-manager.js        # 通知管理器
+├── 📄 notion-course-sync-manager.js  # Notion 課程同步
+├── 📄 reminder-scheduler.js          # 提醒排程器
+├── 📄 synology-calendar-client.js    # Synology Calendar API 客戶端
+├── 📄 synology-drive-client.js       # Synology Drive API 客戶端 🆕
+├── 📄 drive-path-manager.js          # Drive 路徑管理器 🆕
+├── 📄 teacher-registry.js            # 講師註冊管理
+├── 📄 flex-message-templates.json    # LINE Flex Message 模板
+├── 📄 notification-config.json       # 通知配置
+├── 📄 pending-leave-requests.json    # 待處理請假
+├── 📄 student-reminder-settings.json # 學生提醒設定
+├── 📄 system-settings.json           # 系統設定
+├── 📄 teacher_data.json              # 講師資料
+└── 📄 service-account.json           # Google Service Account（不提交）⚠️
+```
+
+---
+
+## 📁 主要目錄說明
+
+### `/docs/` - 文檔中心
+
+#### `/docs/api/`
+- `Calendar_API_Guide.txt` - Synology Calendar API 官方文檔
+
+#### `/docs/guides/`
+- 各種使用指南和操作說明
+- 中文使用指南
+
+#### `/docs/reports/`
+- 所有修復報告
+- 優化進度報告
+- 測試報告
+- 部署檢查清單
+
+#### `/docs/synology-drive/`
+- `DRIVE-INTEGRATION-SUMMARY.md` - Drive 整合總結 ⭐
+- `DRIVE-UPLOAD-API-USAGE.md` - 上傳 API 使用說明 ⭐
+- `SYNOLOGY-DRIVE-IMPLEMENTATION-GUIDE.md` - 實施指南 ⭐
+- `SYNOLOGY-DRIVE-INTEGRATION-PROGRESS.md` - 進度追蹤
+- `UPLOAD-API-COMPLETION-REPORT.md` - 上傳 API 完成報告
+
+### `/backups/` - 備份中心
+
+#### `/backups/server/`
+- `server.js.backup-YYYYMMDD-HHMMSS` - server.js 的時間戳備份
+- 按日期排序，最新的在最上面
+
+#### `/backups/configs/`
+- 所有配置檔案的備份（.json, .js 等）
+- 損壞的檔案（.broken）
+
+#### `/backups/project-snapshots/`
+- `backup-YYYYMMDD-HHMMSS/` - 完整專案快照
+- 包含完整的檔案結構和說明文檔
+
+### `/tests/` - 測試中心
+
+#### `/tests/manual/`
+- `test-drive-upload.js` - Drive 上傳測試 🆕
+- `test-drive-connection.js` - Drive 連線測試（需創建）
+- 其他手動測試腳本
+
+#### `/tests/integration/`
+- Postman Collections
+- API 整合測試
+
+#### `/tests/unit/`
+- 單元測試（待新增）
+
+### `/scripts/` - 工具腳本
+
+#### `/scripts/deployment/`
+- `REBUILD-AND-RESTART.sh` - 重建並重啟 Docker
+- `restart-server.sh` - 重啟伺服器
+
+#### `/scripts/maintenance/`
+- 資料庫維護腳本
+- 日誌清理腳本
+- 其他維護工具
+
+---
+
+## 📄 核心檔案說明
+
+### 伺服器核心
+
+| 檔案 | 說明 | 重要性 |
+|------|------|--------|
+| `server.js` | Express 主伺服器（19000+ 行） | ⭐⭐⭐ |
+| `package.json` | Node.js 專案配置 | ⭐⭐⭐ |
+| `.env.nas` | 環境變數（敏感資訊）| ⭐⭐⭐ |
+| `nodemon.json` | Nodemon 配置 | ⭐ |
+| `Dockerfile` | Docker 映像配置 | ⭐⭐ |
+| `docker-compose.yml` | Docker Compose 配置 | ⭐⭐ |
+
+### Synology 整合
+
+| 檔案 | 說明 | 狀態 |
+|------|------|------|
+| `synology-calendar-client.js` | Calendar API 客戶端 | ✅ 穩定 |
+| `synology-drive-client.js` | Drive API 客戶端 | 🆕 新增 |
+| `drive-path-manager.js` | Drive 路徑管理 | 🆕 新增 |
+| `learning-upload-helper.js` | 學習歷程上傳輔助 | 🆕 新增 |
+
+### 業務邏輯模組
+
+| 檔案 | 說明 |
+|------|------|
+| `attendance-queue-manager.js` | 簽到佇列管理（防衝突）|
+| `fast-attendance.js` | 快速簽到 API |
+| `notification-manager.js` | LINE 通知管理 |
+| `reminder-scheduler.js` | 課程提醒排程 |
+| `holiday-sync-manager.js` | 假期同步管理 |
+| `teacher-registry.js` | 講師註冊管理 |
+| `google-sheets-students.js` | 學生資料同步 |
+| `google-sheets-client.js` | Google Sheets 客戶端 |
+| `notion-course-sync-manager.js` | Notion 課程同步 |
+
+### 配置檔案
+
+| 檔案 | 說明 |
+|------|------|
+| `notification-config.json` | 通知配置 |
+| `system-settings.json` | 系統設定 |
+| `teacher_data.json` | 講師資料與顏色 |
+| `flex-message-templates.json` | LINE Flex Message 模板 |
+| `student-reminder-settings.json` | 學生提醒設定 |
+| `pending-leave-requests.json` | 待處理請假申請 |
+
+---
+
+## 🔍 檔案命名規範
+
+### 備份檔案
+```
+[原檔名].backup-YYYYMMDD-HHMMSS[-描述]
+```
+例如：
+- `server.js.backup-20251108-004413`
+- `server.js.backup-20251105-before-multi-marker-support`
+
+### 測試檔案
+```
+test-[功能名稱].js
+quick-test-[功能名稱].js
+```
+例如：
+- `test-drive-upload.js`
+- `test-drive-connection.js`
+- `quick-test-multiple-events.js`
+
+### 文檔檔案
+```
+[主題]-[類型].md
+```
+例如：
+- `DRIVE-INTEGRATION-SUMMARY.md`
+- `UPLOAD-API-COMPLETION-REPORT.md`
+- `HISTORY-UI-OPTIMIZATION-FIX.md`
+
+---
+
+## 🚫 不應該出現在根目錄的檔案
+
+以下類型的檔案應該移到對應目錄：
+
+❌ **備份檔案** → 移到 `/backups/`
+- `*.backup`
+- `*.backup-*`
+- `*.broken`
+
+❌ **文檔檔案** → 移到 `/docs/`
+- `*-REPORT.md`
+- `*-GUIDE.md`
+- `*-SUMMARY.md`
+- `*FIX*.md`
+- `*指南*.md`
+- `*報告*.md`
+
+❌ **測試檔案** → 移到 `/tests/`
+- `test-*.js`
+- `quick-test-*.js`
+- `*.postman_collection.json`
+
+❌ **日誌檔案** → 移到 `/logs/`
+- `server_*.log`
+- `*.log`（除了 `server.log`）
+
+---
+
+## 📝 維護建議
+
+### 定期清理
+
+#### 每週
+- 檢查並清理臨時日誌檔案
+- 整理測試資料
+
+#### 每月
+- 清理舊的備份檔案（保留最近 3 個月）
+- 歸檔舊的報告文檔
+
+#### 每季
+- 審查並更新文檔
+- 清理不再使用的模組
+
+### 新增檔案指引
+
+#### 新增測試腳本
+```bash
+# 放到對應目錄
+touch tests/manual/test-new-feature.js
+```
+
+#### 新增文檔
+```bash
+# 根據類型選擇目錄
+touch docs/guides/NEW-FEATURE-GUIDE.md
+touch docs/reports/NEW-FIX-REPORT.md
+```
+
+#### 創建備份
+```bash
+# 使用時間戳命名
+cp server.js backups/server/server.js.backup-$(date +%Y%m%d-%H%M%S)
+```
+
+---
+
+## 🔧 快速指令
+
+### 查看專案結構
+```bash
+tree -L 2 -I 'node_modules|archive|archived_*'
+```
+
+### 清理舊備份（保留最近 30 天）
+```bash
+find backups/server -name "*.backup-*" -mtime +30 -delete
+```
+
+### 統計程式碼行數
+```bash
+# 主伺服器
+wc -l server.js
+
+# 所有 JS 檔案（不含 node_modules）
+find . -name "*.js" -not -path "./node_modules/*" -not -path "./archive/*" | xargs wc -l
+```
+
+---
+
+## 📚 相關文檔
+
+- **README.md** - 專案說明
+- **AGENTS.md** - AI 代理指引
+- **.cursorrules** - Cursor 編碼規範
+- **docs/synology-drive/** - Synology Drive 整合文檔
+
+---
+
+## ⚠️ 重要提醒
+
+1. **永遠不要刪除** `archive/`, `archived_docs/`, `archived_scripts/`
+2. **備份重要檔案** 在修改前創建時間戳備份
+3. **保持根目錄整潔** 新檔案應放到對應目錄
+4. **文檔同步更新** 修改功能時同步更新相關文檔
+5. **環境變數安全** `.env.nas` 和 `service-account.json` 不要提交到 Git
+
+---
+
+**維護者**: FLB Team  
+**最後更新**: 2025-11-08  
+**版本**: 2.0
+

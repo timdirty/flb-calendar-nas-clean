@@ -1,0 +1,63 @@
+{
+  "watch": [
+    "*.js",
+    "public/**/*",
+    "utils/**/*"
+  ],
+  "ignore": [
+    "node_modules/**/*",
+    "data/**/*",
+    "logs/**/*",
+    "backups/**/*",
+    "archived_*/**/*",
+    "archive/**/*",
+    "*.log",
+    "*.backup",
+    "*.backup-*",
+    "*_Conflict.*",
+    "test-*.js",
+    ".git/**/*",
+    "docs/**/*",
+    "scripts/**/*"
+  ],
+  "ext": "js,json,html,css",
+  "delay": "2000",
+  "verbose": false,
+  "env": {
+    "NODE_ENV": "development"
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

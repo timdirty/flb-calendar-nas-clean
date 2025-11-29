@@ -1,0 +1,106 @@
+🔥 緊急修復 - 講師篩選與圖片預覽
+============================================
+
+✅ 已修復的問題：
+
+1️⃣ 圖片預覽 CSP 錯誤
+   修改位置：learning-record-upload.html 第 6 行
+   添加：img-src 'self' data: https: blob:
+   
+   現在可以預覽上傳的圖片了！
+
+2️⃣ 講師篩選提示
+   當未登入時，會顯示提示訊息：
+   「請先在主行事曆登入 LINE 以篩選您的課程」
+
+❌ 主要問題：localStorage 沒有 currentUser
+
+🔧 解決步驟：
+
+步驟 1: 打開主行事曆
+   https://calendar.funlearnbar.synology.me/perfect-calendar-optimized-complete2.html
+
+步驟 2: 確認 LINE 登入
+   - 查看右上角是否顯示您的名字
+   - 如果沒有，請點擊「綁定LINE」按鈕
+
+步驟 3: 檢查 localStorage
+   在主行事曆頁面，打開 Console（F12），輸入：
+   ```javascript
+   localStorage.getItem('currentUser')
+   ```
+   
+   應該看到類似這樣的結果：
+   {"userId":"Ucf9b239b708001ed...","displayName":"TIM","pictureUrl":"..."}
+
+步驟 4: 如果沒有 currentUser
+   在主行事曆 Console 輸入：
+   ```javascript
+   // 手動設定測試用戶（僅用於測試）
+   localStorage.setItem('currentUser', JSON.stringify({
+     userId: 'local-test-user',
+     displayName: '測試用戶',
+     pictureUrl: ''
+   }));
+   ```
+   
+   然後重新載入學習歷程頁面
+
+步驟 5: 重新測試
+   - 刷新學習歷程上傳頁面
+   - 應該不會再看到「未找到當前用戶資訊」
+   - 應該可以正確篩選課程
+
+🔍 調試命令：
+
+在主行事曆 Console：
+```javascript
+// 查看當前用戶
+console.log('currentUser:', localStorage.getItem('currentUser'));
+
+// 查看所有 localStorage
+for(let i=0; i<localStorage.length; i++) {
+  let key = localStorage.key(i);
+  console.log(key, ':', localStorage.getItem(key));
+}
+```
+
+📝 為什麼會沒有 currentUser？
+
+可能原因：
+1. 主行事曆還沒登入 LINE
+2. 登入後還沒重新載入頁面
+3. localStorage 被清除了
+4. LIFF 初始化失敗
+
+💡 快速解決方案：
+
+如果您急著測試，可以在主行事曆 Console 手動設定：
+
+```javascript
+// 設定為 TIM
+localStorage.setItem('currentUser', JSON.stringify({
+  userId: '',  // TIM 的 userId 是空的
+  displayName: 'TIM',
+  pictureUrl: ''
+}));
+
+// 或設定為其他講師，例如 YOKI
+localStorage.setItem('currentUser', JSON.stringify({
+  userId: 'Ucf9b239b708001ed44f0710704282655',
+  displayName: 'YOKI',
+  pictureUrl: ''
+}));
+```
+
+設定後，重新載入學習歷程頁面即可。
+
+🎯 預期結果：
+
+設定 currentUser 後：
+✅ Console 顯示「✅ 載入當前用戶」
+✅ Console 顯示「✅ 找到講師綁定」
+✅ Console 顯示「✅ 講師篩選完成」
+✅ 只顯示該講師的課程
+✅ 圖片可以正常預覽
+

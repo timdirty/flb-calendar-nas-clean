@@ -1,0 +1,216 @@
+🔧 LINE 通知 400 錯誤診斷與修復
+═══════════════════════════════════════════════════════════════
+
+問題現象
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ POST /api/test-line-notification 返回 400
+❌ 學生提醒發送失敗: status code 500
+❌ 前端顯示管理員 User ID 但後端可能沒載入
+
+可能原因
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. LINE_CHANNEL_ACCESS_TOKEN 儲存到 .env.nas 但容器沒重啟
+2. ADMIN_USER_ID 沒有寫入 .env.nas 或容器沒載入
+3. 容器的環境變數還是舊的
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 Step 1: 診斷（在 NAS 執行）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas
+
+echo "════════════════════════════════════════"
+echo "1. 檢查 .env.nas 文件內容"
+echo "════════════════════════════════════════"
+cat .env.nas | grep -E "LINE_CHANNEL_ACCESS_TOKEN|ADMIN_USER_ID|LIFF_CLIENT_ID"
+
+echo ""
+echo "════════════════════════════════════════"
+echo "2. 檢查容器內的環境變數"
+echo "════════════════════════════════════════"
+sudo docker exec flb-calendar-nas printenv | grep -E "LINE_CHANNEL_ACCESS_TOKEN|ADMIN_USER_ID|LIFF_CLIENT_ID"
+
+echo ""
+echo "════════════════════════════════════════"
+echo "3. 比較差異"
+echo "════════════════════════════════════════"
+echo "如果上面兩個結果不一樣，表示容器沒有載入新的環境變數！"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 Step 2: 修復（根據診斷結果）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+方案 A: 如果 .env.nas 缺少 ADMIN_USER_ID
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# 檢查管理員 User ID
+curl -s https://calendar.funlearnbar.synology.me/api/admin/info | jq '.data.userId'
+
+# 如果返回 null，表示沒設定，執行：
+curl -s -X POST https://calendar.funlearnbar.synology.me/api/admin/set \
+  -H "Content-Type: application/json" \
+  -d '{"adminUserId":"YOUR_LINE_USER_ID_HERE"}' | jq '.'
+
+# 替換 YOUR_LINE_USER_ID_HERE 為您的 LINE User ID
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+方案 B: 如果容器環境變數與 .env.nas 不一致
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# 重啟容器以載入新的環境變數
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas
+sudo docker-compose down
+sudo docker-compose up -d
+sleep 15
+
+# 再次檢查環境變數
+sudo docker exec flb-calendar-nas printenv | grep -E "LINE_CHANNEL_ACCESS_TOKEN|ADMIN_USER_ID"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+方案 C: 一鍵完整修復（推薦）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas && \
+echo "🔍 檢查配置..." && \
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" && \
+echo ".env.nas 內容:" && \
+cat .env.nas | grep -E "LINE_CHANNEL_ACCESS_TOKEN|ADMIN_USER_ID" && \
+echo "" && \
+echo "容器環境變數:" && \
+sudo docker exec flb-calendar-nas printenv | grep -E "LINE_CHANNEL_ACCESS_TOKEN|ADMIN_USER_ID" && \
+echo "" && \
+echo "🔄 重啟容器載入新配置..." && \
+sudo docker-compose down && \
+sudo docker-compose up -d && \
+sleep 15 && \
+echo "" && \
+echo "✅ 驗證環境變數:" && \
+sudo docker exec flb-calendar-nas printenv | grep -E "LINE_CHANNEL_ACCESS_TOKEN|ADMIN_USER_ID" && \
+echo "" && \
+echo "🧪 測試 LINE 通知:" && \
+curl -s -X POST https://calendar.funlearnbar.synology.me/api/test-line-notification \
+  -H "Content-Type: application/json" \
+  -d '{"message":"🧪 測試訊息"}' | jq '.'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🧪 Step 3: 驗證修復
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+測試 1: 檢查 API 狀態
+curl -s https://calendar.funlearnbar.synology.me/api/admin/info | jq '.'
+
+預期結果:
+{
+  "success": true,
+  "data": {
+    "userId": "U0291ce9023f7911a99cf79a54be90de8",  ← 應該有值
+    "hasToken": true                                 ← 應該是 true
+  }
+}
+
+測試 2: 測試 LINE 通知
+curl -s -X POST https://calendar.funlearnbar.synology.me/api/test-line-notification \
+  -H "Content-Type: application/json" \
+  -d '{"message":"測試"}' | jq '.'
+
+✅ 成功回應:
+{
+  "success": true,
+  "message": "LINE 通知測試成功",
+  ...
+}
+
+❌ 失敗回應（400）:
+{
+  "success": false,
+  "message": "未設定管理員 User ID",
+  "hint": "請先在管理員配置中設定 User ID"
+}
+
+❌ 失敗回應（500）:
+{
+  "success": false,
+  "message": "LINE_CHANNEL_ACCESS_TOKEN 未設定",
+  "hint": "請先在 LINE API 設定中設定 Channel Access Token"
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 Step 4: 講師管理和學生管理檢查
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+問題 1: "講師管理是假的"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# 測試講師 API
+curl -s https://calendar.funlearnbar.synology.me/api/teachers | jq '.'
+
+# 檢查資料文件
+cat teacher_data.json | jq '.'
+
+# 如果 API 返回空或錯誤，檢查文件是否存在
+ls -lh teacher_data.json
+
+問題 2: "學生管理沒有正確顯示 LINE User ID"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# 測試學生 API
+curl -s https://calendar.funlearnbar.synology.me/api/students | jq '.'
+
+# 檢查資料文件
+cat public/student_data.json | jq '.[0]'
+
+# 檢查學生資料結構
+cat public/student_data.json | jq '.[0] | keys'
+
+預期學生資料應包含:
+{
+  "name": "學生姓名",
+  "course": "課程",
+  "lineUserId": "LINE User ID",  ← 應該有這個欄位
+  ...
+}
+
+如果沒有 lineUserId 欄位，需要在 student_data.json 中添加。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 完整修復流程總結
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. 確認 LINE_CHANNEL_ACCESS_TOKEN 在 .env.nas 中
+2. 確認 ADMIN_USER_ID 在 .env.nas 中
+3. 重啟 Docker 容器載入新的環境變數
+4. 驗證容器內環境變數已更新
+5. 測試 LINE 通知 API
+6. 檢查講師和學生資料文件
+7. 在瀏覽器刷新 admin-dashboard.html 測試
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 立即執行（複製整段到 NAS）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas && \
+echo "🔍 當前配置檢查" && \
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" && \
+cat .env.nas | grep -E "LINE_CHANNEL|ADMIN_USER" && \
+echo "" && \
+echo "🔄 重啟容器" && \
+sudo docker-compose restart && \
+sleep 15 && \
+echo "" && \
+echo "✅ 容器環境變數" && \
+sudo docker exec flb-calendar-nas printenv | grep -E "LINE_CHANNEL|ADMIN_USER" && \
+echo "" && \
+echo "🧪 測試通知" && \
+curl -s -X POST https://calendar.funlearnbar.synology.me/api/test-line-notification \
+  -H "Content-Type: application/json" \
+  -d '{"message":"測試"}' | jq '.'
+
+

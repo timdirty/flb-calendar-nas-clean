@@ -1,0 +1,1441 @@
+/**
+ * ============================================
+ * 學習歷程上傳輔助模組（Drive API 版本）
+ * ============================================
+ * 功能：簡化學習歷程上傳到 Synology Drive 的邏輯
+ * 版本：1.0.0
+ * 日期：2025-11-08
+ */
+
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+
+const PHOTO_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'bmp', 'avif']);
+const VIDEO_EXTENSIONS = new Set(['mp4', 'mov', 'avi', 'webm', 'mkv', 'm4v', 'mpg', 'mpeg']);
+
+class LearningUploadHelper {
+    constructor(driveClient, drivePathManager) {
+        this.driveClient = driveClient;
+        this.pathManager = drivePathManager;
+        this.driveRootDepth = (this.pathManager.driveRoot || '').split('/').filter(Boolean).length;
+    }
+
+    /**
+     * ==================== 學生記錄上傳 ====================
+     */
+
+    /**
+     * 上傳學生記錄（照片、影片、評語）
+     */
+    async uploadStudentRecord(params) {
+        const {
+            semester,
+            courseName,
+            date,
+            topic,
+            studentName,
+            photos = [],
+            videos = [],
+            comment = ''
+        } = params;
+
+        console.log('📤 [學習歷程] 上傳學生記錄:', {
+            semester,
+            courseName,
+            date,
+            studentName,
+            photoCount: photos.length,
+            videoCount: videos.length
+        });
+
+        // 驗證必要欄位
+        if (!semester || !courseName || !date || !studentName) {
+            throw new Error('缺少必要欄位: semester, courseName, date, studentName');
+        }
+
+        // 🔥 驗證門檻（調整為更靈活的規則）
+        // 至少需要 1 張照片、1 個影片或評語
+        const hasComment = comment && comment.trim().length > 0;
+        if (photos.length === 0 && videos.length === 0 && !hasComment) {
+            throw new Error('至少需要上傳 1 張照片、1 個影片或填寫評語');
+        }
+
+        // 🔥 評語驗證改為警告而非錯誤（允許稍後補充）
+        // 如果沒有評語或評語太短，只記錄警告，不阻止上傳
+        if (!comment || comment.trim().length < 20) {
+            console.warn('⚠️ [學習歷程] 評語未填寫或字數不足 20 字，建議補充');
+            // 不再拋出錯誤，允許上傳後再補充評語
+        }
+
+        // 構建 Drive 路徑
+        const basePath = this.pathManager.buildStudentRecordPath(
+            semester,
+            courseName,
+            date,
+            topic,
+            studentName
+        );
+
+        console.log('📁 [Drive 上傳] 目標路徑:', basePath);
+
+        // 確保目錄存在
+        await this.driveClient.ensureFolderExists(basePath);
+
+        // 上傳結果
+        const uploadResults = {
+            photos: [],
+            videos: [],
+            comment: null,
+            metadata: null
+        };
+
+        // 上傳照片
+        if (photos.length > 0) {
+            console.log('📸 [Drive 上傳] 上傳', photos.length, '張照片');
+            
+            for (let i = 0; i < photos.length; i++) {
+                const photo = photos[i];
+                const timestamp = Date.now();
+                const random = Math.random().toString(36).substring(2, 8);
+                const ext = path.extname(photo.originalname || photo.name || '.jpg');
+                const fileName = `${studentName}_photo_${i + 1}_${timestamp}_${random}${ext}`;
+                const filePath = path.posix.join(basePath, fileName);
+                
+                try {
+                    const result = await this.driveClient.uploadFile(photo.buffer, filePath, {
+                        contentType: photo.mimetype || 'image/jpeg',
+                        overwrite: false
+                    });
+                    
+                    uploadResults.photos.push({
+                        originalName: photo.originalname || photo.name,
+                        drivePath: result.path,
+                        proxyUrl: `/api/drive-media/${result.path.substring(1)}`,  // 🔥 修复：添加缺失的斜杠
+                        size: photo.size || photo.buffer.length,
+                        fileName: fileName,
+                        mimeType: photo.mimetype || 'image/jpeg'
+                    });
+                    
+                    console.log(`✅ [Drive 上傳] 照片 ${i + 1}/${photos.length} 完成`);
+                } catch (error) {
+                    console.error(`❌ [Drive 上傳] 照片 ${i + 1} 失敗:`, error.message);
+                    throw new Error(`照片上傳失敗: ${photo.originalname || photo.name}`);
+                }
+            }
+        }
+
+        // 上傳影片
+        if (videos.length > 0) {
+            console.log('🎥 [Drive 上傳] 上傳', videos.length, '個影片');
+            
+            for (let i = 0; i < videos.length; i++) {
+                const video = videos[i];
+                const timestamp = Date.now();
+                const random = Math.random().toString(36).substring(2, 8);
+                const ext = path.extname(video.originalname || video.name || '.mp4');
+                const fileName = `${studentName}_video_${i + 1}_${timestamp}_${random}${ext}`;
+                const filePath = path.posix.join(basePath, fileName);
+                
+                try {
+                    const result = await this.driveClient.uploadFile(video.buffer, filePath, {
+                        contentType: video.mimetype || 'video/mp4',
+                        overwrite: false
+                    });
+                    
+                    uploadResults.videos.push({
+                        originalName: video.originalname || video.name,
+                        drivePath: result.path,
+                        proxyUrl: `/api/drive-media/${result.path.substring(1)}`,  // 🔥 修复：添加缺失的斜杠
+                        size: video.size || video.buffer.length,
+                        fileName: fileName,
+                        mimeType: video.mimetype || 'video/mp4'
+                    });
+                    
+                    console.log(`✅ [Drive 上傳] 影片 ${i + 1}/${videos.length} 完成`);
+                } catch (error) {
+                    console.error(`❌ [Drive 上傳] 影片 ${i + 1} 失敗:`, error.message);
+                    throw new Error(`影片上傳失敗: ${video.originalname || video.name}`);
+                }
+            }
+        }
+
+        // 🔥 上傳評語（如果有評語）
+        if (comment && comment.trim().length > 0) {
+            const commentPath = path.posix.join(basePath, 'comment.txt');
+            const commentBuffer = Buffer.from(comment, 'utf-8');
+            
+            try {
+                await this.driveClient.uploadFile(commentBuffer, commentPath, {
+                    contentType: 'text/plain',
+                    overwrite: true
+                });
+                
+                uploadResults.comment = {
+                    text: comment,
+                    length: comment.length,
+                    path: commentPath
+                };
+                
+                console.log('✅ [Drive 上傳] 評語已儲存');
+            } catch (error) {
+                console.error('❌ [Drive 上傳] 評語儲存失敗:', error.message);
+                throw new Error('評語儲存失敗');
+            }
+        } else {
+            console.log('📝 [Drive 上傳] 沒有評語，跳過評語儲存');
+        }
+
+        // 上傳元資料
+        const metadata = {
+            semester,
+            courseName,
+            date,
+            topic,
+            studentName,
+            uploadTime: new Date().toISOString(),
+            comment: comment,
+            photos: uploadResults.photos.map(p => ({
+                fileName: p.fileName,
+                size: p.size,
+                proxyUrl: p.proxyUrl
+            })),
+            videos: uploadResults.videos.map(v => ({
+                fileName: v.fileName,
+                size: v.size,
+                proxyUrl: v.proxyUrl
+            })),
+            totalPhotos: uploadResults.photos.length,
+            totalVideos: uploadResults.videos.length
+        };
+
+        const metaPath = this.pathManager.getRecordMetaPath(basePath);
+        const metaBuffer = Buffer.from(JSON.stringify(metadata, null, 2), 'utf-8');
+        
+        try {
+            await this.driveClient.uploadFile(metaBuffer, metaPath, {
+                contentType: 'application/json',
+                overwrite: true
+            });
+            
+            uploadResults.metadata = metadata;
+            
+            console.log('✅ [Drive 上傳] 元資料已儲存');
+        } catch (error) {
+            console.error('❌ [Drive 上傳] 元資料儲存失敗:', error.message);
+            // 元資料失敗不影響主流程
+        }
+
+        // 🔁 同步新媒體索引（建立 photos-meta.json / videos-meta.json）
+        const mediaMetaResult = await this._syncMediaMeta(basePath, {
+            photos: uploadResults.photos,
+            videos: uploadResults.videos
+        });
+
+        if (mediaMetaResult.photos.length > 0) {
+            uploadResults.newMediaPhotos = mediaMetaResult.photos;
+        }
+        if (mediaMetaResult.videos.length > 0) {
+            uploadResults.newMediaVideos = mediaMetaResult.videos;
+        }
+
+        console.log('✅ [學習歷程] 學生記錄上傳完成:', {
+            photos: uploadResults.photos.length,
+            videos: uploadResults.videos.length,
+            basePath
+        });
+
+        return {
+            success: true,
+            basePath,
+            ...uploadResults
+        };
+    }
+
+    /**
+     * ==================== 分片上傳整合 ====================
+     */
+
+    async uploadMediaFromLocalFile(params = {}) {
+        const {
+            localPath,
+            originalName,
+            mimeType = 'application/octet-stream',
+            mediaCategory = 'auto', // 'photo' | 'video' | 'auto'
+            semester,
+            courseName,
+            date,
+            topic,
+            studentName,
+            isOverview = false
+        } = params;
+
+        if (!localPath || !fs.existsSync(localPath)) {
+            throw new Error('uploadMediaFromLocalFile: localPath 不存在');
+        }
+        if (!semester || !courseName || !date) {
+            throw new Error('uploadMediaFromLocalFile: 缺少必要欄位 (semester/courseName/date)');
+        }
+
+        const stat = await fs.promises.stat(localPath);
+        const basePath = isOverview
+            ? this.pathManager.buildOverviewRecordPath(semester, courseName, date, topic)
+            : this.pathManager.buildStudentRecordPath(semester, courseName, date, topic, studentName);
+
+        await this.driveClient.ensureFolderExists(basePath);
+
+        const inferredIsPhoto = mediaCategory === 'photo' || (mediaCategory === 'auto' && /^image\//i.test(mimeType));
+        const fileType = inferredIsPhoto ? 'photo' : 'video';
+        const ext = path.extname(originalName || localPath) || (fileType === 'photo' ? '.jpg' : '.mp4');
+        const baseName = path.basename(originalName || localPath, ext) || (fileType === 'photo' ? 'photo' : 'video');
+        const sanitizedBase = this.pathManager.sanitizeComponent(baseName) || (fileType === 'photo' ? 'photo' : 'video');
+        const fileName = this.pathManager.generateUniqueFileName(sanitizedBase, ext);
+        const remotePath = path.posix.join(basePath, fileName);
+
+        await this.driveClient.uploadFile(localPath, remotePath, {
+            contentType: mimeType,
+            overwrite: false
+        });
+
+        const proxyUrl = `/api/drive-media/${remotePath.replace(/^\/+/, '')}`;
+        const uploadsPayload = fileType === 'photo'
+            ? { photos: [{
+                    fileName,
+                    originalName: originalName || baseName,
+                    size: stat.size,
+                    proxyUrl,
+                    mimeType
+                }], videos: [] }
+            : { photos: [], videos: [{
+                    fileName,
+                    originalName: originalName || baseName,
+                    size: stat.size,
+                    proxyUrl,
+                    mimeType
+                }] };
+
+        const metaResult = await this._syncMediaMeta(basePath, uploadsPayload);
+        const mediaEntry = fileType === 'photo' ? (metaResult.photos[0] || null) : (metaResult.videos[0] || null);
+
+        return {
+            success: true,
+            basePath,
+            remotePath,
+            proxyUrl,
+            fileName,
+            mimeType,
+            size: stat.size,
+            type: fileType,
+            mediaEntry
+        };
+    }
+
+    /**
+     * ==================== 課程總覽上傳 ====================
+     */
+
+    /**
+     * 上傳課程總覽（照片、影片、摘要）
+     */
+    async uploadOverviewRecord(params) {
+        const {
+            semester,
+            courseName,
+            date,
+            topic,
+            photos = [],
+            videos = [],
+            summary = ''
+        } = params;
+
+        console.log('📤 [學習歷程] 上傳課程總覽:', {
+            semester,
+            courseName,
+            date,
+            photoCount: photos.length,
+            videoCount: videos.length
+        });
+
+        // 驗證必要欄位
+        if (!semester || !courseName || !date) {
+            throw new Error('缺少必要欄位: semester, courseName, date');
+        }
+
+        // 構建 Drive 路徑（若 topic 缺失，後端容錯：從 courseName 推導）
+        let safeTopic = (topic && String(topic).trim().length)
+            ? topic
+            : this.pathManager.deriveTopicFromCourseName(courseName);
+        if (!safeTopic || String(safeTopic).trim().length === 0) safeTopic = '課程';
+        const basePath = this.pathManager.buildOverviewRecordPath(
+            semester,
+            courseName,
+            date,
+            safeTopic
+        );
+
+        console.log('📁 [Drive 上傳] 目標路徑:', basePath);
+
+        // 確保目錄存在
+        await this.driveClient.ensureFolderExists(basePath);
+
+        // 上傳結果
+        const uploadResults = {
+            photos: [],
+            videos: [],
+            summary: null,
+            metadata: null
+        };
+
+        // 上傳照片
+        if (photos.length > 0) {
+            console.log('📸 [Drive 上傳] 上傳', photos.length, '張課程總覽照片');
+            
+            for (let i = 0; i < photos.length; i++) {
+                const photo = photos[i];
+                const timestamp = Date.now();
+                const random = Math.random().toString(36).substring(2, 8);
+                const ext = path.extname(photo.originalname || photo.name || '.jpg');
+                const fileName = `overview_photo_${i + 1}_${timestamp}_${random}${ext}`;
+                const filePath = path.posix.join(basePath, fileName);
+                
+                try {
+                    const result = await this.driveClient.uploadFile(photo.buffer, filePath, {
+                        contentType: photo.mimetype || 'image/jpeg',
+                        overwrite: false
+                    });
+                    
+                    uploadResults.photos.push({
+                        originalName: photo.originalname || photo.name,
+                        drivePath: result.path,
+                        proxyUrl: `/api/drive-media/${result.path.substring(1)}`,  // 🔥 修复：添加缺失的斜杠
+                        size: photo.size || photo.buffer.length,
+                        fileName: fileName,
+                        mimeType: photo.mimetype || 'image/jpeg'
+                    });
+                    
+                    console.log(`✅ [Drive 上傳] 照片 ${i + 1}/${photos.length} 完成`);
+                } catch (error) {
+                    console.error(`❌ [Drive 上傳] 照片 ${i + 1} 失敗:`, error.message);
+                    // 課程總覽照片失敗不中斷流程
+                }
+            }
+        }
+
+        // 上傳影片
+        if (videos.length > 0) {
+            console.log('🎥 [Drive 上傳] 上傳', videos.length, '個課程總覽影片');
+            
+            for (let i = 0; i < videos.length; i++) {
+                const video = videos[i];
+                const timestamp = Date.now();
+                const random = Math.random().toString(36).substring(2, 8);
+                const ext = path.extname(video.originalname || video.name || '.mp4');
+                const fileName = `overview_video_${i + 1}_${timestamp}_${random}${ext}`;
+                const filePath = path.posix.join(basePath, fileName);
+                
+                try {
+                    const result = await this.driveClient.uploadFile(video.buffer, filePath, {
+                        contentType: video.mimetype || 'video/mp4',
+                        overwrite: false
+                    });
+                    
+                    uploadResults.videos.push({
+                        originalName: video.originalname || video.name,
+                        drivePath: result.path,
+                        proxyUrl: `/api/drive-media/${result.path.substring(1)}`,  // 🔥 修复：添加缺失的斜杠
+                        size: video.size || video.buffer.length,
+                        fileName: fileName,
+                        mimeType: video.mimetype || 'video/mp4'
+                    });
+                    
+                    console.log(`✅ [Drive 上傳] 影片 ${i + 1}/${videos.length} 完成`);
+                } catch (error) {
+                    console.error(`❌ [Drive 上傳] 影片 ${i + 1} 失敗:`, error.message);
+                    // 課程總覽影片失敗不中斷流程
+                }
+            }
+        }
+
+        // 🔁 同步課程總覽的媒體 meta
+        const overviewMetaResult = await this._syncMediaMeta(basePath, {
+            photos: uploadResults.photos,
+            videos: uploadResults.videos
+        });
+
+        if (overviewMetaResult.photos.length > 0) {
+            uploadResults.newMediaPhotos = overviewMetaResult.photos;
+        }
+        if (overviewMetaResult.videos.length > 0) {
+            uploadResults.newMediaVideos = overviewMetaResult.videos;
+        }
+
+        // 上傳摘要
+        if (summary && summary.trim().length > 0) {
+            const summaryPath = path.posix.join(basePath, 'summary.txt');
+            const summaryBuffer = Buffer.from(summary, 'utf-8');
+            
+            try {
+                await this.driveClient.uploadFile(summaryBuffer, summaryPath, {
+                    contentType: 'text/plain',
+                    overwrite: true
+                });
+                
+                uploadResults.summary = {
+                    text: summary,
+                    length: summary.length,
+                    path: summaryPath
+                };
+                
+                console.log('✅ [Drive 上傳] 課程摘要已儲存');
+            } catch (error) {
+                console.error('❌ [Drive 上傳] 課程摘要儲存失敗:', error.message);
+                // 摘要失敗不中斷流程
+            }
+        }
+
+        // 上傳元資料
+        const metadata = {
+            semester,
+            courseName,
+            date,
+            topic: safeTopic,
+            isOverview: true,
+            uploadTime: new Date().toISOString(),
+            summary: summary || '',
+            photos: uploadResults.photos.map(p => ({
+                fileName: p.fileName,
+                size: p.size,
+                proxyUrl: p.proxyUrl
+            })),
+            videos: uploadResults.videos.map(v => ({
+                fileName: v.fileName,
+                size: v.size,
+                proxyUrl: v.proxyUrl
+            })),
+            totalPhotos: uploadResults.photos.length,
+            totalVideos: uploadResults.videos.length
+        };
+
+        const metaPath = this.pathManager.getRecordMetaPath(basePath);
+        const metaBuffer = Buffer.from(JSON.stringify(metadata, null, 2), 'utf-8');
+        
+        try {
+            await this.driveClient.uploadFile(metaBuffer, metaPath, {
+                contentType: 'application/json',
+                overwrite: true
+            });
+            
+            uploadResults.metadata = metadata;
+            
+            console.log('✅ [Drive 上傳] 元資料已儲存');
+        } catch (error) {
+            console.error('❌ [Drive 上傳] 元資料儲存失敗:', error.message);
+        }
+
+        console.log('✅ [學習歷程] 課程總覽上傳完成:', {
+            photos: uploadResults.photos.length,
+            videos: uploadResults.videos.length,
+            basePath
+        });
+
+        return {
+            success: true,
+            basePath,
+            ...uploadResults
+        };
+    }
+
+    /**
+     * ==================== 路徑解析輔助 ====================
+     */
+
+    /**
+     * 從前端參數解析學期、課程名稱、日期、主題
+     */
+    parseUploadParams(reqBody) {
+        const {
+            course,
+            period,
+            date,
+            coursePeriod,
+            relativePath
+        } = reqBody;
+
+        // 方案 1：使用 coursePeriod（完整課程名稱）
+        if (coursePeriod) {
+            // 例如：「114-1/SPIKE 三 18:30-20:30 第8週」
+            const parts = coursePeriod.split('/');
+            if (parts.length >= 2) {
+                return {
+                    semester: parts[0],
+                    courseName: parts.slice(1).join('/'),
+                    date: date,
+                    topic: null // 需要從其他地方獲取
+                };
+            }
+        }
+
+        // 方案 2：使用 relativePath
+        if (relativePath) {
+            // 例如：「114-1/SPIKE.../2025-11-05/學生名」
+            const parsed = this.pathManager.parsePath(relativePath);
+            return {
+                semester: parsed.semester,
+                courseName: parsed.courseName,
+                date: parsed.date,
+                topic: parsed.topic
+            };
+        }
+
+        // 方案 3：使用 course + period
+        if (course && period) {
+            // 需要組合成完整課程名稱
+            // 這部分邏輯需要根據前端傳遞的格式調整
+            return {
+                semester: '114-1', // 需要從某處獲取
+                courseName: `${course} ${period}`,
+                date: date,
+                topic: null
+            };
+        }
+
+        throw new Error('無法解析上傳參數，缺少 coursePeriod 或 relativePath');
+    }
+
+    /**
+     * ==================== 歷史記錄查詢 ====================
+     */
+
+    /**
+     * 列出指定條件的學習歷程記錄
+     * @param {Object} params - 查詢參數
+     * @param {string} params.semester - 學期（選填）
+     * @param {string} params.courseName - 課程名稱（選填）
+     * @param {string} params.date - 日期（選填）
+     * @returns {Promise<Array>} 記錄列表
+     */
+    async listLearningRecords(params = {}) {
+        const { semester, courseName, date } = params;
+        
+        console.log('🔍 [歷史記錄] 查詢參數:', { semester, courseName, date });
+        
+        // 🔥 清理 courseName 中的特殊字元（與 buildPath 保持一致）
+        const sanitizedCourseName = courseName ? this.pathManager.sanitizeComponent(courseName) : courseName;
+        const allowSemesterFallback = !courseName;
+        
+        const buildPathCandidates = (courseComponent) => {
+            const candidates = [];
+            if (semester && courseComponent && date) {
+                candidates.push(`${this.pathManager.driveRoot}/${semester}/${courseComponent}/${date}`.replace(/\/+/g, '/'));
+            }
+            if (semester && courseComponent) {
+                candidates.push(`${this.pathManager.driveRoot}/${semester}/${courseComponent}`.replace(/\/+/g, '/'));
+            }
+            return candidates;
+        };
+        
+        const searchPathCandidates = [];
+        const pushCandidate = (p, label) => {
+            if (p && !searchPathCandidates.includes(p)) {
+                searchPathCandidates.push(p);
+            }
+        };
+        
+        // 優先使用清理後的課程名稱
+        if (sanitizedCourseName) {
+            buildPathCandidates(sanitizedCourseName).forEach(p => pushCandidate(p));
+        }
+        // 舊資料夾可能保留冒號，加入原始課程名稱作為候選
+        if (courseName && sanitizedCourseName !== courseName) {
+            buildPathCandidates(courseName).forEach(p => pushCandidate(p));
+        }
+        if (allowSemesterFallback) {
+            if (semester) {
+                pushCandidate(`${this.pathManager.driveRoot}/${semester}`.replace(/\/+/g, '/'));
+            }
+            pushCandidate(this.pathManager.driveRoot);
+        }
+        
+        let searchPath = searchPathCandidates[0];
+        for (const candidate of searchPathCandidates) {
+            const exists = await this._directoryExists(candidate);
+            if (exists) {
+                searchPath = candidate;
+                if (candidate !== searchPathCandidates[0]) {
+                    console.log('🔀 [歷史記錄] 使用候選搜尋路徑:', candidate);
+                }
+                break;
+            }
+        }
+        
+        if (!searchPath) {
+            console.log('ℹ️ [歷史記錄] 目標課程資料夾不存在，直接返回空結果');
+            return [];
+        }
+        
+        console.log('🔍 [歷史記錄] 最終搜尋路徑:', searchPath);
+        
+        try {
+            await this.driveClient.ensureAuthenticated();
+            
+            // 遞迴掃描所有學習記錄
+            const records = await this._scanRecordsRecursive(searchPath, { semester, courseName, date });
+            
+            console.log('✅ [歷史記錄] 找到', records.length, '筆記錄');
+            
+            return records;
+        } catch (error) {
+            console.error('❌ [歷史記錄] 查詢失敗:', error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * 遞迴掃描目錄，找出所有學習記錄
+     * @private
+     */
+    async _scanRecordsRecursive(dirPath, filters = {}) {
+        const records = [];
+        
+        try {
+            const depthFromRoot = this._getDepthFromRoot(dirPath);
+            const shouldCheckMetadata = depthFromRoot >= 4;
+            if (shouldCheckMetadata) {
+                // 🔥 首先檢查當前目錄本身是否為記錄目錄
+                // 🔥 文件名為 record-meta.json（前端上傳時使用的命名）
+                const currentMetadataPath = `${dirPath}/record-meta.json`.replace(/\/+/g, '/');
+                const currentMetadataExists = await this._fileExists(currentMetadataPath);
+                
+                if (currentMetadataExists) {
+                    // 當前目錄就是記錄目錄
+                    try {
+                        const metadata = await this._readMetadata(currentMetadataPath);
+                        console.log('🔍 [歷史記錄] 讀取 metadata:', {
+                            dirPath,
+                            'metadata.studentName': metadata.studentName,
+                            'metadata.isOverview': metadata.isOverview,
+                            'metadata所有keys': Object.keys(metadata || {})
+                        });
+                        const record = await this._buildRecordFromMetadata(dirPath, metadata);
+                        console.log('🔍 [歷史記錄] 構建後的記錄:', {
+                            dirPath,
+                            'record.studentName': record.studentName,
+                            'record.isOverview': record.isOverview,
+                            'record.photos數量': record.photos ? record.photos.length : 0,
+                            'record.videos數量': record.videos ? record.videos.length : 0
+                        });
+                        records.push(record);
+                        console.log('✅ [歷史記錄] 找到記錄:', dirPath);
+                        return records; // 找到記錄後直接返回，不再遞歸
+                    } catch (error) {
+                        console.warn('⚠️ [歷史記錄] 讀取當前目錄 metadata 失敗:', currentMetadataPath, error.message);
+                    }
+                }
+            }
+            
+            // 如果當前目錄不是記錄目錄，則遞歸掃描子目錄
+            const result = await this.driveClient.listFiles(dirPath);
+            const files = result.files || [];
+            
+            for (const file of files) {
+                const filePath = `${dirPath}/${file.name}`.replace(/\/+/g, '/');
+                
+                if (file.isdir) {
+                    // 遞歸掃描子目錄
+                    const subRecords = await this._scanRecordsRecursive(filePath, filters);
+                    records.push(...subRecords);
+                }
+            }
+        } catch (error) {
+            if (error && error.code === 'DRIVE_PATH_UNAVAILABLE') {
+                console.warn('⚠️ [歷史記錄] 目錄不可用，略過掃描:', dirPath);
+            } else if (!error.message.includes('不存在')) {
+                console.warn('⚠️ [歷史記錄] 掃描目錄失敗:', dirPath, error.message);
+            }
+        }
+        
+        return records;
+    }
+
+    /**
+     * 檢查檔案是否存在
+     * @private
+     */
+    async _fileExists(filePath) {
+        try {
+            await this.driveClient.getFileStream(filePath);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    /**
+     * 檢查目錄是否存在
+     * @private
+     */
+    async _directoryExists(dirPath) {
+        try {
+            const result = await this.driveClient.listFiles(dirPath);
+            return Array.isArray(result.files);
+        } catch (error) {
+            const message = error?.message || '';
+            if (error && error.code === 'DRIVE_PATH_UNAVAILABLE') {
+                console.warn('⚠️ [歷史記錄] 目錄不可用（Synology 408）:', dirPath);
+                return false;
+            }
+            if (message.includes('404') || message.includes('不存在')) {
+                console.warn('⚠️ [歷史記錄] 目錄不存在:', dirPath);
+                return false;
+            }
+            console.warn('⚠️ [歷史記錄] 無法確認目錄是否存在:', dirPath, message);
+            return false;
+        }
+    }
+
+    _getDepthFromRoot(fullPath) {
+        const normalized = String(fullPath || '').split('/').filter(Boolean).length;
+        return Math.max(0, normalized - (this.driveRootDepth || 0));
+    }
+
+    _generateMediaId(prefix) {
+        try {
+            return `${prefix || 'media'}-${crypto.randomUUID()}`;
+        } catch (error) {
+            return `${prefix || 'media'}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+        }
+    }
+
+    async _uploadJson(filePath, data, label) {
+        const buffer = Buffer.from(JSON.stringify(data, null, 2), 'utf-8');
+        await this.driveClient.uploadFile(buffer, filePath, {
+            contentType: 'application/json',
+            overwrite: true
+        });
+        console.log(`✅ [新媒體] ${label} 已更新:`, filePath);
+    }
+
+    async _updateDriveMetaFile(basePath, type, uploads) {
+        if (!Array.isArray(uploads) || uploads.length === 0) {
+            return [];
+        }
+
+        const metaPath = type === 'photo'
+            ? this.pathManager.getPhotosMetaPath(basePath)
+            : this.pathManager.getVideosMetaPath(basePath);
+        const label = type === 'photo' ? 'photos-meta.json' : 'videos-meta.json';
+
+        try {
+            const existingList = await this._readOptionalJson(metaPath, { label, fallback: [] }) || [];
+            const normalizedList = Array.isArray(existingList) ? existingList.slice() : [];
+            const entryMap = new Map();
+            normalizedList.forEach(entry => {
+                if (entry && entry.filename) {
+                    entryMap.set(entry.filename, entry);
+                }
+            });
+
+            const createdEntries = [];
+            const nowIso = new Date().toISOString();
+
+            uploads.forEach(upload => {
+                if (!upload || !upload.fileName) {
+                    return;
+                }
+
+                const filename = upload.fileName;
+                const existing = entryMap.get(filename) || {};
+                const id = existing.id || this._generateMediaId(type === 'photo' ? 'photo' : 'video');
+                const baseEntry = {
+                    id,
+                    filename,
+                    originalName: upload.originalName || upload.name || existing.originalName || filename,
+                    fileSize: upload.size || existing.fileSize || 0,
+                    uploadedAt: existing.uploadedAt || nowIso,
+                    status: existing.status || 'ready',
+                    source: existing.source || 'drive',
+                    proxyUrl: upload.proxyUrl || existing.proxyUrl || null
+                };
+
+                if (type === 'photo') {
+                    baseEntry.thumbnails = existing.thumbnails || {};
+                } else {
+                    baseEntry.thumbnailFilename = existing.thumbnailFilename || null;
+                    baseEntry.transcodedFilename = existing.transcodedFilename || null;
+                    baseEntry.mimeType = upload.mimeType || existing.mimeType || 'video/mp4';
+                }
+
+                entryMap.set(filename, baseEntry);
+                upload.id = id; // 🔥 立即回傳 photoId/videoId 供前端使用
+                createdEntries.push(baseEntry);
+            });
+
+            const finalList = Array.from(entryMap.values());
+            await this._uploadJson(metaPath, finalList, label);
+            return createdEntries;
+        } catch (error) {
+            console.warn(`⚠️ [新媒體] 無法更新 ${label}:`, error.message);
+            return [];
+        }
+    }
+
+    async _syncMediaMeta(basePath, uploads = {}) {
+        const result = { photos: [], videos: [] };
+
+        result.photos = await this._updateDriveMetaFile(basePath, 'photo', uploads.photos);
+        result.videos = await this._updateDriveMetaFile(basePath, 'video', uploads.videos);
+
+        return result;
+    }
+
+    async _removeRecordMetadataEntry(recordPath, type, filename) {
+        const metaPath = this.pathManager.getRecordMetaPath(recordPath);
+        const metadata = await this._readOptionalJson(metaPath, { label: 'record-meta.json', fallback: null });
+        if (!metadata) return false;
+        const targetKey = type === 'video' ? 'videos' : 'photos';
+        const totalKey = type === 'video' ? 'totalVideos' : 'totalPhotos';
+        if (!Array.isArray(metadata[targetKey]) || metadata[targetKey].length === 0) {
+            return false;
+        }
+        const beforeLength = metadata[targetKey].length;
+        metadata[targetKey] = metadata[targetKey].filter(entry => {
+            if (!entry) return true;
+            if (typeof entry === 'string') return entry !== filename;
+            const name = entry.fileName || entry.filename || entry.name;
+            return name !== filename;
+        });
+        const changed = metadata[targetKey].length !== beforeLength;
+        if (changed) {
+            const updatedCount = metadata[targetKey].length;
+            if (typeof metadata[totalKey] === 'number') {
+                metadata[totalKey] = Math.max(0, updatedCount);
+            }
+            await this._uploadJson(metaPath, metadata, 'record-meta.json');
+        }
+        return changed;
+    }
+
+    async _removeMediaMetaEntry(recordPath, type, filename) {
+        const metaPath = type === 'video'
+            ? this.pathManager.getVideosMetaPath(recordPath)
+            : this.pathManager.getPhotosMetaPath(recordPath);
+        const label = type === 'video' ? 'videos-meta.json' : 'photos-meta.json';
+        const entries = await this._readOptionalJson(metaPath, { label, fallback: [] });
+        if (!Array.isArray(entries) || entries.length === 0) {
+            return false;
+        }
+        const beforeLength = entries.length;
+        const filtered = entries.filter(entry => {
+            if (!entry) return true;
+            const name = entry.filename || entry.fileName || entry.name;
+            return name !== filename;
+        });
+        if (filtered.length === beforeLength) return false;
+        await this._uploadJson(metaPath, filtered, label);
+        return true;
+    }
+
+    async _removeMediaIndexEntry(recordPath, filename) {
+        const mediaMetaPath = path.posix.join(recordPath, 'media-meta.json');
+        const mediaMeta = await this._readOptionalJson(mediaMetaPath, { label: 'media-meta.json', fallback: null });
+        if (!mediaMeta || !Array.isArray(mediaMeta.files)) {
+            return false;
+        }
+        const beforeLength = mediaMeta.files.length;
+        mediaMeta.files = mediaMeta.files.filter(entry => {
+            if (!entry) return true;
+            const name = entry.filename || entry.fileName || entry.name;
+            return name !== filename;
+        });
+        if (mediaMeta.files.length === beforeLength) {
+            return false;
+        }
+        await this._uploadJson(mediaMetaPath, mediaMeta, 'media-meta.json');
+        return true;
+    }
+
+    /**
+     * 讀取 metadata.json
+     * @private
+     */
+    async _readMetadata(metadataPath) {
+        const stream = await this.driveClient.getFileStream(metadataPath);
+        return this._parseJsonStream(stream, 'metadata.json 格式錯誤');
+    }
+
+    async _readOptionalJson(filePath, { label = 'JSON', fallback = null } = {}) {
+        if (!filePath) {
+            return fallback;
+        }
+
+        try {
+            const stream = await this.driveClient.getFileStream(filePath);
+            return await this._parseJsonStream(stream, `${label} 格式錯誤`);
+        } catch (error) {
+            const message = error?.message || '';
+            if (message.includes('404') || message.includes('不存在')) {
+                console.log(`⚠️ [新媒體] ${label} 不存在，跳過:`, filePath);
+                return fallback;
+            }
+            console.warn(`⚠️ [新媒體] 讀取 ${label} 失敗:`, { filePath, message });
+            return fallback;
+        }
+    }
+
+    async _parseJsonStream(stream, errorMessage) {
+        const raw = await this._streamToString(stream);
+        try {
+            return JSON.parse(raw);
+        } catch (error) {
+            throw new Error(errorMessage);
+        }
+    }
+
+    _streamToString(stream) {
+        return new Promise((resolve, reject) => {
+            const chunks = [];
+            stream.on('data', chunk => {
+                try {
+                    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+                } catch (bufferError) {
+                    reject(bufferError);
+                }
+            });
+            stream.on('end', () => {
+                try {
+                    resolve(Buffer.concat(chunks).toString('utf8'));
+                } catch (concatError) {
+                    reject(concatError);
+                }
+            });
+            stream.on('error', reject);
+        });
+    }
+
+    /**
+     * 從 metadata 建立記錄物件
+     * @private
+     */
+    async _buildRecordFromMetadata(recordPath, metadata) {
+        // 列出記錄目錄中的所有檔案
+        const result = await this.driveClient.listFiles(recordPath);
+        const files = result.files || [];
+        const fileNameSet = new Set(
+            files
+                .filter(file => !file.isdir)
+                .map(file => file.name)
+        );
+        
+        console.log('🔍 [掃描記錄] 開始掃描目錄:', {
+            recordPath,
+            studentName: metadata.studentName,
+            files總數: files.length,
+            files列表: files.map(f => ({ name: f.name, isdir: f.isdir }))
+        });
+        
+        // 分類檔案
+        const photos = [];
+        const videos = [];
+        
+        for (const file of files) {
+            if (file.isdir) {
+                console.log('⏭️ [掃描記錄] 跳過目錄:', file.name);
+                continue;
+            }
+            if (file.name === 'record-meta.json' || file.name === 'metadata.json') {
+                console.log('⏭️ [掃描記錄] 跳過 metadata 檔案:', file.name);
+                continue;
+            }
+            
+            const ext = file.name.split('.').pop().toLowerCase();
+            const filePath = `${recordPath}/${file.name}`.replace(/\/+/g, '/');
+            
+            console.log('🔍 [掃描記錄] 處理檔案:', {
+                name: file.name,
+                ext: ext,
+                isPhoto: ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext),
+                isVideo: ['mp4', 'mov', 'avi', 'webm'].includes(ext)
+            });
+            
+            const driveProxyUrl = this.pathManager.isInDriveRoot(filePath)
+                ? this.pathManager.toProxyUrl(filePath)
+                : null;
+
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+                photos.push({
+                    name: file.name,
+                    path: filePath,
+                    drivePath: filePath,
+                    size: file.additional?.size || 0,
+                    proxyUrl: driveProxyUrl
+                });
+                console.log('✅ [掃描記錄] 加入照片:', file.name);
+            } else if (['mp4', 'mov', 'avi', 'webm'].includes(ext)) {
+                videos.push({
+                    name: file.name,
+                    path: filePath,
+                    drivePath: filePath,
+                    size: file.additional?.size || 0,
+                    proxyUrl: driveProxyUrl
+                });
+                console.log('✅ [掃描記錄] 加入影片:', file.name);
+            } else {
+                console.log('⏭️ [掃描記錄] 跳過未知類型檔案:', file.name, '副檔名:', ext);
+            }
+        }
+        
+        console.log('📊 [掃描記錄] 掃描結果:', {
+            recordPath,
+            studentName: metadata.studentName,
+            photos數量: photos.length,
+            videos數量: videos.length,
+            photos列表: photos.map(p => p.name),
+            videos列表: videos.map(v => v.name)
+        });
+
+        // 🔥 讀取新媒體系統的 meta 檔案
+        const photosMetaPath = `${recordPath}/photos-meta.json`.replace(/\/+/g, '/');
+        const videosMetaPath = `${recordPath}/videos-meta.json`.replace(/\/+/g, '/');
+        const mediaMetaPath = `${recordPath}/media-meta.json`.replace(/\/+/g, '/');
+
+        const photosMetaPromise = fileNameSet.has('photos-meta.json')
+            ? this._readOptionalJson(photosMetaPath, { label: 'photos-meta.json', fallback: [] })
+            : Promise.resolve([]);
+        const videosMetaPromise = fileNameSet.has('videos-meta.json')
+            ? this._readOptionalJson(videosMetaPath, { label: 'videos-meta.json', fallback: [] })
+            : Promise.resolve([]);
+        const mediaMetaPromise = fileNameSet.has('media-meta.json')
+            ? this._readOptionalJson(mediaMetaPath, { label: 'media-meta.json', fallback: null })
+            : Promise.resolve(null);
+
+        const [photosMetaRaw, videosMetaRaw, mediaMetaRaw] = await Promise.all([
+            photosMetaPromise,
+            videosMetaPromise,
+            mediaMetaPromise
+        ]);
+
+        const normalizePhotoEntry = (entry) => {
+            if (!entry || !entry.id) return null;
+            const filename = entry.filename || entry.fileName || '';
+            if (!filename) {
+                console.warn('⚠️ [新媒體] 照片缺少檔名，略過:', { recordPath, id: entry.id });
+                return null;
+            }
+            return {
+                ...entry,
+                filename
+            };
+        };
+
+        const normalizeVideoEntry = (entry) => {
+            if (!entry || !entry.id) return null;
+            const filename = entry.filename || entry.fileName || '';
+            if (!filename) {
+                console.warn('⚠️ [新媒體] 影片缺少檔名，略過:', { recordPath, id: entry.id });
+                return null;
+            }
+
+            const thumbnailFilename = entry.thumbnailFilename || entry.thumbnail?.filename || null;
+            const transcodedFilename = entry.transcodedFilename || entry.transcoded?.filename || null;
+            const mimeType = String(entry.type || entry.mimeType || '');
+            const isVideoType = mimeType.toLowerCase().startsWith('video/');
+            const isVideoByExt = /\.(mp4|mov|avi|webm|mkv|m4v)$/i.test(filename);
+            if (!isVideoType && !isVideoByExt) {
+                return null;
+            }
+
+            return {
+                ...entry,
+                filename,
+                originalName: entry.originalName || filename,
+                thumbnailFilename,
+                transcodedFilename
+            };
+        };
+
+        let newMediaPhotos = Array.isArray(photosMetaRaw)
+            ? photosMetaRaw.map(normalizePhotoEntry).filter(Boolean)
+            : [];
+
+        let newMediaVideos = [];
+        let videoMetaSource = 'none';
+
+        if (mediaMetaRaw && Array.isArray(mediaMetaRaw.files)) {
+            newMediaVideos = mediaMetaRaw.files
+                .map(normalizeVideoEntry)
+                .filter(Boolean);
+            if (newMediaVideos.length > 0) {
+                videoMetaSource = 'media-meta.json';
+            }
+        }
+
+        if (newMediaVideos.length === 0 && Array.isArray(videosMetaRaw)) {
+            newMediaVideos = videosMetaRaw
+                .map(normalizeVideoEntry)
+                .filter(Boolean);
+            if (newMediaVideos.length > 0) {
+                videoMetaSource = 'videos-meta.json';
+            }
+        }
+
+        const videoThumbnails = {};
+        const collectThumbnail = (entry) => {
+            if (!entry) return;
+            const thumb = entry.thumbnailFilename || entry.thumbnail?.filename;
+            if (!thumb) return;
+            const mainName = entry.filename || entry.fileName;
+            if (mainName) {
+                videoThumbnails[mainName] = thumb;
+            }
+            const transcodedName = entry.transcodedFilename || entry.transcoded?.filename;
+            if (transcodedName) {
+                videoThumbnails[transcodedName] = thumb;
+            }
+        };
+        newMediaVideos.forEach(collectThumbnail);
+        if (Array.isArray(videosMetaRaw) && videosMetaRaw.length > 0) {
+            videosMetaRaw.forEach(collectThumbnail);
+        }
+
+        const enhanceLegacyPhoto = (photo) => {
+            if (!photo) return photo;
+            if (!photo.proxyUrl && this.pathManager.isInDriveRoot(photo.path || '')) {
+                photo.proxyUrl = this.pathManager.toProxyUrl(photo.path);
+            }
+            return photo;
+        };
+
+        const enhanceLegacyVideo = (video) => {
+            if (!video) return video;
+            if (!video.proxyUrl && this.pathManager.isInDriveRoot(video.path || '')) {
+                video.proxyUrl = this.pathManager.toProxyUrl(video.path);
+            }
+            if (!video.drivePath && video.path) {
+                video.drivePath = video.path;
+            }
+            const thumbName = videoThumbnails[video.name];
+            if (thumbName && !video.thumbnailFilename) {
+                video.thumbnailFilename = thumbName;
+                const thumbPath = `${recordPath}/${thumbName}`.replace(/\/+/g, '/');
+                if (this.pathManager.isInDriveRoot(thumbPath)) {
+                    video.thumbnailProxyUrl = this.pathManager.toProxyUrl(thumbPath);
+                }
+            }
+            return video;
+        };
+
+        photos.forEach(enhanceLegacyPhoto);
+        videos.forEach(enhanceLegacyVideo);
+
+        console.log('🆕 [新媒體] 解析 meta 完成:', {
+            recordPath,
+            新媒體照片數: newMediaPhotos.length,
+            新媒體影片數: newMediaVideos.length,
+            影片來源: videoMetaSource
+        });
+        
+        // 解析路徑獲取結構化資訊
+        const pathInfo = this.pathManager.parsePath(recordPath);
+        
+        // 🔥 重要：確保 studentName 優先使用 metadata 中的值（上傳時保存的）
+        // pathInfo 中的 studentName 可能來自路徑解析，但 metadata 中的更準確
+        const finalStudentName = metadata.studentName || pathInfo.studentName || '';
+        const finalIsOverview = metadata.isOverview !== undefined ? metadata.isOverview : (finalStudentName === '課程總覽');
+        
+        console.log('🔍 [構建記錄] 合併 metadata 和 pathInfo:', {
+            recordPath,
+            'metadata.studentName': metadata.studentName,
+            'pathInfo.studentName': pathInfo.studentName,
+            '最終studentName': finalStudentName,
+            'metadata.isOverview': metadata.isOverview,
+            '最終isOverview': finalIsOverview,
+            photos數量: photos.length,
+            videos數量: videos.length
+        });
+        
+        let commentText = typeof metadata.comment === 'string' ? metadata.comment : '';
+        if (!commentText && fileNameSet.has('comment.txt')) {
+            const commentPath = `${recordPath}/comment.txt`.replace(/\/+/g, '/');
+            try {
+                const commentStream = await this.driveClient.getFileStream(commentPath);
+                commentText = (await this._streamToString(commentStream)).trim();
+            } catch (error) {
+                console.warn('⚠️ [掃描記錄] 無法讀取 comment.txt，將略過:', { commentPath, message: error?.message });
+            }
+        }
+
+        return {
+            ...metadata,
+            ...pathInfo,
+            studentName: finalStudentName,  // 🔥 確保使用正確的 studentName
+            isOverview: finalIsOverview,     // 🔥 確保 isOverview 正確設置
+            comment: commentText,
+            recordPath,
+            photos,
+            videos,
+            newMediaPhotos,
+            newMediaVideos,
+            videoThumbnails,
+            photoCount: photos.length + newMediaPhotos.length,
+            videoCount: videos.length + newMediaVideos.length
+        };
+    }
+
+    /**
+     * ==================== 記錄刪除 ====================
+     */
+
+    /**
+     * 刪除學習記錄（刪除整個目錄）
+     * @param {string} recordPath - 記錄路徑（例如：/FLB-Learning-Portfolio/114-1/課程名/2025-11-08/學生名）
+     * @returns {Promise<Object>} 刪除結果
+     */
+    async deleteLearningRecord(recordPath) {
+        console.log('🗑️  [刪除記錄] 開始刪除:', recordPath);
+        
+        try {
+            await this.driveClient.ensureAuthenticated();
+            
+            // 驗證路徑是否在 Drive 根目錄內
+            if (!this.pathManager.isInDriveRoot(recordPath)) {
+                throw new Error('安全錯誤：只能刪除 Drive 根目錄內的檔案');
+            }
+            
+            // 先列出目錄內容（用於日誌）
+            let filesCount = 0;
+            try {
+                const result = await this.driveClient.listFiles(recordPath);
+                // 🔥 修復：listFiles 返回 { files: [...] }，不是數組
+                filesCount = result.files ? result.files.length : 0;
+                console.log('🗑️  [刪除記錄] 目錄包含', filesCount, '個檔案');
+            } catch (error) {
+                console.warn('⚠️ [刪除記錄] 無法列出目錄內容:', error.message);
+            }
+            
+            // 刪除整個目錄及其所有內容
+            // 注意：需要先刪除所有子文件，然後刪除目錄本身
+            try {
+                const result = await this.driveClient.listFiles(recordPath);
+                if (result.files && result.files.length > 0) {
+                    // 先刪除所有文件
+                    for (const file of result.files) {
+                        const filePath = `${recordPath}/${file.name}`.replace(/\/+/g, '/');
+                        try {
+                            await this.driveClient.deleteFile(filePath);
+                            console.log('✅ [刪除記錄] 已刪除文件:', file.name);
+                        } catch (error) {
+                            console.warn('⚠️ [刪除記錄] 刪除文件失敗:', file.name, error.message);
+                        }
+                    }
+                }
+                
+                // 最後刪除空目錄
+                await this.driveClient.deleteFile(recordPath);
+            } catch (error) {
+                // 如果先刪除文件的方式失敗，嘗試直接刪除目錄
+                console.warn('⚠️ [刪除記錄] 批次刪除失敗，嘗試直接刪除目錄:', error.message);
+                await this.driveClient.deleteFile(recordPath);
+            }
+            
+            console.log('✅ [刪除記錄] 刪除成功:', recordPath);
+            
+            return {
+                success: true,
+                recordPath,
+                filesDeleted: filesCount
+            };
+            
+        } catch (error) {
+            console.error('❌ [刪除記錄] 刪除失敗:', error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * 批次刪除多個記錄
+     * @param {Array<string>} recordPaths - 記錄路徑陣列
+     * @returns {Promise<Object>} 刪除結果統計
+     */
+    async deleteLearningRecordsBatch(recordPaths) {
+        console.log('🗑️  [批次刪除] 開始刪除', recordPaths.length, '筆記錄');
+        
+        const results = {
+            success: [],
+            failed: [],
+            total: recordPaths.length
+        };
+        
+        for (const recordPath of recordPaths) {
+            try {
+                await this.deleteLearningRecord(recordPath);
+                results.success.push(recordPath);
+            } catch (error) {
+                console.error('❌ [批次刪除] 刪除失敗:', recordPath, error.message);
+                results.failed.push({
+                    recordPath,
+                    error: error.message
+                });
+            }
+        }
+        
+        console.log('✅ [批次刪除] 完成:', {
+            total: results.total,
+            success: results.success.length,
+            failed: results.failed.length
+        });
+        
+        return results;
+    }
+
+    /**
+     * 刪除單個文件（照片或影片）
+     * @param {string} recordPath - 記錄目錄路徑
+     * @param {string} fileName - 文件名稱
+     */
+    async deleteSingleFile(recordPath, fileName) {
+        try {
+            console.log('🗑️  [單個文件刪除] 開始:', { recordPath, fileName });
+            
+            // 驗證路徑是否在 Drive 根目錄內
+            if (!this.pathManager.isInDriveRoot(recordPath)) {
+                throw new Error('安全錯誤：只能刪除 Drive 根目錄內的檔案');
+            }
+            
+            // 構建完整文件路徑
+            const filePath = path.posix.join(recordPath, fileName);
+            
+            // 刪除文件
+            await this.driveClient.deleteFile(filePath);
+            
+            console.log('✅ [單個文件刪除] 刪除成功:', filePath);
+
+            try {
+                const ext = path.extname(fileName).toLowerCase().replace('.', '');
+                const isPhoto = PHOTO_EXTENSIONS.has(ext);
+                const isVideo = VIDEO_EXTENSIONS.has(ext);
+                if (isPhoto || isVideo) {
+                    const type = isVideo ? 'video' : 'photo';
+                    await this._removeRecordMetadataEntry(recordPath, type, fileName);
+                    await this._removeMediaMetaEntry(recordPath, type, fileName);
+                    if (isVideo) {
+                        await this._removeMediaIndexEntry(recordPath, fileName);
+                    }
+                }
+            } catch (metaError) {
+                console.warn('⚠️ [單個文件刪除] 更新元資料失敗:', metaError.message);
+            }
+            
+            return {
+                success: true,
+                filePath,
+                fileName
+            };
+            
+        } catch (error) {
+            console.error('❌ [單個文件刪除] 刪除失敗:', error.message);
+            throw error;
+        }
+    }
+}
+
+module.exports = LearningUploadHelper;

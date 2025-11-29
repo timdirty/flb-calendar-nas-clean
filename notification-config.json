@@ -1,0 +1,129 @@
+{
+  "version": "1.0.0",
+  "description": "課程提醒系統訊息傳送配置",
+  "last_updated": "2025-01-24T00:00:00.000Z",
+  
+  "roles": {
+    "admin": {
+      "name": "管理員",
+      "description": "系統管理員，接收所有通知",
+      "user_id": "Udb51363eb6fdc605a6a9816379a38103",
+      "group_id": "C9cd9530405411fdd46de96f4e6cdecb7",
+      "permissions": [
+        "receive_all_notifications",
+        "receive_student_attendance",
+        "receive_teacher_reports",
+        "receive_system_alerts",
+        "receive_reminder_notifications"
+      ]
+    },
+    "teacher": {
+      "name": "講師",
+      "description": "課程講師，接收相關課程通知",
+      "permissions": [
+        "receive_own_course_notifications",
+        "receive_reminder_notifications"
+      ]
+    },
+    "teacher_group": {
+      "name": "講師群組",
+      "description": "所有講師的群組，接收課程異動通知",
+      "group_id": "C476ccbb325f1207c0fcfbd2301712e12",
+      "permissions": [
+        "receive_class_cancellation_notifications",
+        "receive_class_resumption_notifications",
+        "receive_schedule_change_notifications"
+      ]
+    }
+  },
+  
+  "notification_settings": {
+    "student_attendance": {
+      "enabled": true,
+      "send_to_admin": true,
+      "send_to_teacher": true,
+      "message_template": {
+        "admin": "📚 學生簽到通知\n\n👨‍🏫 講師：{teacherName}\n📖 課程：{courseName}\n⏰ 時間：{time}\n👤 學生：{studentName}\n📊 出席統計：{attendanceStats}",
+        "teacher": "📚 您的課程簽到通知\n\n📖 課程：{courseName}\n⏰ 時間：{time}\n👤 學生：{studentName}\n📊 出席統計：{attendanceStats}"
+      }
+    },
+    
+    "teacher_reports": {
+      "enabled": true,
+      "send_to_admin": true,
+      "send_to_teacher": false,
+      "message_template": {
+        "admin": "📋 講師報表提交\n\n👨‍🏫 講師：{teacherName}\n📖 課程：{courseName}\n⏰ 時間：{time}\n📅 日期：{date}\n👥 學生人數：{studentCount}人\n📝 課程內容：{courseContent}\n🔧 模式：{mode}",
+        "teacher": "📋 您的報表已提交\n\n📖 課程：{courseName}\n⏰ 時間：{time}\n📅 日期：{date}\n👥 學生人數：{studentCount}人\n✅ 提交成功！"
+      }
+    },
+    
+    "reminder_notifications": {
+      "enabled": true,
+      "send_to_admin": true,
+      "send_to_teacher": true,
+      "message_template": {
+        "admin": "🔔 提醒通知\n\n👨‍🏫 講師：{teacherName}\n📖 課程：{courseName}\n⏰ 時間：{time}\n📅 日期：{date}\n💬 訊息：{message}",
+        "teacher": "🔔 課程提醒\n\n📖 課程：{courseName}\n⏰ 時間：{time}\n📅 日期：{date}\n💬 訊息：{message}"
+      }
+    },
+    
+    "system_alerts": {
+      "enabled": true,
+      "send_to_admin": true,
+      "send_to_teacher": false,
+      "message_template": {
+        "admin": "⚠️ 系統警報\n\n🔧 類型：{alertType}\n📝 描述：{description}\n⏰ 時間：{timestamp}",
+        "teacher": ""
+      }
+    }
+  },
+  
+  "message_routing": {
+    "student_attendance": {
+      "admin": "always",
+      "teacher": "course_teacher_only"
+    },
+    "teacher_reports": {
+      "admin": "always",
+      "teacher": "never"
+    },
+    "reminder_notifications": {
+      "admin": "always",
+      "teacher": "target_teacher_only"
+    },
+    "system_alerts": {
+      "admin": "always",
+      "teacher": "never"
+    }
+  },
+  
+  "teacher_course_mapping": {
+    "description": "講師與課程的對應關係，用於確定誰應該接收特定課程的通知",
+    "mapping_rules": {
+      "default": "all_teachers",
+      "specific_courses": {
+        "ESM": ["Tim", "Yoki 🙏🏻"],
+        "SPM": ["Ted", "James"],
+        "SPIKE": ["Hansen", "Agnes"],
+        "Scratch": ["Ivan", "Xian"],
+        "包班": ["Tim", "Yoki 🙏🏻", "Ted"],
+        "到府": ["Tim", "Yoki 🙏🏻", "Ted", "James"]
+      }
+    }
+  },
+  
+  "delivery_settings": {
+    "retry_attempts": 3,
+    "retry_delay_ms": 1000,
+    "timeout_ms": 10000,
+    "batch_delay_ms": 500
+  },
+  
+  "logging": {
+    "enabled": true,
+    "log_level": "info",
+    "log_notification_delivery": true,
+    "log_failures": true
+  }
+}

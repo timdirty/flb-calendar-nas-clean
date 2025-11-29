@@ -1,0 +1,604 @@
+// ==================== 🚀 API Client 2.0 (2025-11-04) ====================
+// 新架構：媒體與文字分離
+// - 媒體文件 → /api/media/videos/* (分片上傳 + 自動壓縮/轉碼)
+// - 文字評語 → /api/learning-records/save (純文字 API)
+// - 向後相容：保留舊 API 支援，但優先使用新架構
+// ========================================================================
+
+(function (global) {
+  function buildQuery(params) {
+    const sp = new URLSearchParams();
+    Object.keys(params || {}).forEach((k) => {
+      const v = params[k];
+      if (v !== undefined && v !== null && String(v).length > 0) {
+        sp.set(k, String(v));
+      }
+    });
+    sp.set('_t', Date.now());
+    return sp.toString();
+  }
+
+  async function handleResponse(resp) {
+    const isJson = (resp.headers.get('content-type') || '').includes('application/json');
+    if (!resp.ok) {
+      if (isJson) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.message || ('HTTP ' + resp.status + ': ' + resp.statusText));
+      } else {
+        const txt = await resp.text().catch(() => '');
+        throw new Error('HTTP ' + resp.status + ': ' + resp.statusText + (txt ? ' - ' + txt.slice(0, 120) : ''));
+      }
+    }
+    return isJson ? resp.json() : resp.text();
+  }
+
+  // ==================== 🆕 媒體上傳輔助函數 ====================
+  
+  /**
+   * 使用新媒體 API 上傳單個文件
+   * @param {File} file - 文件對象
+   * @param {object} metadata - 元數據
+   * @param {function} onProgress - 進度回調
+   * @returns {Promise<string>} 返回 mediaId
+   */
+  async function uploadMediaFile(file, metadata, onProgress) {
+    if (!global.ChunkedUploader) {
+      throw new Error('ChunkedUploader 模組未載入');
+    }
+    
+    const result = await global.ChunkedUploader.uploadFileChunked(
+      file,
+      onProgress,
+      null,  // onError
+      { metadata }
+    );
+    
+    if (!result || !result.id) {
+      throw new Error('媒體上傳失敗：未返回 ID');
+    }
+    
+    return result.id;
+  }
+
+  /**
+   * 批次上傳媒體文件
+   * @param {File[]} files - 文件陣列
+   * @param {object} metadata - 元數據
+   * @param {function} onProgress - 進度回調 (percent, current, total)
+   * @returns {Promise<string[]>} 返回 mediaIds 陣列
+   */
+  async function uploadMediaBatch(files, metadata, onProgress) {
+    if (!files || files.length === 0) return [];
+    
+    const mediaIds = [];
+    const total = files.length;
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const mediaId = await uploadMediaFile(file, metadata, (filePercent) => {
+        // 計算總體進度
+        const overallPercent = Math.round(((i + filePercent / 100) / total) * 100);
+        if (onProgress) onProgress(overallPercent, i + 1, total);
+      });
+      mediaIds.push(mediaId);
+    }
+    
+    return mediaIds;
+  }
+
+  // ==================== 📡 API 函數 ====================
+
+  const Api = {
+    // ==================== 查詢相關 ====================
+    
+    async getStudentFilterConfig() {
+      const resp = await fetch('/api/student-filter-config');
+      return handleResponse(resp);
+    },
+    
+    async getSystemSettings() {
+      const resp = await fetch('/api/system-settings');
+      return handleResponse(resp);
+    },
+    
+    async getCompletedCourses(opts) {
+      const query = buildQuery({
+        range: opts && opts.range === 'week' ? 'week' : 'day',
+        date: opts && opts.date,
+        eventId: opts && opts.eventId,
+        instructor: opts && opts.instructor
+      });
+      const url = '/api/learning-records/today-completed-courses?' + query;
+      const resp = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await handleResponse(resp);
+      if (!data || data.success === false) {
+        throw new Error((data && data.message) || '獲取課程失敗');
+      }
+      return data;
+    },
+
+    async getStudentData() {
+      const resp = await fetch('/api/students');
+      return handleResponse(resp);
+    },
+
+    async checkCompletion({ course, period, date, studentName }) {
+      const query = buildQuery({ course, period, date, studentName });
+      const resp = await fetch('/api/learning-records/check-completion?' + query);
+      return handleResponse(resp);
+    },
+
+    async getHistory(filters) {
+      const query = buildQuery(filters || {});
+      const resp = await fetch('/api/learning-records/history?' + query);
+      return handleResponse(resp);
+    },
+
+    async getRecordsByCourse({ course, period, date, coursePeriod, relativePath, overviewFolder }) {
+      const query = buildQuery({ course, period, date, coursePeriod, relativePath, overviewFolder });
+      const resp = await fetch('/api/learning-records/by-course?' + query);
+      return handleResponse(resp);
+    },
+
+    async lookupStudentByDate({ date, studentName }) {
+      const query = buildQuery({ date, studentName });
+      const resp = await fetch('/api/learning-records/lookup-student?' + query);
+      return handleResponse(resp);
+    },
+
+    async deleteRecord({ course, period, date, studentName, filename, coursePeriod, relativePath }) {
+      const query = buildQuery({ course, period, date, studentName, filename, coursePeriod, relativePath });
+      const resp = await fetch('/api/learning-records/0?' + query, { method: 'DELETE' });
+      return handleResponse(resp);
+    },
+
+    // ==================== 🆕 新架構上傳 (推薦使用) ====================
+
+    /**
+     * 上傳學習記錄 (新架構：媒體分離)
+     * @param {FormData|object} data - 可以是 FormData 或普通對象
+     * @param {function} onProgress - 進度回調
+     * @returns {Promise<object>} 上傳結果
+     */
+    async uploadRecordV2(data, onProgress) {
+      // 從 FormData 或對象中提取數據
+      const isFormData = data instanceof FormData;
+      const course = isFormData ? data.get('course') : data.course;
+      const period = isFormData ? data.get('period') : data.period;
+      const date = isFormData ? data.get('date') : data.date;
+      const studentName = isFormData ? data.get('studentName') : data.studentName;
+      const comment = isFormData ? data.get('comment') : data.comment;
+      const coursePeriod = isFormData ? data.get('coursePeriod') : data.coursePeriod;
+      const relativePath = isFormData ? data.get('relativePath') : data.relativePath;
+      const isOverview = isFormData ? (data.get('isOverview') === 'true') : data.isOverview;
+      const overviewSummary = isFormData ? data.get('overviewSummary') : data.overviewSummary;
+      
+      // 提取文件
+      const photos = isFormData ? data.getAll('photos') : (data.photos || []);
+      const videos = isFormData ? data.getAll('videos') : (data.videos || []);
+      
+      // 步驟 1: 上傳媒體 (如果有)
+      const mediaIds = [];
+      const totalFiles = photos.length + videos.length;
+      let currentFile = 0;
+      
+      const updateProgress = () => {
+        if (onProgress) {
+          const percent = totalFiles > 0 ? Math.round((currentFile / totalFiles) * 90) : 90;
+          onProgress(percent);
+        }
+      };
+      
+      // 上傳照片
+      if (photos.length > 0) {
+        const photoMetadata = {
+          studentName,
+          dateKey: date,
+          courseName: course,
+          period,
+          mode: isOverview ? 'overview' : 'student'
+        };
+        
+        for (const photo of photos) {
+          const mediaId = await uploadMediaFile(photo, photoMetadata, () => {
+            updateProgress();
+          });
+          mediaIds.push(mediaId);
+          currentFile++;
+        }
+      }
+      
+      // 上傳影片
+      if (videos.length > 0) {
+        const videoMetadata = {
+          studentName,
+          dateKey: date,
+          courseName: course,
+          period,
+          mode: isOverview ? 'overview' : 'student'
+        };
+        
+        for (const video of videos) {
+          const mediaId = await uploadMediaFile(video, videoMetadata, () => {
+            updateProgress();
+          });
+          mediaIds.push(mediaId);
+          currentFile++;
+        }
+      }
+      
+      // 步驟 2: 保存文字記錄
+      if (onProgress) onProgress(95);
+      
+      const recordData = {
+        course,
+        period,
+        date,
+        studentName,
+        comment,
+        mediaIds,
+        isOverview,
+        overviewSummary,
+        coursePeriod,
+        relativePath
+      };
+      
+      const resp = await fetch('/api/learning-records/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(recordData)
+      });
+      
+      const result = await handleResponse(resp);
+      if (onProgress) onProgress(100);
+      
+      return result;
+    },
+
+    /**
+     * 更新學習記錄 (新架構：媒體分離)
+     * @param {object} data - 更新數據
+     * @param {function} onProgress - 進度回調
+     * @returns {Promise<object>} 更新結果
+     */
+    async updateRecordV2(data, onProgress) {
+      // 使用相同的邏輯，因為新 API 是冪等的
+      return this.uploadRecordV2(data, onProgress);
+    },
+
+    // ==================== 🔄 向後相容 (使用舊 API，逐步廢棄) ====================
+
+    /**
+     * 上傳學習記錄 (舊 API，向後相容)
+     * ⚠️ 建議使用 uploadRecordV2
+     */
+    async uploadRecord(formData) {
+      console.warn('⚠️ [API] uploadRecord 使用舊 API，建議改用 uploadRecordV2');
+      const resp = await fetch('/api/learning-records/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await handleResponse(resp);
+      if (!data || data.success === false) {
+        throw new Error((data && data.message) || '上傳失敗');
+      }
+      return data;
+    },
+
+    /**
+     * 上傳學習記錄 (帶進度，舊 API)
+     * ⚠️ 建議使用 uploadRecordV2
+     */
+    uploadRecordWithProgress(formData, onProgress) {
+      console.warn('⚠️ [API] uploadRecordWithProgress 使用舊 API，建議改用 uploadRecordV2');
+      const xhr = new XMLHttpRequest();
+      const promise = new Promise(function (resolve, reject) {
+        try {
+          xhr.open('POST', '/api/learning-records/upload');
+          xhr.upload.onprogress = function (evt) {
+            if (!evt.lengthComputable) return;
+            const percent = Math.round((evt.loaded / evt.total) * 100);
+            if (typeof onProgress === 'function') onProgress(percent, evt);
+          };
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState !== 4) return;
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const data = JSON.parse(xhr.responseText || '{}');
+                if (data && data.success !== false) return resolve(data);
+                reject(new Error((data && data.message) || '上傳失敗'));
+              } catch (e) { reject(new Error('上傳回應解析失敗')); }
+            } else {
+              try {
+                let msg = '';
+                try {
+                  const data = JSON.parse(xhr.responseText || '{}');
+                  msg = (data && data.message) || '';
+                } catch (_) {
+                  msg = (xhr.responseText || '').slice(0, 200);
+                }
+                reject(new Error('HTTP ' + xhr.status + (xhr.statusText ? (': ' + xhr.statusText) : '') + (msg ? (' - ' + msg) : '')));
+              } catch (e) {
+                reject(new Error('HTTP ' + xhr.status + (xhr.statusText ? (': ' + xhr.statusText) : '')));
+              }
+            }
+          };
+          xhr.onerror = function () { reject(new Error('網路錯誤，請重試')); };
+          xhr.send(formData);
+        } catch (e) { reject(e); }
+      });
+      return { promise, abort: function () { try { xhr.abort(); } catch (e) {} } };
+    },
+
+    /**
+     * 更新學習記錄 (帶進度，舊 API)
+     * ⚠️ 建議使用 updateRecordV2
+     */
+    updateRecordWithProgress(formData, onProgress) {
+      console.warn('⚠️ [API] updateRecordWithProgress 使用舊 API，建議改用 updateRecordV2');
+      const xhr = new XMLHttpRequest();
+      const promise = new Promise(function (resolve, reject) {
+        try {
+          xhr.open('PUT', '/api/learning-records/0');
+          xhr.upload.onprogress = function (evt) {
+            if (!evt.lengthComputable) return;
+            const percent = Math.round((evt.loaded / evt.total) * 100);
+            if (typeof onProgress === 'function') onProgress(percent, evt);
+          };
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState !== 4) return;
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const data = JSON.parse(xhr.responseText || '{}');
+                if (data && data.success !== false) return resolve(data);
+                reject(new Error((data && data.message) || '更新失敗'));
+              } catch (e) { reject(new Error('更新回應解析失敗')); }
+            } else {
+              try {
+                let msg = '';
+                try { const data = JSON.parse(xhr.responseText || '{}'); msg = (data && data.message) || ''; }
+                catch (_) { msg = (xhr.responseText || '').slice(0, 200); }
+                reject(new Error('HTTP ' + xhr.status + (xhr.statusText ? (': ' + xhr.statusText) : '') + (msg ? (' - ' + msg) : '')));
+              } catch (e) {
+                reject(new Error('HTTP ' + xhr.status + (xhr.statusText ? (': ' + xhr.statusText) : '')));
+              }
+            }
+          };
+          xhr.onerror = function () { reject(new Error('網路錯誤，請重試')); };
+          xhr.send(formData);
+        } catch (e) { reject(e); }
+      });
+      return { promise, abort: function () { try { xhr.abort(); } catch (e) {} } };
+    },
+
+    /**
+     * 更新學習記錄 (舊 API)
+     * ⚠️ 建議使用 updateRecordV2
+     */
+    async updateRecord({ course, period, date, studentName, comment, photos, videos, coursePeriod, relativePath }) {
+      console.warn('⚠️ [API] updateRecord 使用舊 API，建議改用 updateRecordV2');
+      const form = new FormData();
+      form.append('course', course);
+      form.append('period', period);
+      form.append('date', date);
+      form.append('studentName', studentName);
+      if (coursePeriod) form.append('coursePeriod', coursePeriod);
+      if (relativePath) form.append('relativePath', relativePath);
+      if (comment != null) form.append('comment', comment);
+      (photos || []).forEach(f => {
+        try { form.append('photos', f, (f && f.name) ? f.name : 'photo.jpg'); }
+        catch(e) { form.append('photos', f); }
+      });
+      (videos || []).forEach(f => {
+        try { form.append('videos', f, (f && f.name) ? f.name : 'video.mp4'); }
+        catch(e) { form.append('videos', f); }
+      });
+      const resp = await fetch('/api/learning-records/0', { method: 'PUT', body: form });
+      return handleResponse(resp);
+    }
+  };
+
+  global.FLB = global.FLB || {};
+  global.FLB.Api = Api;
+})(window);
+
+          currentFile++;
+        }
+      }
+      
+      // 上傳影片
+      if (videos.length > 0) {
+        const videoMetadata = {
+          studentName,
+          dateKey: date,
+          courseName: course,
+          period,
+          mode: isOverview ? 'overview' : 'student'
+        };
+        
+        for (const video of videos) {
+          const mediaId = await uploadMediaFile(video, videoMetadata, () => {
+            updateProgress();
+          });
+          mediaIds.push(mediaId);
+          currentFile++;
+        }
+      }
+      
+      // 步驟 2: 保存文字記錄
+      if (onProgress) onProgress(95);
+      
+      const recordData = {
+        course,
+        period,
+        date,
+        studentName,
+        comment,
+        mediaIds,
+        isOverview,
+        overviewSummary,
+        coursePeriod,
+        relativePath
+      };
+      
+      const resp = await fetch('/api/learning-records/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(recordData)
+      });
+      
+      const result = await handleResponse(resp);
+      if (onProgress) onProgress(100);
+      
+      return result;
+    },
+
+    /**
+     * 更新學習記錄 (新架構：媒體分離)
+     * @param {object} data - 更新數據
+     * @param {function} onProgress - 進度回調
+     * @returns {Promise<object>} 更新結果
+     */
+    async updateRecordV2(data, onProgress) {
+      // 使用相同的邏輯，因為新 API 是冪等的
+      return this.uploadRecordV2(data, onProgress);
+    },
+
+    // ==================== 🔄 向後相容 (使用舊 API，逐步廢棄) ====================
+
+    /**
+     * 上傳學習記錄 (舊 API，向後相容)
+     * ⚠️ 建議使用 uploadRecordV2
+     */
+    async uploadRecord(formData) {
+      console.warn('⚠️ [API] uploadRecord 使用舊 API，建議改用 uploadRecordV2');
+      const resp = await fetch('/api/learning-records/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await handleResponse(resp);
+      if (!data || data.success === false) {
+        throw new Error((data && data.message) || '上傳失敗');
+      }
+      return data;
+    },
+
+    /**
+     * 上傳學習記錄 (帶進度，舊 API)
+     * ⚠️ 建議使用 uploadRecordV2
+     */
+    uploadRecordWithProgress(formData, onProgress) {
+      console.warn('⚠️ [API] uploadRecordWithProgress 使用舊 API，建議改用 uploadRecordV2');
+      const xhr = new XMLHttpRequest();
+      const promise = new Promise(function (resolve, reject) {
+        try {
+          xhr.open('POST', '/api/learning-records/upload');
+          xhr.upload.onprogress = function (evt) {
+            if (!evt.lengthComputable) return;
+            const percent = Math.round((evt.loaded / evt.total) * 100);
+            if (typeof onProgress === 'function') onProgress(percent, evt);
+          };
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState !== 4) return;
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const data = JSON.parse(xhr.responseText || '{}');
+                if (data && data.success !== false) return resolve(data);
+                reject(new Error((data && data.message) || '上傳失敗'));
+              } catch (e) { reject(new Error('上傳回應解析失敗')); }
+            } else {
+              try {
+                let msg = '';
+                try {
+                  const data = JSON.parse(xhr.responseText || '{}');
+                  msg = (data && data.message) || '';
+                } catch (_) {
+                  msg = (xhr.responseText || '').slice(0, 200);
+                }
+                reject(new Error('HTTP ' + xhr.status + (xhr.statusText ? (': ' + xhr.statusText) : '') + (msg ? (' - ' + msg) : '')));
+              } catch (e) {
+                reject(new Error('HTTP ' + xhr.status + (xhr.statusText ? (': ' + xhr.statusText) : '')));
+              }
+            }
+          };
+          xhr.onerror = function () { reject(new Error('網路錯誤，請重試')); };
+          xhr.send(formData);
+        } catch (e) { reject(e); }
+      });
+      return { promise, abort: function () { try { xhr.abort(); } catch (e) {} } };
+    },
+
+    /**
+     * 更新學習記錄 (帶進度，舊 API)
+     * ⚠️ 建議使用 updateRecordV2
+     */
+    updateRecordWithProgress(formData, onProgress) {
+      console.warn('⚠️ [API] updateRecordWithProgress 使用舊 API，建議改用 updateRecordV2');
+      const xhr = new XMLHttpRequest();
+      const promise = new Promise(function (resolve, reject) {
+        try {
+          xhr.open('PUT', '/api/learning-records/0');
+          xhr.upload.onprogress = function (evt) {
+            if (!evt.lengthComputable) return;
+            const percent = Math.round((evt.loaded / evt.total) * 100);
+            if (typeof onProgress === 'function') onProgress(percent, evt);
+          };
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState !== 4) return;
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const data = JSON.parse(xhr.responseText || '{}');
+                if (data && data.success !== false) return resolve(data);
+                reject(new Error((data && data.message) || '更新失敗'));
+              } catch (e) { reject(new Error('更新回應解析失敗')); }
+            } else {
+              try {
+                let msg = '';
+                try { const data = JSON.parse(xhr.responseText || '{}'); msg = (data && data.message) || ''; }
+                catch (_) { msg = (xhr.responseText || '').slice(0, 200); }
+                reject(new Error('HTTP ' + xhr.status + (xhr.statusText ? (': ' + xhr.statusText) : '') + (msg ? (' - ' + msg) : '')));
+              } catch (e) {
+                reject(new Error('HTTP ' + xhr.status + (xhr.statusText ? (': ' + xhr.statusText) : '')));
+              }
+            }
+          };
+          xhr.onerror = function () { reject(new Error('網路錯誤，請重試')); };
+          xhr.send(formData);
+        } catch (e) { reject(e); }
+      });
+      return { promise, abort: function () { try { xhr.abort(); } catch (e) {} } };
+    },
+
+    /**
+     * 更新學習記錄 (舊 API)
+     * ⚠️ 建議使用 updateRecordV2
+     */
+    async updateRecord({ course, period, date, studentName, comment, photos, videos, coursePeriod, relativePath }) {
+      console.warn('⚠️ [API] updateRecord 使用舊 API，建議改用 updateRecordV2');
+      const form = new FormData();
+      form.append('course', course);
+      form.append('period', period);
+      form.append('date', date);
+      form.append('studentName', studentName);
+      if (coursePeriod) form.append('coursePeriod', coursePeriod);
+      if (relativePath) form.append('relativePath', relativePath);
+      if (comment != null) form.append('comment', comment);
+      (photos || []).forEach(f => {
+        try { form.append('photos', f, (f && f.name) ? f.name : 'photo.jpg'); }
+        catch(e) { form.append('photos', f); }
+      });
+      (videos || []).forEach(f => {
+        try { form.append('videos', f, (f && f.name) ? f.name : 'video.mp4'); }
+        catch(e) { form.append('videos', f); }
+      });
+      const resp = await fetch('/api/learning-records/0', { method: 'PUT', body: form });
+      return handleResponse(resp);
+    }
+  };
+
+  global.FLB = global.FLB || {};
+  global.FLB.Api = Api;
+})(window);

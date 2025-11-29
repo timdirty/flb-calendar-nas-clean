@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上傳錯誤診斷工具</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .log-area {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .btn {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #0051d5;
+        }
+        .btn-danger {
+            background: #ff3b30;
+        }
+        .btn-danger:hover {
+            background: #d62b20;
+        }
+        input[type="file"] {
+            display: block;
+            margin: 12px 0;
+            padding: 8px;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+        }
+        .info-box {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #007aff;
+        }
+        .error-box {
+            background: #fff5f5;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #ff3b30;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <h1>🔧 上傳錯誤診斷工具</h1>
+        <p>此工具會詳細記錄上傳過程中的所有信息，幫助診斷問題。</p>
+    </div>
+
+    <div class="panel">
+        <h2>📤 測試上傳</h2>
+        <div>
+            <label>
+                <input type="radio" name="uploadType" value="photo" checked> 照片
+                <input type="radio" name="uploadType" value="video"> 影片
+            </label>
+        </div>
+        <input type="file" id="fileInput" accept="image/*,video/*" multiple>
+        <button class="btn" onclick="testUpload()">開始測試上傳</button>
+        <button class="btn btn-danger" onclick="clearLogs()">清除日誌</button>
+    </div>
+
+    <div class="panel">
+        <h2>📊 系統資訊</h2>
+        <div class="grid">
+            <div class="info-box">
+                <strong>瀏覽器:</strong> <span id="browserInfo"></span>
+            </div>
+            <div class="info-box">
+                <strong>User Agent:</strong> <span id="userAgent"></span>
+            </div>
+            <div class="info-box">
+                <strong>記憶體:</strong> <span id="memoryInfo"></span>
+            </div>
+            <div class="info-box">
+                <strong>時間:</strong> <span id="timeInfo"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>📝 詳細日誌</h2>
+        <div class="log-area" id="logArea"></div>
+    </div>
+
+    <div class="panel" id="errorPanel" style="display: none;">
+        <h2>❌ 錯誤詳情</h2>
+        <div class="error-box" id="errorDetails"></div>
+    </div>
+
+    <script>
+        // 全域日誌緩衝
+        let logs = [];
+        
+        // 增強的日誌函數
+        function log(message, type = 'info', data = null) {
+            const timestamp = new Date().toISOString();
+            const logEntry = {
+                timestamp,
+                type,
+                message,
+                data
+            };
+            logs.push(logEntry);
+            
+            const logArea = document.getElementById('logArea');
+            const emoji = {
+                info: 'ℹ️',
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                debug: '🔍'
+            }[type] || 'ℹ️';
+            
+            const color = {
+                info: '#61afef',
+                success: '#98c379',
+                error: '#e06c75',
+                warning: '#e5c07b',
+                debug: '#c678dd'
+            }[type] || '#d4d4d4';
+            
+            const line = `<span style="color: #808080">[${timestamp}]</span> <span style="color: ${color}">${emoji} ${message}</span>`;
+            
+            if (data) {
+                const dataStr = typeof data === 'object' ? JSON.stringify(data, null, 2) : String(data);
+                logArea.innerHTML += line + `\n<span style="color: #808080; padding-left: 20px">${dataStr}</span>\n`;
+            } else {
+                logArea.innerHTML += line + '\n';
+            }
+            
+            logArea.scrollTop = logArea.scrollHeight;
+            
+            // 同時輸出到 console
+            console.log(`[${type.toUpperCase()}] ${message}`, data || '');
+        }
+        
+        // 捕獲全域錯誤
+        window.addEventListener('error', function(e) {
+            log('全域錯誤捕獲', 'error', {
+                message: e.message,
+                filename: e.filename,
+                lineno: e.lineno,
+                colno: e.colno,
+                error: e.error ? e.error.stack : null
+            });
+            showError(e.message, e.error);
+        });
+        
+        // 捕獲未處理的 Promise 拒絕
+        window.addEventListener('unhandledrejection', function(e) {
+            log('未處理的 Promise 拒絕', 'error', {
+                reason: e.reason,
+                promise: e.promise
+            });
+            showError('Promise 拒絕', e.reason);
+        });
+        
+        // 顯示錯誤
+        function showError(title, error) {
+            const errorPanel = document.getElementById('errorPanel');
+            const errorDetails = document.getElementById('errorDetails');
+            errorPanel.style.display = 'block';
+            
+            let errorHTML = `<h3>${title}</h3>`;
+            
+            if (error) {
+                if (typeof error === 'object') {
+                    if (error.stack) {
+                        errorHTML += `<pre style="background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px; overflow-x: auto;">${error.stack}</pre>`;
+                    }
+                    errorHTML += `<pre style="background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px; overflow-x: auto;">${JSON.stringify(error, null, 2)}</pre>`;
+                } else {
+                    errorHTML += `<p>${error}</p>`;
+                }
+            }
+            
+            errorDetails.innerHTML = errorHTML;
+        }
+        
+        // 清除日誌
+        function clearLogs() {
+            logs = [];
+            document.getElementById('logArea').innerHTML = '';
+            document.getElementById('errorPanel').style.display = 'none';
+            log('日誌已清除', 'info');
+        }
+        
+        // 測試上傳
+        async function testUpload() {
+            try {
+                log('========== 開始測試上傳 ==========', 'info');
+                
+                const fileInput = document.getElementById('fileInput');
+                const files = fileInput.files;
+                
+                if (!files || files.length === 0) {
+                    log('未選擇檔案', 'warning');
+                    alert('請先選擇檔案');
+                    return;
+                }
+                
+                log(`選擇了 ${files.length} 個檔案`, 'success');
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    log(`檔案 ${i + 1}/${files.length}`, 'info', {
+                        name: file.name,
+                        size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+                        type: file.type,
+                        lastModified: new Date(file.lastModified).toISOString()
+                    });
+                    
+                    // 測試檔案讀取
+                    try {
+                        log('測試檔案讀取...', 'debug');
+                        const reader = new FileReader();
+                        await new Promise((resolve, reject) => {
+                            reader.onload = () => {
+                                log('檔案讀取成功', 'success', {
+                                    bytesRead: reader.result.byteLength
+                                });
+                                resolve();
+                            };
+                            reader.onerror = () => {
+                                log('檔案讀取失敗', 'error', reader.error);
+                                reject(reader.error);
+                            };
+                            reader.readAsArrayBuffer(file);
+                        });
+                    } catch (readError) {
+                        log('檔案讀取測試失敗', 'error', readError);
+                        throw readError;
+                    }
+                    
+                    // 構建 FormData
+                    log('構建 FormData...', 'debug');
+                    const formData = new FormData();
+                    
+                    // 添加測試資料
+                    formData.append('course', '測試課程');
+                    formData.append('period', '測試時段');
+                    formData.append('date', new Date().toISOString().split('T')[0]);
+                    formData.append('studentName', '測試學生');
+                    formData.append('isOverview', 'true');
+                    formData.append('overviewSummary', '診斷工具測試上傳');
+                    
+                    // 根據類型添加檔案
+                    if (file.type.startsWith('image/')) {
+                        formData.append('overviewPhotos', file, file.name);
+                        log('添加照片到 FormData', 'debug');
+                    } else if (file.type.startsWith('video/')) {
+                        formData.append('videos', file, file.name);
+                        log('添加影片到 FormData', 'debug');
+                    }
+                    
+                    // 記錄 FormData 內容
+                    log('FormData 內容:', 'debug');
+                    for (const [key, value] of formData.entries()) {
+                        if (value instanceof File) {
+                            log(`  ${key}: [File] ${value.name} (${(value.size / 1024).toFixed(2)} KB)`, 'debug');
+                        } else {
+                            log(`  ${key}: ${value}`, 'debug');
+                        }
+                    }
+                    
+                    // 發送請求
+                    log('發送 HTTP 請求到 /api/learning-records/upload', 'info');
+                    
+                    const xhr = new XMLHttpRequest();
+                    
+                    // 監聽進度
+                    xhr.upload.addEventListener('progress', (e) => {
+                        if (e.lengthComputable) {
+                            const percent = Math.round((e.loaded / e.total) * 100);
+                            log(`上傳進度: ${percent}%`, 'debug', {
+                                loaded: `${(e.loaded / 1024 / 1024).toFixed(2)} MB`,
+                                total: `${(e.total / 1024 / 1024).toFixed(2)} MB`
+                            });
+                        }
+                    });
+                    
+                    // 監聽載入
+                    xhr.addEventListener('load', () => {
+                        log(`HTTP ${xhr.status} ${xhr.statusText}`, xhr.status >= 200 && xhr.status < 300 ? 'success' : 'error');
+                        log('回應內容:', 'debug', xhr.responseText);
+                        
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            log('解析後的回應:', 'success', response);
+                            
+                            if (response.success) {
+                                log('✅ 上傳成功！', 'success', response);
+                            } else {
+                                log('❌ 上傳失敗（API 回傳 success: false）', 'error', response);
+                                showError('API 錯誤', response);
+                            }
+                        } catch (parseError) {
+                            log('JSON 解析失敗', 'error', parseError);
+                            showError('回應解析錯誤', parseError);
+                        }
+                    });
+                    
+                    // 監聽錯誤
+                    xhr.addEventListener('error', () => {
+                        log('網路錯誤', 'error', {
+                            status: xhr.status,
+                            statusText: xhr.statusText,
+                            responseText: xhr.responseText
+                        });
+                        showError('網路錯誤', new Error('XHR error event'));
+                    });
+                    
+                    // 監聽中斷
+                    xhr.addEventListener('abort', () => {
+                        log('請求被中斷', 'warning');
+                    });
+                    
+                    // 監聽超時
+                    xhr.addEventListener('timeout', () => {
+                        log('請求超時', 'error');
+                        showError('請求超時', new Error('XHR timeout'));
+                    });
+                    
+                    // 發送請求
+                    xhr.open('POST', '/api/learning-records/upload');
+                    xhr.timeout = 60000; // 60 秒超時
+                    
+                    await new Promise((resolve, reject) => {
+                        xhr.onreadystatechange = () => {
+                            if (xhr.readyState === XMLHttpRequest.DONE) {
+                                if (xhr.status >= 200 && xhr.status < 300) {
+                                    resolve();
+                                } else {
+                                    reject(new Error(`HTTP ${xhr.status}`));
+                                }
+                            }
+                        };
+                        xhr.send(formData);
+                    });
+                }
+                
+                log('========== 測試完成 ==========', 'success');
+                
+            } catch (error) {
+                log('測試上傳失敗', 'error', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
+                showError('測試上傳失敗', error);
+            }
+        }
+        
+        // 初始化系統資訊
+        function initSystemInfo() {
+            document.getElementById('browserInfo').textContent = navigator.userAgent.split(' ').pop();
+            document.getElementById('userAgent').textContent = navigator.userAgent;
+            document.getElementById('timeInfo').textContent = new Date().toLocaleString('zh-TW');
+            
+            // 記憶體資訊
+            if (performance.memory) {
+                const used = (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2);
+                const limit = (performance.memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2);
+                document.getElementById('memoryInfo').textContent = `${used} / ${limit} MB (${((used / limit) * 100).toFixed(1)}%)`;
+            } else {
+                document.getElementById('memoryInfo').textContent = '不可用';
+            }
+            
+            log('診斷工具已初始化', 'success');
+        }
+        
+        // 頁面載入後初始化
+        window.addEventListener('DOMContentLoaded', initSystemInfo);
+    </script>
+</body>
+</html>
+

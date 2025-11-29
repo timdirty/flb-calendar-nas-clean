@@ -1,0 +1,524 @@
+/* ================================================
+   歷史記錄 UI 優化樣式
+   針對新的 HTML 結構優化，提供清晰的視覺層級
+   ================================================ */
+
+/* 🎯 歷史記錄卡片 */
+.history-record {
+  background: #ffffff;
+  border-radius: 6px;   /* 🔥 超級緊湊：8px → 6px */
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  margin-bottom: 6px;   /* 🔥 超級緊湊：8px → 6px */
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  border: 1px solid #e5e7eb;
+}
+
+.history-record:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  border-color: #cbd5e1;
+}
+
+/* 📋 摘要區（可點擊） */
+.history-record-summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* 🎨 標題區 */
+.record-header {
+  padding: 5px 6px;   /* 🔥 超級緊湊：6px 8px → 5px 6px */
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 3px;           /* 🔥 超級緊湊：4px → 3px */
+}
+
+.record-main-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.record-course-name {
+  font-size: 13px;      /* 🔥 超級緊湊：14px → 13px */
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1px;   /* 🔥 超級緊湊：2px → 1px */
+  line-height: 1.05;    /* 🔥 超級緊湊：1.1 → 1.05 */
+  word-wrap: break-word;
+}
+
+/* 🏷️ 標籤區 */
+.record-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;             /* 🔥 超級緊湊：4px → 3px */
+  margin-bottom: 0;
+}
+
+.record-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;             /* 🔥 超級緊湊：3px → 2px */
+  padding: 2px 6px;     /* 🔥 超級緊湊：3px 8px → 2px 6px */
+  border-radius: 10px;  /* 🔥 超級緊湊：12px → 10px */
+  font-size: 9px;       /* 🔥 超級緊湊：10px → 9px */
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.record-tag i {
+  font-size: 11px;
+}
+
+.record-tag--teacher {
+  /* 講師標籤（顏色由 JS 動態設定） */
+}
+
+.record-tag--course-type {
+  /* 課程類型標籤（顏色由 JS 動態設定） */
+}
+
+/* 🔽 展開圖示 */
+.record-expand-icon {
+  flex-shrink: 0;
+  width: 22px;        /* 🔥 再縮小 26px → 22px */
+  height: 22px;       /* 🔥 再縮小 26px → 22px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(148, 163, 184, 0.1);
+  border-radius: 50%;
+  transition: all 0.3s;
+  align-self: flex-start;
+  margin-top: -8px;   /* 🔥 更負的邊距 -2px → -8px，大幅上移 */
+  padding: 2px;       /* 🔥 減少內邊距 */
+}
+
+.record-expand-icon i {
+  color: #64748b;
+  font-size: 11px;    /* 🔥 縮小圖示 13px → 11px */
+  transition: transform 0.3s;
+}
+
+.history-record.expanded .record-expand-icon {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.history-record.expanded .record-expand-icon i {
+  transform: rotate(180deg);
+  color: #10b981;
+}
+
+/* 📊 元數據區 */
+.record-meta {
+  padding: 4px 6px;     /* 🔥 超級緊湊：5px 8px → 4px 6px */
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.record-date {
+  display: flex;
+  align-items: center;
+  gap: 3px;             /* 🔥 超級緊湊：4px → 3px */
+  font-size: 10px;      /* 🔥 超級緊湊：11px → 10px */
+  color: #64748b;
+  margin-bottom: 3px;   /* 🔥 超級緊湊：4px → 3px */
+  font-weight: 500;
+}
+
+.record-date i {
+  font-size: 11px;      /* 🔥 超級緊湊：12px → 11px */
+  color: #10b981;
+}
+
+/* 📈 統計資訊區（重點優化） */
+.record-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));  /* 🔥 超級緊湊：75px → 70px */
+  gap: 3px;             /* 🔥 超級緊湊：4px → 3px */
+}
+
+.record-stats span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;             /* 🔥 超級緊湊：3px → 2px */
+  padding: 3px 4px;     /* 🔥 超級緊湊：4px 6px → 3px 4px */
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 4px;   /* 🔥 超級緊湊：5px → 4px */
+  font-size: clamp(8px, 2vw, 10px);  /* 🔥 自適應字體：手機端自動縮小 */
+  font-weight: 600;
+  color: #475569;
+  transition: all 0.2s;
+  border: 1px solid #e2e8f0;
+  white-space: nowrap;  /* 🔥 防止換行 */
+  overflow: hidden;     /* 🔥 防止溢出 */
+  text-overflow: ellipsis; /* 🔥 過長顯示省略號 */
+}
+
+.record-stats span:hover {
+  background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+  border-color: #bae6fd;
+  transform: translateY(-1px);
+}
+
+.record-stats i {
+  font-size: 11px;      /* 🔥 超級緊湊：12px → 11px */
+  color: #3b82f6;
+}
+
+/* 📝 詳細內容區 */
+.history-record-details {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  background: #ffffff;
+}
+
+.history-record-details-inner {
+  min-height: 0;
+  overflow: visible;
+}
+
+.history-record.expanded .history-record-details {
+  grid-template-rows: 1fr;
+}
+
+/* 📚 區塊標題 */
+.record-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.record-section-title i {
+  font-size: 16px;
+  color: #3b82f6;
+}
+
+/* 📖 課程總覽區 */
+.record-overview-section {
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.record-comment-preview {
+  margin: 0 0 12px 0;
+  padding: 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-left: 4px solid #10b981;
+  border-radius: 8px;
+  line-height: 1.6;
+  color: #334155;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.record-view-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.record-view-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.record-view-btn i {
+  font-size: 12px;
+}
+
+/* 🎓 學生記錄區 */
+.record-students-section {
+  padding: 16px;
+  width: 100%;
+  overflow: visible;
+}
+
+.record-students-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  width: 100%;
+  overflow: visible;
+}
+
+/* 👤 單一學生項目 */
+.student-item {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.student-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.student-header {
+  padding: 10px 12px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.student-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.student-name i {
+  font-size: 14px;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.student-media {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.student-media i {
+  margin-right: 3px;
+  color: #3b82f6;
+}
+
+.student-comment {
+  padding: 12px;
+  min-height: 60px;
+  line-height: 1.6;
+  color: #475569;
+  font-size: 13px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.student-no-comment {
+  padding: 12px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 13px;
+}
+
+.student-view-btn {
+  width: 100%;
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #3b82f6;
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.student-view-btn:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+.student-view-btn i {
+  font-size: 12px;
+}
+
+/* 🚫 無學生記錄 */
+.record-no-students {
+  padding: 24px 16px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.record-no-students i {
+  font-size: 20px;
+  opacity: 0.6;
+}
+
+/* 📱 響應式設計 - 手機端超級緊湊 */
+@media (max-width: 768px) {
+  .record-header {
+    padding: 3px 5px;     /* 🔥 超級緊湊：5px 8px → 3px 5px */
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .record-expand-icon {
+    align-self: flex-end;
+    margin-top: -14px;    /* 🔥 超級向上移動：-12px → -14px */
+    padding: 4px;         /* 🔥 減小點擊區域 */
+  }
+
+  .record-course-name {
+    font-size: 12px;      /* 🔥 超級緊湊：13px → 12px */
+    margin-bottom: 1px;   /* 🔥 超級緊湊：2px → 1px */
+  }
+
+  .record-tags {
+    margin-bottom: 0;     /* 🔥 移除底部間距 */
+  }
+
+  .record-tag {
+    padding: 1px 4px;     /* 🔥 超級緊湊：2px 6px → 1px 4px */
+    font-size: 8px;       /* 🔥 超級緊湊：9px → 8px */
+  }
+
+  .record-meta {
+    padding: 3px 5px;     /* 🔥 超級緊湊：4px 8px → 3px 5px */
+  }
+
+  .record-date {
+    font-size: 9px;       /* 🔥 超級緊湊：10px → 9px */
+    margin-bottom: 2px;   /* 🔥 超級緊湊：3px → 2px */
+  }
+
+  .record-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;             /* 🔥 超級緊湊：3px → 2px */
+  }
+
+  .record-stats span {
+    padding: 2px 3px;     /* 🔥 超級緊湊：3px 4px → 2px 3px */
+    font-size: 9px;       /* 🔥 超級緊湊：10px → 9px */
+  }
+
+  .record-stats i {
+    font-size: 10px;      /* 🔥 超級緊湊：11px → 10px */
+  }
+
+  .record-overview-section,
+  .record-students-section {
+    padding: 20px 16px;
+  }
+
+  .record-section-title {
+    font-size: 15px;
+    margin-bottom: 14px;
+  }
+
+  .record-comment-preview {
+    padding: 14px;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .record-students-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .student-header {
+    padding: 12px 14px;
+    flex-wrap: wrap;
+  }
+
+  .student-name {
+    font-size: 14px;
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .student-media {
+    gap: 10px;
+    font-size: 12px;
+  }
+
+  .student-comment,
+  .student-no-comment {
+    padding: 14px;
+    min-height: 60px;
+    font-size: 13px;
+  }
+
+  .student-view-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
+/* 🎨 動畫優化 */
+@media (prefers-reduced-motion: reduce) {
+  .history-record,
+  .history-record-details,
+  .record-expand-icon i,
+  .record-stats span,
+  .student-item,
+  .record-view-btn,
+  .student-view-btn {
+    transition: none !important;
+  }
+}
+
+/* 低階裝置優化 */
+body.low-end .history-record {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: none;
+}
+
+body.low-end .history-record:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+body.low-end .record-stats span:hover,
+body.low-end .student-item:hover,
+body.low-end .record-view-btn:hover,
+body.low-end .student-view-btn:hover {
+  transform: none;
+}
+

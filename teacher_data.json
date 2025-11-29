@@ -1,0 +1,84 @@
+{
+  "teachers": [
+    {
+      "name": "YOKI",
+      "userId": "Ucf9b239b708001ed44f0710704282655",
+      "color": "rgba(255, 182, 193, 0.8)"
+    },
+    {
+      "name": "TED",
+      "userId": "U213b36e8024ab1d2b895b24082c21270",
+      "color": "rgba(116, 185, 255, 0.8)"
+    },
+    {
+      "name": "AGNES",
+      "userId": "U8427f9e5cc1fd485a7fba84152776f2c",
+      "color": "rgba(255, 223, 102, 0.8)"
+    },
+    {
+      "name": "HANSEN",
+      "userId": "U73d377e2bcaedb439eaa8c757f623666",
+      "color": "rgba(180, 167, 214, 0.8)"
+    },
+    {
+      "name": "JAMES",
+      "userId": "Uebfe9bd644976914003e99254d46764c",
+      "color": "rgba(0, 184, 148, 0.8)"
+    },
+    {
+      "name": "IVAN",
+      "userId": "Udba73eb49b16cfd091181bf589efdca0",
+      "color": "rgba(255, 192, 203, 0.8)"
+    },
+    {
+      "name": "XIAN",
+      "userId": "Uce2bdcaa734d11a8aa0558c96ba1dad9",
+      "color": "rgba(162, 155, 254, 0.8)"
+    },
+    {
+      "name": "EASON",
+      "userId": "U99233a941eaab5298c1a4d77127ccfd9",
+      "color": "rgba(85, 239, 196, 0.8)"
+    },
+    {
+      "name": "BELLA",
+      "userId": "Uad4a371309913a867e530e582684d853",
+      "color": "rgba(255, 118, 117, 0.8)"
+    },
+    {
+      "name": "GILLIAN",
+      "userId": "U5f859c4f8a6cfcb602c0a26b2f61ec64",
+      "color": "rgba(253, 203, 110, 0.8)"
+    },
+    {
+      "name": "DANIEL",
+      "userId": "Uec1772181e34b968bf2671d249128ff5",
+      "color": "rgba(129, 236, 236, 0.8)"
+    },
+    {
+      "name": "Dirty",
+      "userId": "U0291ce9023f7911a99cf79a54be90de8",
+      "color": "rgba(255, 159, 243, 0.8)"
+    },
+    {
+      "name": "TIM",
+      "userId": "Udb51363eb6fdc605a6a9816379a38103",
+      "color": "rgba(144, 238, 144, 0.8)"
+    },
+    {
+      "name": "Melody",
+      "userId": "Udb51363eb6fdc605a6a9816379a38100",
+      "color": "rgba(144, 200, 100, 0.8)"
+    },
+    {
+      "name": "FLB 共用",
+      "userId": "U_FLB_SHARED_ACCOUNT",
+      "color": "rgba(100, 100, 100, 0.8)"
+    },
+    {
+      "name": "TIM",
+      "userId": "local-test-user"
+    }
+  ],
+  "last_update": "2025-11-28T13:20:49.858Z"
+}

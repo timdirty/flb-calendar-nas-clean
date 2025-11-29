@@ -1,0 +1,156 @@
+/**
+ * 影片轉碼與縮圖處理
+ */
+
+const path = require('path');
+const fs = require('fs');
+const fsPromises = fs.promises;
+const { spawn } = require('child_process');
+const {default: PQueue} = require('p-queue');
+
+const mediaStorage = require('./media-storage');
+
+const TRANSCODE_CONCURRENCY = Number(process.env.MEDIA_TRANSCODE_CONCURRENCY || 1);
+const POSTER_CONCURRENCY = Number(process.env.MEDIA_POSTER_CONCURRENCY || 2);
+
+const videoQueue = new PQueue({ concurrency: Math.max(1, TRANSCODE_CONCURRENCY) });
+const posterQueue = new PQueue({ concurrency: Math.max(1, POSTER_CONCURRENCY) });
+
+function resolveFfmpegBinary() {
+    const candidates = [
+        process.env.FFMPEG_PATH,
+        process.env.MEDIA_FFMPEG_PATH,
+        '/usr/bin/ffmpeg',
+        '/usr/local/bin/ffmpeg',
+        '/opt/bin/ffmpeg',
+        '/var/packages/CodecPack/target/usr/bin/ffmpeg',
+        '/volume1/@appstore/CodecPack/usr/bin/ffmpeg',
+        'ffmpeg'
+    ].filter(Boolean);
+
+    for (const candidate of candidates) {
+        try {
+            if (!fs.existsSync(candidate)) continue;
+            fs.accessSync(candidate, fs.constants.X_OK);
+            return candidate;
+        } catch (err) {
+            continue;
+        }
+    }
+
+    return 'ffmpeg';
+}
+
+const FFMPEG_BIN = resolveFfmpegBinary();
+
+function runFfmpeg(args) {
+    return new Promise((resolve, reject) => {
+        const job = spawn(FFMPEG_BIN, args, { stdio: 'pipe' });
+        let stderr = '';
+        job.stderr.on('data', chunk => { stderr += chunk.toString(); });
+        job.on('error', reject);
+        job.on('close', code => {
+            if (code === 0) {
+                resolve({ code, stderr });
+            } else {
+                const error = new Error(`FFmpeg 執行失敗 (code=${code})`);
+                error.code = code;
+                error.stderr = stderr;
+                reject(error);
+            }
+        });
+    });
+}
+
+async function transcodeToMp4(inputPath, outputDir, baseName) {
+    await fsPromises.mkdir(outputDir, { recursive: true });
+    const outputName = `${baseName}.mp4`;
+    const outputPath = path.join(outputDir, outputName);
+
+    const exists = fs.existsSync(outputPath);
+    if (exists) {
+        return {
+            outputPath,
+            outputName,
+            reused: true
+        };
+    }
+
+    const args = [
+        '-y',
+        '-i', inputPath,
+        '-preset', 'veryfast',
+        '-movflags', 'faststart',
+        '-c:v', 'libx264',
+        '-crf', process.env.MEDIA_TRANSCODE_CRF || '23',
+        '-c:a', 'aac',
+        '-b:a', '160k',
+        outputPath
+    ];
+
+    await runFfmpeg(args);
+    return {
+        outputPath,
+        outputName,
+        reused: false
+    };
+}
+
+async function extractPoster(inputPath, outputDir, baseName, seekSecond = 1) {
+    await fsPromises.mkdir(outputDir, { recursive: true });
+    const outputName = `${baseName}.jpg`;
+    const outputPath = path.join(outputDir, outputName);
+
+    const args = [
+        '-y',
+        '-i', inputPath,
+        '-ss', String(seekSecond),
+        '-vframes', '1',
+        '-vf', 'scale=1280:-1',
+        outputPath
+    ];
+
+    await runFfmpeg(args);
+    return {
+        outputPath,
+        outputName
+    };
+}
+
+async function createOutputs(bucket, originFilePath) {
+    const baseName = path.basename(originFilePath, path.extname(originFilePath));
+    const transcodeResult = await transcodeToMp4(originFilePath, bucket.transcodedDir, baseName);
+    const posterResult = await extractPoster(transcodeResult.outputPath, bucket.thumbsDir, `${baseName}_poster`);
+
+    return {
+        transcoded: transcodeResult,
+        poster: posterResult
+    };
+}
+
+function enqueueTranscode(bucket, originFilePath) {
+    return videoQueue.add(() => createOutputs(bucket, originFilePath)
+        .catch((err) => {
+            console.error('❌ 影片轉碼失敗:', err.stderr || err.message);
+            throw err;
+        }));
+}
+
+function enqueuePosterOnly(bucket, originFilePath, seekSecond) {
+    const baseName = path.basename(originFilePath, path.extname(originFilePath));
+    return posterQueue.add(() => extractPoster(originFilePath, bucket.thumbsDir, `${baseName}_poster`, seekSecond)
+        .catch((err) => {
+            console.error('❌ 影片縮圖失敗:', err.stderr || err.message);
+            throw err;
+        }));
+}
+
+module.exports = {
+    enqueueTranscode,
+    enqueuePosterOnly,
+    queues: {
+        videoQueue,
+        posterQueue
+    },
+    FFMPEG_BIN
+};

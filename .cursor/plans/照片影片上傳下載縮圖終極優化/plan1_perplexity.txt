@@ -1,0 +1,978 @@
+我已經完成了廣泛的研究,涵蓋了企業級影像與影片上傳系統的各個關鍵領域。現在讓我整合這些資訊,為您提供一個完整的企業級解決方案規劃。
+
+## 企業級影像影片上傳系統完整規劃方案
+
+### 一、系統架構概述
+
+根據 LINE、Google Photos、Immich 等大型企業的實踐,一套完整的媒體管理系統需要以下核心組件:
+
+#### **核心架構層**
+
+**前端上傳層**[1][2][3]
+- 支援拖放上傳和分批上傳
+- 使用 Presigned URL 直接上傳到物件儲存,避免經過應用伺服器
+- 實作分片上傳(Chunked Upload),支援大檔案和斷點續傳
+- 前端即時生成縮圖預覽
+
+**物件儲存層**[4][5][6]
+- 使用 S3 相容的物件儲存(MinIO)部署在 NAS 上
+- 原始檔案與處理後檔案分開存放
+- 支援物件版本控制和生命週期管理
+
+**訊息佇列層**[7][8]
+- 使用 Redis 作為訊息佇列處理非同步任務
+- 解耦上傳、處理、儲存流程
+- 支援任務重試和錯誤處理
+
+**處理引擎層**[9][10][11]
+- 影像:使用 FFmpeg 或 libvips 進行縮圖生成、格式轉換
+- 影片:使用 FFmpeg 進行轉碼、縮圖擷取、多解析度輸出
+- 批次處理 Worker 從佇列中取任務
+
+**內容傳遞層**[12][13][14]
+- CDN 快取靜態資源
+- 響應式圖片傳遞(srcset)
+- 適應性位元率串流(HLS/DASH)用於影片
+
+**資料庫層**[15][16]
+- PostgreSQL 儲存中繼資料
+- 儲存檔案資訊、使用者資訊、相簿資訊
+- EXIF 資料可以 JSON 格式儲存
+
+### 二、詳細技術方案
+
+#### **1. 檔案上傳流程**[17][18][19]
+
+```
+使用者 → Web UI → API Gateway
+    ↓
+1. 請求 Presigned URL
+    ↓
+API Server → MinIO → 生成 Presigned URL
+    ↓
+2. 前端直接上傳到 MinIO (分片上傳)
+    ↓
+3. 上傳完成後通知 API Server
+    ↓
+4. API Server 寫入資料庫(狀態: pending)
+    ↓
+5. 發送訊息到 Redis Queue
+```
+
+**分片上傳實作**:[18][17]
+- 將大檔案分成 5-10MB 的塊
+- 每個塊使用獨立的 Presigned URL
+- 支援並行上傳加速
+- 前端追蹤上傳進度
+
+#### **2. 影像處理 Pipeline**[3][20][11]
+
+```
+Redis Queue → Worker 監聽
+    ↓
+1. 從 MinIO 下載原始檔案
+    ↓
+2. 生成多種尺寸
+   - 縮圖: 200x200 (相簿預覽)
+   - 中等: 800x800 (網頁顯示)
+   - 大圖: 1920x1920 (全螢幕)
+   - 原圖: 保留原始尺寸
+    ↓
+3. 格式優化
+   - 轉換為 WebP/AVIF (90% 壓縮率)
+   - 保留 JPEG 作為備援
+    ↓
+4. 提取 EXIF 資料
+   - 拍攝時間、地點、相機型號
+   - 儲存到資料庫
+    ↓
+5. 生成 Perceptual Hash
+   - 用於去重檢測
+    ↓
+6. 上傳處理後檔案到 MinIO
+    ↓
+7. 更新資料庫狀態: completed
+```
+
+#### **3. 影片處理 Pipeline**[21][22][23]
+
+```
+Redis Queue → Video Worker
+    ↓
+1. 下載原始影片
+    ↓
+2. FFmpeg 轉碼多解析度
+   - 480p (mobile)
+   - 720p (standard)
+   - 1080p (HD)
+   - 原始解析度
+    ↓
+3. 生成 HLS/DASH 串流格式
+   - .m3u8 播放列表
+   - 分段 .ts 檔案
+    ↓
+4. 擷取縮圖
+   - 智能選擇最佳幀(避免黑幀)
+   - 生成多個時間點縮圖
+    ↓
+5. 提取影片中繼資料
+   - 時長、解析度、位元率、編碼
+    ↓
+6. 上傳到 MinIO
+    ↓
+7. 更新資料庫
+```
+
+#### **4. 快速預覽與下載**[13][24][1]
+
+**縮圖快取策略**:
+- 縮圖永久快取在 CDN
+- 使用 Redis 快取熱門檔案的中繼資料
+- 瀏覽器快取設置長期過期時間
+
+**響應式圖片傳遞**:[24][25]
+```html
+<img 
+  src="image-800w.webp"
+  srcset="
+    image-400w.webp 400w,
+    image-800w.webp 800w,
+    image-1200w.webp 1200w"
+  sizes="(max-width: 600px) 400px, 800px"
+  alt="responsive image">
+```
+
+**影片串流**:[26][27][28]
+- 使用 HLS (HTTP Live Streaming)
+- 支援適應性位元率(ABR)
+- 根據網路狀況自動調整品質
+
+### 三、NAS Docker 部署方案
+
+#### **Docker Compose 架構**[29][6][30]
+
+```yaml
+version: '3.8'
+
+services:
+  # MinIO - S3 相容物件儲存
+  minio:
+    image: minio/minio:latest
+    container_name: media-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - /volume1/docker/minio/data1:/data1
+      - /volume1/docker/minio/data2:/data2
+      - /volume1/docker/minio/data3:/data3
+      - /volume1/docker/minio/data4:/data4
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: your_secure_password
+      MINIO_VOLUMES: "/data1 /data2 /data3 /data4"
+    command: server --console-address ":9001"
+    restart: unless-stopped
+
+  # PostgreSQL - 資料庫
+  postgres:
+    image: postgres:15-alpine
+    container_name: media-db
+    volumes:
+      - /volume1/docker/postgres/data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: media_db
+      POSTGRES_USER: media_user
+      POSTGRES_PASSWORD: your_db_password
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  # Redis - 訊息佇列與快取
+  redis:
+    image: redis:7-alpine
+    container_name: media-redis
+    volumes:
+      - /volume1/docker/redis/data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # API Server - 主應用
+  api-server:
+    build: ./api-server
+    container_name: media-api
+    ports:
+      - "8080:8080"
+    volumes:
+      - /volume1/docker/media/temp:/tmp
+    environment:
+      DATABASE_URL: postgresql://media_user:your_db_password@postgres:5432/media_db
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: your_secure_password
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    restart: unless-stopped
+
+  # Image Worker - 圖片處理
+  image-worker:
+    build: ./image-worker
+    container_name: media-image-worker
+    volumes:
+      - /volume1/docker/media/temp:/tmp
+    environment:
+      DATABASE_URL: postgresql://media_user:your_db_password@postgres:5432/media_db
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: your_secure_password
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+
+  # Video Worker - 影片處理
+  video-worker:
+    build: ./video-worker
+    container_name: media-video-worker
+    volumes:
+      - /volume1/docker/media/temp:/tmp
+    environment:
+      DATABASE_URL: postgresql://media_user:your_db_password@postgres:5432/media_db
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: your_secure_password
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    restart: unless-stopped
+
+  # Nginx - 反向代理與靜態檔案服務
+  nginx:
+    image: nginx:alpine
+    container_name: media-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - /volume1/docker/nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - api-server
+    restart: unless-stopped
+```
+
+#### **資料庫 Schema 設計**[16][15]
+
+```sql
+-- 使用者表
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 相簿表
+CREATE TABLE albums (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    is_public BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 媒體檔案表
+CREATE TABLE media (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    type VARCHAR(20) CHECK (type IN ('image', 'video')),
+    original_filename VARCHAR(255),
+    mime_type VARCHAR(100),
+    file_size BIGINT,
+    
+    -- 儲存位置
+    bucket VARCHAR(100),
+    object_key VARCHAR(500),
+    
+    -- 處理狀態
+    status VARCHAR(20) DEFAULT 'pending' 
+        CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
+    
+    -- 圖片特定欄位
+    width INTEGER,
+    height INTEGER,
+    
+    -- EXIF 資料 (JSON 格式)
+    exif_data JSONB,
+    
+    -- 去重用的 perceptual hash
+    perceptual_hash VARCHAR(64),
+    
+    -- 縮圖位置
+    thumbnail_key VARCHAR(500),
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_media_user ON media(user_id);
+CREATE INDEX idx_media_status ON media(status);
+CREATE INDEX idx_media_hash ON media(perceptual_hash);
+
+-- 影片特定資訊表
+CREATE TABLE video_metadata (
+    id SERIAL PRIMARY KEY,
+    media_id INTEGER REFERENCES media(id) ON DELETE CASCADE,
+    duration FLOAT,
+    bitrate INTEGER,
+    codec VARCHAR(50),
+    
+    -- HLS 串流檔案位置
+    hls_playlist_key VARCHAR(500),
+    
+    -- 多解析度版本
+    resolutions JSONB -- {"480p": "key1", "720p": "key2", "1080p": "key3"}
+);
+
+-- 相簿與媒體關聯表 (多對多)
+CREATE TABLE album_media (
+    id SERIAL PRIMARY KEY,
+    album_id INTEGER REFERENCES albums(id) ON DELETE CASCADE,
+    media_id INTEGER REFERENCES media(id) ON DELETE CASCADE,
+    position INTEGER,
+    caption TEXT,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(album_id, media_id)
+);
+
+-- 分享連結表
+CREATE TABLE share_links (
+    id SERIAL PRIMARY KEY,
+    media_id INTEGER REFERENCES media(id) ON DELETE CASCADE,
+    token VARCHAR(64) UNIQUE NOT NULL,
+    expires_at TIMESTAMP,
+    password_hash VARCHAR(255),
+    download_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 四、核心功能模組
+
+#### **1. 上傳模組**[2][3]
+
+**前端 (JavaScript)**:
+```javascript
+// 分片上傳函式
+async function uploadLargeFile(file) {
+    const chunkSize = 10 * 1024 * 1024; // 10MB
+    const chunks = Math.ceil(file.size / chunkSize);
+    
+    // 1. 初始化多部分上傳
+    const initResponse = await fetch('/api/upload/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            filename: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+            chunks: chunks
+        })
+    });
+    
+    const { uploadId, presignedUrls } = await initResponse.json();
+    
+    // 2. 並行上傳所有分片
+    const uploadPromises = [];
+    for (let i = 0; i < chunks; i++) {
+        const start = i * chunkSize;
+        const end = Math.min(start + chunkSize, file.size);
+        const chunk = file.slice(start, end);
+        
+        uploadPromises.push(
+            fetch(presignedUrls[i], {
+                method: 'PUT',
+                body: chunk
+            }).then(response => ({
+                ETag: response.headers.get('ETag'),
+                PartNumber: i + 1
+            }))
+        );
+    }
+    
+    const parts = await Promise.all(uploadPromises);
+    
+    // 3. 完成上傳
+    await fetch('/api/upload/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uploadId, parts })
+    });
+}
+```
+
+**後端 API (Node.js/Python)**:
+```javascript
+// 初始化上傳
+app.post('/api/upload/init', async (req, res) => {
+    const { filename, fileType, fileSize, chunks } = req.body;
+    
+    // 生成唯一物件鍵
+    const objectKey = `uploads/${userId}/${uuid()}-${filename}`;
+    
+    // 初始化 MinIO 多部分上傳
+    const uploadId = await minioClient.initiateMultipartUpload(
+        'temp-bucket',
+        objectKey
+    );
+    
+    // 生成每個分片的 Presigned URL
+    const presignedUrls = [];
+    for (let i = 1; i <= chunks; i++) {
+        const url = await minioClient.presignedPutObject(
+            'temp-bucket',
+            objectKey,
+            { partNumber: i, uploadId: uploadId }
+        );
+        presignedUrls.push(url);
+    }
+    
+    // 在資料庫中創建記錄
+    const mediaId = await db.query(
+        'INSERT INTO media (user_id, type, original_filename, mime_type, file_size, bucket, object_key, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+        [userId, detectType(fileType), filename, fileType, fileSize, 'temp-bucket', objectKey, 'pending']
+    );
+    
+    res.json({ uploadId, presignedUrls, mediaId: mediaId.rows[0].id });
+});
+
+// 完成上傳
+app.post('/api/upload/complete', async (req, res) => {
+    const { uploadId, parts, mediaId } = req.body;
+    
+    // 完成 MinIO 多部分上傳
+    await minioClient.completeMultipartUpload(
+        'temp-bucket',
+        objectKey,
+        uploadId,
+        parts
+    );
+    
+    // 發送處理任務到 Redis 佇列
+    await redisClient.lpush('media:processing', JSON.stringify({
+        mediaId: mediaId,
+        type: 'image' // or 'video'
+    }));
+    
+    res.json({ success: true });
+});
+```
+
+#### **2. 圖片處理 Worker**[10][11]
+
+```python
+# Image Worker (Python + FFmpeg)
+import redis
+import psycopg2
+from minio import Minio
+from PIL import Image
+import imagehash
+import json
+from pillow_heif import register_heif_opener
+
+register_heif_opener()  # 支援 HEIC
+
+def process_image(media_id):
+    # 1. 從資料庫獲取資訊
+    media = db.get_media(media_id)
+    
+    # 2. 從 MinIO 下載原始檔案
+    temp_path = f"/tmp/{media_id}_original"
+    minio_client.fget_object(
+        media['bucket'],
+        media['object_key'],
+        temp_path
+    )
+    
+    # 3. 開啟圖片
+    img = Image.open(temp_path)
+    
+    # 4. 提取 EXIF
+    exif_data = extract_exif(img)
+    
+    # 5. 生成 perceptual hash (用於去重)
+    phash = str(imagehash.phash(img))
+    
+    # 檢查是否重複
+    duplicate = db.check_duplicate(phash)
+    if duplicate:
+        # 標記為重複並連結到原始檔案
+        db.mark_as_duplicate(media_id, duplicate['id'])
+        return
+    
+    # 6. 生成多種尺寸
+    sizes = [
+        ('thumb', 200, 200),
+        ('medium', 800, 800),
+        ('large', 1920, 1920)
+    ]
+    
+    processed_keys = {}
+    for size_name, max_width, max_height in sizes:
+        # 保持長寬比縮放
+        img_copy = img.copy()
+        img_copy.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+        
+        # 轉換為 WebP
+        webp_path = f"/tmp/{media_id}_{size_name}.webp"
+        img_copy.save(webp_path, 'WEBP', quality=85)
+        
+        # 上傳到 MinIO
+        object_key = f"images/{media['user_id']}/{media_id}/{size_name}.webp"
+        minio_client.fput_object(
+            'media-bucket',
+            object_key,
+            webp_path
+        )
+        processed_keys[size_name] = object_key
+        
+        os.remove(webp_path)
+    
+    # 7. 更新資料庫
+    db.update_media(media_id, {
+        'status': 'completed',
+        'width': img.width,
+        'height': img.height,
+        'exif_data': json.dumps(exif_data),
+        'perceptual_hash': phash,
+        'thumbnail_key': processed_keys['thumb'],
+        'bucket': 'media-bucket',
+        'object_key': processed_keys['large']
+    })
+    
+    # 8. 刪除臨時檔案
+    os.remove(temp_path)
+    minio_client.remove_object(media['bucket'], media['object_key'])
+
+# Worker 主迴圈
+redis_client = redis.Redis(host='redis', port=6379)
+while True:
+    # 從佇列取任務
+    _, task_data = redis_client.brpop('media:processing')
+    task = json.loads(task_data)
+    
+    try:
+        if task['type'] == 'image':
+            process_image(task['mediaId'])
+    except Exception as e:
+        # 錯誤處理
+        db.update_media_status(task['mediaId'], 'failed')
+        logger.error(f"Error processing {task['mediaId']}: {e}")
+```
+
+#### **3. 影片處理 Worker**[11][23][9]
+
+```python
+# Video Worker
+import ffmpeg
+import subprocess
+
+def process_video(media_id):
+    media = db.get_media(media_id)
+    
+    # 下載原始影片
+    temp_path = f"/tmp/{media_id}_original.mp4"
+    minio_client.fget_object(media['bucket'], media['object_key'], temp_path)
+    
+    # 提取影片資訊
+    probe = ffmpeg.probe(temp_path)
+    video_info = next(s for s in probe['streams'] if s['codec_type'] == 'video')
+    duration = float(probe['format']['duration'])
+    
+    # 轉碼多解析度
+    resolutions = {
+        '480p': {'width': 854, 'height': 480, 'bitrate': '1000k'},
+        '720p': {'width': 1280, 'height': 720, 'bitrate': '2500k'},
+        '1080p': {'width': 1920, 'height': 1080, 'bitrate': '5000k'}
+    }
+    
+    output_keys = {}
+    for res_name, params in resolutions.items():
+        output_path = f"/tmp/{media_id}_{res_name}.mp4"
+        
+        # FFmpeg 轉碼
+        (
+            ffmpeg
+            .input(temp_path)
+            .output(
+                output_path,
+                vcodec='libx264',
+                video_bitrate=params['bitrate'],
+                vf=f"scale={params['width']}:{params['height']}",
+                acodec='aac',
+                audio_bitrate='128k'
+            )
+            .overwrite_output()
+            .run(quiet=True)
+        )
+        
+        # 上傳
+        object_key = f"videos/{media['user_id']}/{media_id}/{res_name}.mp4"
+        minio_client.fput_object('media-bucket', object_key, output_path)
+        output_keys[res_name] = object_key
+        os.remove(output_path)
+    
+    # 生成 HLS 串流 (可選)
+    hls_output_dir = f"/tmp/{media_id}_hls"
+    os.makedirs(hls_output_dir, exist_ok=True)
+    
+    subprocess.run([
+        'ffmpeg', '-i', temp_path,
+        '-codec:', 'copy',
+        '-start_number', '0',
+        '-hls_time', '10',
+        '-hls_list_size', '0',
+        '-f', 'hls',
+        f"{hls_output_dir}/playlist.m3u8"
+    ])
+    
+    # 上傳 HLS 檔案
+    for file in os.listdir(hls_output_dir):
+        minio_client.fput_object(
+            'media-bucket',
+            f"videos/{media['user_id']}/{media_id}/hls/{file}",
+            os.path.join(hls_output_dir, file)
+        )
+    
+    # 擷取縮圖 (智能選擇最佳幀)
+    thumbnail_path = f"/tmp/{media_id}_thumb.jpg"
+    (
+        ffmpeg
+        .input(temp_path, ss=duration * 0.3)  # 取 30% 位置的幀
+        .filter('select', 'gt(scene,0.4)')
+        .filter('scale', 320, -1)
+        .output(thumbnail_path, vframes=1)
+        .overwrite_output()
+        .run(quiet=True)
+    )
+    
+    thumb_key = f"videos/{media['user_id']}/{media_id}/thumb.jpg"
+    minio_client.fput_object('media-bucket', thumb_key, thumbnail_path)
+    
+    # 更新資料庫
+    db.update_video(media_id, {
+        'status': 'completed',
+        'thumbnail_key': thumb_key,
+        'duration': duration,
+        'width': int(video_info['width']),
+        'height': int(video_info['height'])
+    })
+    
+    db.insert_video_metadata(media_id, {
+        'duration': duration,
+        'codec': video_info['codec_name'],
+        'bitrate': int(video_info.get('bit_rate', 0)),
+        'resolutions': json.dumps(output_keys),
+        'hls_playlist_key': f"videos/{media['user_id']}/{media_id}/hls/playlist.m3u8"
+    })
+    
+    # 清理
+    os.remove(temp_path)
+    os.remove(thumbnail_path)
+```
+
+#### **4. 前端顯示模組**[25][24]
+
+```javascript
+// 響應式圖片元件
+function ResponsiveImage({ mediaId, alt }) {
+    const baseUrl = 'https://cdn.yourdomain.com';
+    
+    return (
+        <picture>
+            {/* WebP 優先 */}
+            <source
+                type="image/webp"
+                srcSet={`
+                    ${baseUrl}/images/${mediaId}/thumb.webp 200w,
+                    ${baseUrl}/images/${mediaId}/medium.webp 800w,
+                    ${baseUrl}/images/${mediaId}/large.webp 1920w
+                `}
+                sizes="(max-width: 600px) 200px, (max-width: 1200px) 800px, 1920px"
+            />
+            {/* JPEG 備援 */}
+            <source
+                type="image/jpeg"
+                srcSet={`
+                    ${baseUrl}/images/${mediaId}/thumb.jpg 200w,
+                    ${baseUrl}/images/${mediaId}/medium.jpg 800w,
+                    ${baseUrl}/images/${mediaId}/large.jpg 1920w
+                `}
+            />
+            <img
+                src={`${baseUrl}/images/${mediaId}/medium.jpg`}
+                alt={alt}
+                loading="lazy"
+            />
+        </picture>
+    );
+}
+
+// HLS 影片播放器
+function VideoPlayer({ mediaId }) {
+    const videoRef = useRef(null);
+    
+    useEffect(() => {
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(`https://cdn.yourdomain.com/videos/${mediaId}/hls/playlist.m3u8`);
+            hls.attachMedia(videoRef.current);
+        }
+    }, [mediaId]);
+    
+    return (
+        <video
+            ref={videoRef}
+            controls
+            poster={`https://cdn.yourdomain.com/videos/${mediaId}/thumb.jpg`}
+            style={{ width: '100%' }}
+        />
+    );
+}
+```
+
+### 五、效能優化策略
+
+#### **1. 快取層次**[12][13]
+
+```
+L1: 瀏覽器快取 (7天)
+  ↓
+L2: CDN 快取 (30天)
+  ↓
+L3: Redis 快取中繼資料 (1小時)
+  ↓
+L4: MinIO 物件儲存
+  ↓
+L5: NAS 實體儲存
+```
+
+#### **2. 縮圖生成策略**[31][9]
+
+- 即時生成首次縮圖
+- 背景生成其他尺寸
+- 使用 LRU 快取策略
+- 預先生成常用尺寸
+
+#### **3. 圖片優化**[32][33]
+
+- 優先使用 WebP/AVIF 格式(節省 50% 以上空間)
+- 自動品質調整(85% 品質通常不可察覺)
+- 漸進式 JPEG 載入
+- Lazy Loading 延遲載入
+
+#### **4. 影片優化**[27][34][26]
+
+- 適應性位元率串流(HLS/DASH)
+- 多解析度版本
+- 預載入優化
+- 硬體加速轉碼
+
+### 六、安全性考量
+
+**1. 存取控制**[19][1]
+- Presigned URL 設置短期有效期限(15分鐘)
+- 基於使用者權限的存取控制
+- 私有檔案與公開檔案分離
+
+**2. 檔案驗證**[2][3]
+- 前端與後端雙重檔案類型驗證
+- 檔案大小限制
+- 病毒掃描(可選)
+
+**3. 資料保護**[30][13]
+- HTTPS 傳輸加密
+- 靜態資料加密(MinIO 支援)
+- 定期備份
+
+### 七、監控與維護
+
+**1. 系統監控**
+- 使用 Prometheus + Grafana 監控
+- 追蹤處理隊列長度
+- 監控儲存空間使用
+
+**2. 日誌管理**
+- 集中化日誌收集
+- 錯誤追蹤與告警
+- 效能分析
+
+**3. 備份策略**[35][29]
+- 每日增量備份
+- 每週完整備份
+- 異地備份
+
+### 八、擴展性考量
+
+**水平擴展**:[36][3]
+- Worker 可動態增加實例
+- 使用負載均衡器
+- 無狀態設計
+
+**垂直擴展**:
+- 增加 CPU/記憶體資源
+- 升級儲存容量
+- 優化資料庫效能
+
+### 九、參考開源方案
+
+根據研究,以下是可直接使用的成熟方案:[37][38][29][35]
+
+**Immich**:[38][37]
+- 完整的 Google Photos 替代方案
+- Docker 部署簡單
+- 支援臉部辨識、地理位置
+- 移動端 App 支援
+
+**PhotoPrism**:[39][29]
+- AI 驅動的相片管理
+- 支援 RAW 格式
+- 可與 Nextcloud 整合
+
+**Piwigo**:[40][41]
+- 輕量級相簿系統
+- 豐富的外掛生態
+- 多使用者支援
+
+這套完整方案整合了 LINE、Google Photos、AWS S3、MinIO、Immich 等大型企業和開源專案的最佳實踐,提供從上傳、處理、儲存到傳遞的完整解決方案。所有組件都可在 Docker 中運行,直接部署在您的 NAS 上,並能根據需求靈活擴展。
+
+來源
+[1] Creating/editing albums and sharing ... https://help.line.me/line?contentId=20000248
+[2] System Design: Photo Sharing Service (5+ Approaches) https://www.youtube.com/watch?v=fuYtpnH4knI
+[3] Design a Picture-Sharing System - System Design https://www.geeksforgeeks.org/system-design/design-a-picture-sharing-system-system-design/
+[4] What is NAS? - Network-Attached Storage Explained https://aws.amazon.com/what-is/nas/
+[5] Object Storage vs NAS | Benefits & Definitions https://www.scality.com/topics/object-storage-vs-nas/
+[6] Setting up Object Storage with MinIO with Docker https://kodekloud.com/community/t/setting-up-object-storage-with-minio-with-docker/336624
+[7] c# Message queue with Redis https://dev.to/coddicat/c-message-queue-with-redis-1hjk
+[8] Redis Message Queue: 4 Easy Steps to Build a ... https://hevodata.com/learn/redis-message-queue/
+[9] cshum/imagorvideo: imagor video thumbnail server in Go ... https://github.com/cshum/imagorvideo
+[10] Generating thumbnails for video files with ffmpeg — Sulu 2.5 ... https://docs.sulu.io/en/2.5/cookbook/video-preview-images.html
+[11] Generate thumbnails of video - PHP & FFmpeg - AdnanTech https://adnan-tech.com/generate-thumbnails-of-video-php-ffmpeg/
+[12] Push vs Pull CDN in System Design https://www.linkedin.com/pulse/push-vs-pull-cdn-system-design-comprehensive-guide-firoz-khan-sjq8c
+[13] Designing Content Delivery Network (CDN) | System Design https://www.geeksforgeeks.org/system-design/designing-content-delivery-network-cdn-system-design/
+[14] System Design: Content Delivery Network (CDN) https://dev.to/karanpratapsingh/system-design-content-delivery-network-cdn-bof
+[15] Entity Relationship Diagram Example: Online Photo Album https://circle.visual-paradigm.com/erd-online-photo-album/
+[16] database - Photo album table design https://stackoverflow.com/questions/4620675/photo-album-table-design
+[17] Upload large files to AWS S3 using Multipart ... https://dev.to/magpys/upload-large-files-to-aws-s3-using-multipart-upload-and-presigned-urls-4olo
+[18] Uploading large objects to Amazon S3 using multipart ... https://aws.amazon.com/blogs/compute/uploading-large-objects-to-amazon-s3-using-multipart-upload-and-transfer-acceleration/
+[19] Uploading objects with presigned URLs https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html
+[20] System Design Case Study #2: Building An Image Processing ... https://shivangsnewsletter.com/p/image-processing-pipeline
+[21] Demystifying video transcoding: Importance, tools, types & ... https://imagekit.io/blog/video-transcoding/
+[22] What is Video Transcoding? https://aws.amazon.com/what-is/video-transcoding/
+[23] rehan-adi/video-transcoding-pipeline https://github.com/rehan-adi/video-transcoding-pipeline
+[24] 10 Responsive Image Techniques for Faster Websites https://onenine.com/10-responsive-image-techniques-for-faster-websites/
+[25] Creating responsive images with srcset https://uploadcare.com/blog/srcset-images/
+[26] HLS vs. DASH | What's The Difference? https://www.mux.com/articles/hls-vs-dash-what-s-the-difference-between-the-video-streaming-protocols
+[27] What is MPEG-DASH? | HLS vs. DASH https://www.cloudflare.com/learning/video/what-is-mpeg-dash/
+[28] MPEG-DASH - Dynamic Adaptive Streaming Standard vs ... https://getstream.io/glossary/mpeg-dash-streaming/
+[29] How I built a Google Photos alternative on my NAS with ... https://www.xda-developers.com/how-built-google-photos-alternative-nas-photoprism/
+[30] Setting up S3-compatible storage using MinIO and Docker https://blog.sddc.be/2023/10/25/setting-up-s3-compatible-storage-using-minio-and-docker/
+[31] How to generate video thumbnails in ASP.NET Core 8.0 https://dev.to/gleamtech/how-to-generate-video-thumbnails-in-aspnet-core-80-3k7e
+[32] AVIF vs WebP: Which Image Format Reigns Supreme in ... https://elementor.com/blog/webp-vs-avif/
+[33] AVIF vs. WebP: Speed, Quality, and Browser Support https://crystallize.com/blog/avif-vs-webp
+[34] Adaptive bitrate streaming https://en.wikipedia.org/wiki/Adaptive_bitrate_streaming
+[35] Immich — Self-hosted Google Photos alternative that ... https://akashrajpurohit.com/blog/selfhost-immich-your-personal-google-photos-alternative/
+[36] The 12 Best Enterprise Video CMS & Hosting Platforms for ... https://www.dacast.com/blog/enterprises-video-platform/
+[37] Replacing Google Photos with Immich - Danny McClelland https://blog.dmcc.io/posts/2024-immich-and-docker/
+[38] Immich: A Private, Fast, and Modern Google Photos ... https://nanohost.org/blog/immich-a-private-fast-and-modern-google-photos-alternative-you-can-self-host
+[39] Nextcloud Photos 2.0 vs PhotoPrism : r/selfhosted https://www.reddit.com/r/selfhosted/comments/10h4pad/nextcloud_photos_20_vs_photoprism/
+[40] How to Install Piwigo on Your Synology NAS https://mariushosting.com/how-to-install-piwigo-on-your-synology-nas/
+[41] Docker Setup Question | Piwigo.org https://piwigo.org/forum/viewtopic.php?id=31201
+[42] Video Thumbnail Generator - Extract Frames Online https://codeshack.io/video-thumbnail-generator/
+[43] Editing/checking content such as photos and videos in chats https://help.line.me/line/ios/?contentId=20008461&lang=en
+[44] How CDN Works | System Design https://www.youtube.com/watch?v=bJ9NnLLMQ78
+[45] Recommended architecture for handling user image uploads https://stackoverflow.com/questions/1149364/recommended-architecture-for-handling-user-image-uploads
+[46] CDN and Server Architecture : Picture upload feature for ... https://stackoverflow.com/questions/30843002/cdn-and-server-architecture-picture-upload-feature-for-my-web-app
+[47] Generate thumbnails for video files : r/synology https://www.reddit.com/r/synology/comments/1cozeij/generate_thumbnails_for_video_files/
+[48] Methods and systems for improved uploading of media ... https://patents.google.com/patent/US8935322B1/en
+[49] Generate Thumbnail from server video link android https://stackoverflow.com/questions/22855053/generate-thumbnail-from-server-video-link-android
+[50] donnemartin/system-design-primer https://github.com/donnemartin/system-design-primer
+[51] How to generate thumbnails for Home Videos https://emby.media/community/index.php?%2Ftopic%2F98799-how-to-generate-thumbnails-for-home-videos%2F
+[52] Content Delivery Network (CDN) System Design Basics https://www.designgurus.io/blog/content-delivery-network-cdn-system-design-basics
+[53] Get thumbnails and images from a video https://www.mux.com/docs/guides/get-images-from-a-video
+[54] Image and Video Upload, Storage, Optimization and CDN https://cloudinary.com
+[55] NAS vs. object storage: What's best for unstructured data ... https://www.techtarget.com/searchstorage/answer/NAS-vs-object-storage-Whats-best-for-unstructured-data-storage
+[56] How can I handle File Uploads in a Microservice ... https://stackoverflow.com/questions/47782247/how-can-i-handle-file-uploads-in-a-microservice-environment
+[57] NAS vs. Object-Based Storage https://www.parkplacetechnologies.com/blog/nas-vs-object-based-storage/
+[58] Image file upload microservice - Spring Boot Video Tutorial https://www.linkedin.com/learning/creating-spring-boot-microservices/image-file-upload-microservice
+[59] Extract thumbnails from videos in browsers with ffmpeg.wasm https://transloadit.com/devtips/extract-thumbnails-from-videos-in-browsers-with-ffmpeg-wasm/
+[60] Advantages of Object Storage vs SAN/NAS Systems https://blog.min.io/why-object-storage-is-superior-to-san-nas/
+[61] File storage microservice for your Express.js Application https://dev.to/louis_bertson_1124e9cdc59/file-storage-microservice-for-your-expressjs-application-1he5
+[62] Create a thumbnail image from video with ffmpeg with .net https://gist.github.com/6721178
+[63] File Storage vs Block Storage vs Object Storage https://www.fullstackfoundations.com/blog/file-storage-vs-block-storage
+[64] Create thumbnail from video using ffmpeg https://stackoverflow.com/questions/27145238/create-thumbnail-from-video-using-ffmpeg
+[65] What is object storage? - Usage & benefits https://c2.synology.com/en-global/topics/what-is-object-storage
+[66] Distributed ImageServer https://sre.google/static/pdf/image-server.pdf
+[67] minio s3 object storage in docker environment in less than ... https://www.youtube.com/watch?v=2SDgIyrXmKc
+[68] Best practice when using Photoprism with Nextcloud AIO? https://help.nextcloud.com/t/best-practice-when-using-photoprism-with-nextcloud-aio/175282
+[69] Services https://docs.photoprism.app/user-guide/settings/sync/
+[70] MinIO is a Object Storage compatible with S3. - Docker ... https://github.com/Tob1as/docker-minio
+[71] Effortless Video Uploads with Bunny Stream Resumable & ... https://bunny.net/blog/bunny-stream-introducing-pre-signed-and-resumable-uploads/
+[72] Tell us about how you use PhotoPrism! #706 https://github.com/photoprism/photoprism/discussions/706
+[73] MinIO is a high-performance, S3 compatible object store ... https://github.com/minio/minio
+[74] Securely Using AWS S3 Pre-signed URLs https://www.hackerone.com/blog/handling-large-file-uploads-react-securely-using-aws-s3-pre-signed-urls
+[75] I'm torn between these 5 user-friendly NAS image hosting ... https://www.xda-developers.com/5-top-nas-image-management-self-hosted-tools/
+[76] minio/minio - Docker Image https://hub.docker.com/r/minio/minio
+[77] uploading the large file through chunking https://stackoverflow.com/questions/71788632/uploading-the-large-file-through-chunking
+[78] How to install Photo Prism on a Synology NAS using ... https://www.youtube.com/watch?v=yRWuhgz2smg
+[79] MinIO: S3 Compatible, Exascale Object Store for AI https://www.min.io
+[80] Redis Pubsub and Message Queueing https://stackoverflow.com/questions/27745842/redis-pubsub-and-message-queueing
+[81] Optimize Images and Convert to WebP or AVIF Plugin https://wordpress.com/plugins/image-optimization
+[82] Make responsive images https://developers.cloudflare.com/images/transform-images/make-responsive-images/
+[83] How to Make the Most of Redis Pipeline https://last9.io/blog/how-to-make-the-most-of-redis-pipeline/
+[84] TinyPNG – Compress AVIF, WebP, PNG and JPEG images https://tinypng.com
+[85] Using responsive images in HTML - MDN Web Docs https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Responsive_images
+[86] Deep learning in production with Keras, Redis, Flask, and ... https://pyimagesearch.com/2018/02/05/deep-learning-production-keras-redis-flask-apache/
+[87] Imagify: The Easiest Online Image Compressor And ... https://imagify.io
+[88] How to make responsive images on CDN and without ... https://stackoverflow.com/questions/12854127/how-to-make-responsive-images-on-cdn-and-without-loosing-seo
+[89] FastAPI + Message Queues (RabbitMQ, Kafka, Redis ... https://python.plainenglish.io/building-event-driven-architectures-fastapi-message-queues-rabbitmq-kafka-redis-streams-2ba82926a120
+[90] ShortPixel Image Optimizer – Compress & Convert to WebP ... https://shortpixel.com
+[91] Responsive Images with srcset | Tutorials | Getting Started https://docs.imgix.com/getting-started/tutorials/responsive-design/responsive-images-with-srcset
+[92] Redis-Based Messaging Queue and Cache-Enabled Parallel ... https://academic.oup.com/comjnl/article/65/4/843/5956494
+[93] Image Optimizer – Optimize Images and Convert to WebP ... https://tw.wordpress.org/plugins/image-optimization/
+[94] Selfhosted photo gallery with Android app (alternative to ... https://www.reddit.com/r/selfhosted/comments/hypm0k/selfhosted_photo_gallery_with_android_app/
+[95] Photo Album Application - Java Spring Boot with Oracle DB https://github.com/Azure-Samples/PhotoAlbum-Java
+[96] Synology: Best Docker Containers To Organize Photos https://mariushosting.com/synology-best-docker-containers-to-organize-photos/
+[97] Immich is the perfect Google Photos replacement https://www.reddit.com/r/selfhosted/comments/17v5qii/immich_is_the_perfect_google_photos_replacement/
+[98] Google Photos Database Structure and Schema Diagram https://databasesample.com/database/google-photos-database
+[99] Piwigo - ASUSTOR NAS https://www.asustor.com/en/app_central/app_detail?id=1431&type=
+[100] time to ditch google photos, made my own server. unlimited ... https://www.facebook.com/avoidyasin/posts/time-to-ditch-google-photos-made-my-own-server-unlimited-storage-immich-is-an-op/1127214712550638/
+[101] Photobook and Album Creator Database https://www.databasesample.com/database/photobook-and-album-creator-database
+[102] Piwigo - Open source photo management software https://piwigo.org
+[103] Immich 2.0 is ready to replace Google Photos https://www.youtube.com/watch?v=e4AYC88gi6g
+[104] 4.2. ACS 4 Photo Album Package Design Documentation https://openacs.org/doc/photo-album/design
+[105] Piwigo - TrueNAS Apps Market https://apps.truenas.com/catalog/piwigo
+[106] Immich: Self-hosted Google Photos Alternative - LucasCosti.com https://lucascosti.com/blog/2025/10/immich-self-hosted-google-photos-alternative/
+[107] VITEC's Enterprise Video Streaming Solutions https://www.vitec.com/solutions/video-streaming
+[108] Optimizing enterprise video streaming: Boosting efficiency ... https://www.hivestreaming.com/resources/optimizing-enterprise-video-streaming
+[109] What is Enterprise Video Streaming? https://vbrick.com/blogs/what-is-enterprise-video-streaming/
+[110] What Is Video Transcoding? https://cloudinary.com/guides/video-formats/video-transcoding-a-practical-guide
+[111] Architecture for a video streaming service https://hygraph.com/blog/video-streaming-architecture
+[112] Adaptive Bitrate vs. Multi-Bitrate Streaming https://optiview.dolby.com/resources/blog/streaming/adaptive-bitrate-vs-multi-bitrate-streaming/
+[113] Understanding Video Pipelines for Developers https://www.fastpix.io/blog/a-complete-guide-to-video-pipelines
+[114] Video Streaming - Architectures https://builder.aws.com/content/2wAcezE0LwAoIbaR1xA2eTEOYym/video-streaming-architectures
+[115] Choosing the Right Video Bitrate for Streaming HLS and ... https://bitmovin.com/blog/video-bitrate-streaming-hls-dash/
+[116] Video Transcoding: Why It Matters for Quality Streaming https://vidizmo.ai/blog/video-transcoding-importance
+[117] Enterprise Video Streaming - Broadcast Settings https://support.video.ibm.com/hc/en-us/articles/115005451385-Enterprise-Video-Streaming-Broadcast-Settings
+[118] Setting up adaptive streaming media sources - MDN Web Docs https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Audio_and_video_delivery/Setting_up_adaptive_streaming_media_sources

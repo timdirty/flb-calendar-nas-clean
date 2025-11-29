@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>删除按钮诊断工具</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #334155;
+            border-radius: 8px;
+        }
+        .test-preview {
+            width: 120px;
+            height: 120px;
+            background: #64748b;
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+            border-radius: 8px;
+            overflow: visible;
+        }
+        .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 22px;
+            height: 22px;
+            background: rgba(220, 38, 38, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            z-index: 10;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            padding: 0;
+            color: white;
+        }
+        .log {
+            background: #0f172a;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #3b82f6;
+        }
+        .log-entry.success {
+            border-left-color: #10b981;
+        }
+        .log-entry.error {
+            border-left-color: #ef4444;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #3b82f6;
+            color: white;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 删除按钮诊断工具</h1>
+    
+    <div class="test-section">
+        <h2>测试 1：直接 onclick 属性</h2>
+        <div class="test-preview">
+            <button class="remove-btn" onclick="logTest('Test 1: onclick 属性调用成功', 'success'); return false;">×</button>
+        </div>
+        <p>✅ 预期：点击显示成功日志</p>
+    </div>
+
+    <div class="test-section">
+        <h2>测试 2：setAttribute onclick</h2>
+        <div class="test-preview" id="test2-preview">
+            <!-- 按钮将通过 JS 创建 -->
+        </div>
+        <p>✅ 预期：点击显示成功日志</p>
+    </div>
+
+    <div class="test-section">
+        <h2>测试 3：addEventListener</h2>
+        <div class="test-preview" id="test3-preview">
+            <!-- 按钮将通过 JS 创建 -->
+        </div>
+        <p>✅ 预期：点击显示成功日志</p>
+    </div>
+
+    <div class="test-section">
+        <h2>测试 4：模拟实际场景（window.removeFile）</h2>
+        <div class="test-preview" id="test4-preview">
+            <!-- 按钮将通过 JS 创建 -->
+        </div>
+        <p>✅ 预期：点击显示成功日志</p>
+    </div>
+
+    <div class="test-section">
+        <h2>测试 5：z-index 遮挡测试</h2>
+        <div class="test-preview" style="position: relative;">
+            <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 5;">
+                遮挡层 (z-index: 5)
+            </div>
+            <button class="remove-btn" style="z-index: 10;" onclick="logTest('Test 5: z-index 正常工作', 'success'); return false;">×</button>
+        </div>
+        <p>✅ 预期：即使有遮挡层，按钮仍可点击</p>
+    </div>
+
+    <div class="test-section">
+        <h2>测试 6：pointer-events 测试</h2>
+        <div class="test-preview" style="position: relative;">
+            <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); pointer-events: none;">
+                无 pointer-events 的遮挡层
+            </div>
+            <button class="remove-btn" onclick="logTest('Test 6: pointer-events 正常工作', 'success'); return false;">×</button>
+        </div>
+        <p>✅ 预期：点击穿透遮挡层，按钮可点击</p>
+    </div>
+
+    <div class="test-section">
+        <button onclick="clearLog()">清除日志</button>
+        <button onclick="runAllTests()">运行所有测试</button>
+        <button onclick="checkWindowRemoveFile()">检查 window.removeFile</button>
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <script>
+        // 日志函数
+        function logTest(message, type = 'info') {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry ' + type;
+            entry.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        // 测试 2: setAttribute onclick
+        (function() {
+            const preview = document.getElementById('test2-preview');
+            const btn = document.createElement('button');
+            btn.className = 'remove-btn';
+            btn.textContent = '×';
+            btn.setAttribute('onclick', "logTest('Test 2: setAttribute 调用成功', 'success'); return false;");
+            preview.appendChild(btn);
+            logTest('Test 2 初始化完成');
+        })();
+
+        // 测试 3: addEventListener
+        (function() {
+            const preview = document.getElementById('test3-preview');
+            const btn = document.createElement('button');
+            btn.className = 'remove-btn';
+            btn.textContent = '×';
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                logTest('Test 3: addEventListener 调用成功', 'success');
+                return false;
+            });
+            preview.appendChild(btn);
+            logTest('Test 3 初始化完成');
+        })();
+
+        // 测试 4: 模拟实际场景
+        window.removeFile = function(studentIndex, type, fileIndex) {
+            logTest('🎉 window.removeFile 被调用！参数: ' + JSON.stringify({studentIndex, type, fileIndex}), 'success');
+            return false;
+        };
+
+        (function() {
+            const preview = document.getElementById('test4-preview');
+            const btn = document.createElement('button');
+            btn.className = 'remove-btn';
+            btn.textContent = '×';
+            btn.setAttribute('onclick', 'return window.removeFile(0, "photos", 0);');
+            preview.appendChild(btn);
+            logTest('Test 4 初始化完成，onclick = ' + btn.getAttribute('onclick'));
+        })();
+
+        function checkWindowRemoveFile() {
+            if (typeof window.removeFile === 'function') {
+                logTest('✅ window.removeFile 存在且是函数', 'success');
+                logTest('测试调用: window.removeFile(99, "test", 99)');
+                window.removeFile(99, 'test', 99);
+            } else {
+                logTest('❌ window.removeFile 不存在或不是函数', 'error');
+            }
+        }
+
+        function runAllTests() {
+            logTest('=== 开始运行所有测试 ===');
+            checkWindowRemoveFile();
+            logTest('请手动点击所有删除按钮进行测试');
+        }
+
+        // 初始化日志
+        logTest('诊断工具已加载');
+        checkWindowRemoveFile();
+    </script>
+</body>
+</html>

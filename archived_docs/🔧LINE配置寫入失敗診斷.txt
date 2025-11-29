@@ -1,0 +1,175 @@
+🔧 LINE 配置寫入失敗 - 完整診斷與修復
+═══════════════════════════════════════════════════════════════
+
+問題現象
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ .env.nas 檔案中沒有 LINE_CHANNEL_ACCESS_TOKEN 和 ADMIN_USER_ID
+✅ API 顯示 hasToken: true, tokenLength: 172（有儲存在記憶體）
+❌ 但容器重啟後就丟失（因為沒寫入檔案）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+問題分析
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+server.js Line 4820-4891 的 POST /api/line-config 邏輯：
+✅ 程式碼正確，會寫入 .env.nas
+✅ 有正確的檔案路徑：path.join(__dirname, '.env.nas')
+✅ 有 fs.writeFileSync(envPath, envContent)
+
+可能原因：
+1. Docker 容器內的 /app/.env.nas 沒有對應到主機的 .env.nas
+2. 容器內的檔案權限不允許寫入
+3. 只更新了 process.env，但沒有寫入檔案
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+診斷步驟（在 NAS 執行）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas
+
+# 1. 檢查主機上的 .env.nas
+echo "=== 主機上的 .env.nas ==="
+cat .env.nas
+
+# 2. 檢查容器內的 .env.nas
+echo ""
+echo "=== 容器內的 .env.nas ==="
+sudo docker exec flb-calendar-nas cat /app/.env.nas
+
+# 3. 檢查 docker-compose.yml 的 volume 掛載
+echo ""
+echo "=== docker-compose.yml volumes ==="
+grep -A 10 "volumes:" docker-compose.yml
+
+# 4. 檢查容器內檔案權限
+echo ""
+echo "=== 容器內 .env.nas 權限 ==="
+sudo docker exec flb-calendar-nas ls -la /app/.env.nas
+
+# 5. 檢查容器運行的使用者
+echo ""
+echo "=== 容器運行使用者 ==="
+sudo docker exec flb-calendar-nas whoami
+sudo docker exec flb-calendar-nas id
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+解決方案 1: 檢查 Volume 掛載
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+檢查 docker-compose.yml 是否有掛載 .env.nas：
+
+volumes:
+  - ./.env.nas:/app/.env.nas  ← 需要這一行！
+
+如果沒有，需要添加並重啟：
+
+1. 編輯 docker-compose.yml
+2. 在 volumes 區段添加：- ./.env.nas:/app/.env.nas
+3. 重啟：sudo docker-compose down && sudo docker-compose up -d
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+解決方案 2: 手動添加到 .env.nas（推薦）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas
+
+# 步驟 1: 備份現有 .env.nas
+cp .env.nas .env.nas.backup
+
+# 步驟 2: 添加 LINE 配置
+# ⚠️ 請替換成您的實際值
+cat >> .env.nas << 'ENVEOF'
+
+# LINE Messaging API
+LINE_CHANNEL_ACCESS_TOKEN=LaeRrV+/XZ6oCJ2ZFzAFxxxxxxxxxxxxxxxxxxxxxxxxx
+ADMIN_USER_ID=Udb51363eb6fdc605a6a9816379a38103
+ENVEOF
+
+# 步驟 3: 檢查
+cat .env.nas
+
+# 步驟 4: 如果有 volume 掛載，同步到容器
+sudo docker cp .env.nas flb-calendar-nas:/app/.env.nas
+
+# 步驟 5: 重啟載入
+sudo docker-compose down
+sudo docker-compose up -d
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+解決方案 3: 修復 API 寫入邏輯（如果是權限問題）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+如果容器內沒有寫入權限，修改 server.js 的寫入邏輯：
+
+// 在 POST /api/line-config 中添加錯誤處理
+try {
+  fs.writeFileSync(envPath, envContent);
+  console.log('✅ 寫入成功:', envPath);
+} catch (writeError) {
+  console.error('❌ 寫入失敗:', writeError.message);
+  
+  // 嘗試寫入到容器可寫的位置
+  const altPath = '/tmp/.env.nas';
+  fs.writeFileSync(altPath, envContent);
+  console.log('✅ 已寫入到備用位置:', altPath);
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+快速獲取當前配置
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+在瀏覽器開發者工具執行：
+
+// 獲取當前儲存的配置
+fetch('/api/line-config').then(r => r.json()).then(d => {
+  console.log('Token Length:', d.data.tokenLength);
+  console.log('Token Preview:', d.data.tokenPreview);
+  console.log('完整 Token (需要從後端日誌查看)');
+});
+
+fetch('/api/admin/info').then(r => r.json()).then(d => {
+  console.log('Admin User ID:', d.data.adminUserId);
+});
+
+// 如果返回 null，表示沒有從環境變數載入
+// 但 hasToken: true 表示有在記憶體中
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+最可能的情況
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+根據您的輸出：
+- curl 顯示 hasToken: true, tokenLength: 172
+- 但 .env.nas 檔案中沒有這些值
+
+這表示：
+1. ✅ POST /api/line-config 成功接收並儲存在 process.env
+2. ❌ 但 fs.writeFileSync 可能失敗了（沒有報錯？）
+3. ❌ 或者寫入到容器內的 /app/.env.nas，但沒有對應到主機
+
+最快解決方式：
+→ 手動添加到主機的 .env.nas
+→ 然後 docker-compose down && up -d
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+執行順序
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. 先執行診斷步驟，找出問題
+2. 然後手動添加配置到 .env.nas
+3. 重啟容器載入
+4. 測試 API
+5. 如果成功，考慮修復 volume 掛載或 API 寫入邏輯
+
+立即執行診斷！
+
+

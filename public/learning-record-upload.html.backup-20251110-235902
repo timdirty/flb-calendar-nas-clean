@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- 🔥 防止瀏覽器緩存（強制每次載入最新版本） -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <title>學習歷程上傳 - FLB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/learning-records.css?v=1762587574">
+    <!-- 🎨 歷史記錄優化樣式 -->
+    <link rel="stylesheet" href="/css/history-records-optimized.css?v=20251106-arrow-up">
+    <!-- 🎯 歷史記錄 Tab 切換 UI -->
+    <link rel="stylesheet" href="/css/history-records-tabs.css?v=20251107-tabs">
+    
+    <!-- 🔥 強制覆蓋：移除虛線圓圈，改為縮圖 + Hover 效果 -->
+    <style>
+        /* ✅ 移除強制顯示的 CSS，讓切換邏輯正常工作 */
+        /* 課程總覽的顯示/隱藏由 JS 切換邏輯控制 */
+        
+        /* ❌ 移除虛線邊框 */
+        .file-preview.new-upload {
+            border: 2px solid rgba(58, 141, 255, 0.25) !important;
+        }
+        
+        /* ✅ Hover 覆蓋層：半透明黑色 */
+        .file-preview .file-uploading-overlay {
+            position: absolute !important;
+            inset: 0 !important;
+            background: rgba(0, 0, 0, 0.2) !important;
+            backdrop-filter: blur(1px) !important;
+            -webkit-backdrop-filter: blur(1px) !important;
+            display: none !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: white !important;
+            z-index: 2 !important;
+        }
+        
+        /* 🔥 只有上傳中才顯示覆蓋層，選擇檔案時不顯示 */
+        .file-preview.uploading .file-uploading-overlay {
+            display: flex !important;
+        }
+        
+        /* ❌ 新選擇的檔案不顯示覆蓋層，避免遮住縮圖 */
+        .file-preview.new-upload .file-uploading-overlay {
+            display: none !important;
+        }
+        
+        /* 🔥 進度條在遮罩層內部，居中顯示（僅上傳中） */
+        .file-preview.uploading .file-upload-progress {
+            position: static !important;
+            width: 80% !important;
+            height: 8px !important;
+            margin-top: 8px !important;
+            border-radius: 4px !important;
+            overflow: hidden !important;
+            background: rgba(255, 255, 255, 0.3) !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* 🔥 進度條填充 */
+        .file-preview .file-upload-progress-fill,
+        .file-preview .file-upload-progress .fill {
+            background: linear-gradient(90deg, #10b981, #34d399) !important;
+            height: 100% !important;
+            display: block !important;
+            transition: width 0.3s ease !important;
+        }
+        
+        /* 🔥 進度文字 */
+        .file-preview .file-uploading-overlay .progress-text {
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            color: white !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8) !important;
+            margin-bottom: 4px !important;
+        }
+        
+        /* ❌ 隱藏虛線圓圈動畫（所有狀態） */
+        .file-preview .thumb-loading {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+        
+        /* ❌ 隱藏旋轉動畫的 ::after 伪元素（所有狀態） */
+        .file-preview .thumb-loading::after {
+            display: none !important;
+            content: none !important;
+        }
+        
+        /* ✅ 確保縮圖立即可見（所有狀態） */
+        .file-preview img,
+        .file-preview video {
+            opacity: 1 !important;
+            display: block !important;
+        }
+    </style>
+    
+    <!-- 🔥 立即修復上傳 UI -->
+    <script>
+    (function() {
+      // 等待 DOM 加載完成
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyFix);
+      } else {
+        applyFix();
+      }
+      
+      function applyFix() {
+        console.log('🚀 應用上傳 UI 修復...');
+        
+        // 監聽新元素添加和類名變化
+        const observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            // 處理新增的節點
+            mutation.addedNodes.forEach(function(node) {
+              if (node.nodeType === 1 && node.classList && node.classList.contains('file-preview')) {
+                fixPreviewElement(node);
+              }
+            });
+            
+            // 處理類名變化（例如從 new-upload 變成 uploading）
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+              const target = mutation.target;
+              if (target.classList && target.classList.contains('file-preview')) {
+                fixPreviewElement(target);
+              }
+            }
+          });
+        });
+        
+        // 監聽整個文檔
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['class']
+        });
+        
+        // 修復現有元素
+        document.querySelectorAll('.file-preview').forEach(fixPreviewElement);
+        
+        console.log('✅ 上傳 UI 修復已應用');
+      }
+      
+      function fixPreviewElement(preview) {
+        // 移除所有動畫
+        preview.style.animation = 'none';
+        preview.style.transform = 'none';
+        
+        // 隱藏 thumb-loading
+        const thumbLoading = preview.querySelector('.thumb-loading');
+        if (thumbLoading) {
+          thumbLoading.style.display = 'none';
+          thumbLoading.style.visibility = 'hidden';
+        }
+        
+        // 確保圖片可見
+        const img = preview.querySelector('img');
+        if (img) {
+          img.style.opacity = '1';
+          img.style.display = 'block';
+        }
+        
+        // 修復覆蓋層（只在上傳中顯示）
+        const overlay = preview.querySelector('.file-uploading-overlay');
+        if (overlay) {
+          overlay.style.position = 'absolute';
+          overlay.style.inset = '0';
+          overlay.style.background = 'rgba(0, 0, 0, 0.2)';
+          overlay.style.flexDirection = 'column';
+          overlay.style.alignItems = 'center';
+          overlay.style.justifyContent = 'center';
+          overlay.style.zIndex = '2';
+          
+          // ✅ 只有上傳中才顯示覆蓋層
+          if (preview.classList.contains('uploading')) {
+            overlay.style.display = 'flex';
+          } else {
+            overlay.style.display = 'none';
+          }
+          
+          // 修復進度條
+          const progressBar = overlay.querySelector('.file-upload-progress');
+          if (progressBar) {
+            progressBar.style.position = 'static';
+            progressBar.style.width = '80%';
+            progressBar.style.height = '8px';
+            progressBar.style.borderRadius = '4px';
+            progressBar.style.background = 'rgba(255, 255, 255, 0.3)';
+            progressBar.style.overflow = 'hidden';
+            
+            // 只在上傳中顯示進度條
+            if (preview.classList.contains('uploading')) {
+              progressBar.style.display = 'block';
+            } else {
+              progressBar.style.display = 'none';
+            }
+            
+            // 修復進度條填充
+            const progressFill = progressBar.querySelector('.file-upload-progress-fill, .fill');
+            if (progressFill) {
+              progressFill.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
+              progressFill.style.height = '100%';
+              progressFill.style.display = 'block';
+              progressFill.style.transition = 'width 0.3s ease';
+            }
+          }
+        }
+      }
+    })();
+    </script>
+    
+    <script>
+      // 📱 低階手機偵測：根據硬體與連線條件，加上 body.low-end 降噪樣式
+      (function(){
+        try {
+          // 🔧 允許以 URL 參數強制開啟：?lite=1
+          var forceLite = (function(){ try { var p=new URLSearchParams(location.search); return p.get('lite')==='1'; } catch(e){ return false; } })();
+          if (forceLite) { window.__LOW_END = true; document.addEventListener('DOMContentLoaded', function(){ try { document.body.classList.add('low-end'); } catch(e){} }); return; }
+          var hc = (navigator.hardwareConcurrency || 0);
+          var dm = (navigator.deviceMemory || 0);
+          var et = (navigator.connection && navigator.connection.effectiveType) || '';
+          var isWeakCpu = hc && hc <= 4;
+          var isLowMem = dm && dm <= 2;
+          var isSlowNet = /(^|\b)(2g|slow-2g)\b/i.test(String(et));
+          var isSmallScreen = Math.min(screen.width, screen.height) <= 420;
+          if (isWeakCpu || isLowMem || isSlowNet || isSmallScreen) {
+            document.addEventListener('DOMContentLoaded', function(){ try { document.body.classList.add('low-end'); } catch (e) {} });
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <!-- 🔍 全局錯誤追蹤器（優先載入，確保捕獲所有錯誤） -->
+    <script src="/js/debug-error-tracker.js?v=1762519117"></script>
+    
+    <!-- 共用模組（非 ES Modules） -->
+    <script defer src="/js/modules/url-utils.js?v=20251101-lrm10"></script>
+    <script defer src="/js/modules/id-utils.js?v=20251101-lrm10"></script>
+    <script defer src="/js/modules/course-utils.js?v=20251101-lrm10"></script>
+    <script defer src="/js/modules/api-client.js?v=1762712201"></script>
+    <script defer src="/js/modules/ui/toast.js?v=20251101-lrm10"></script>
+    <!-- 路由與狀態 -->
+    <script defer src="/js/core/router.js?v=20251101-lrm10"></script>
+    <script defer src="/js/core/state-store.js?v=20251101-lrm10"></script>
+    <!-- 🔥 學習歷程上傳系統 - 核心模組（必須按順序載入） -->
+    <script defer src="/js/modules/learning-upload/constants.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/config.js?v=20251105-optimized"></script>
+    <!-- 🚀 新增：錯誤處理與用戶通知系統（優先載入） -->
+    <script defer src="/js/modules/learning-upload/user-notification.js?v=20251106-error-handling"></script>
+    <script defer src="/js/modules/learning-upload/error-handler.js?v=20251106-error-handling"></script>
+    <script defer src="/js/modules/learning-upload/state-manager.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/blob-url-manager.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/pending-media-store.js?v=20251110-instant-preview"></script>
+    <!-- 🚀 新增：Worker 與快取管理器 -->
+    <script defer src="/js/modules/learning-upload/worker-pool-manager.js?v=20251107-error-fix-v2"></script>
+    <script defer src="/js/modules/learning-upload/indexeddb-cache-manager.js?v=20251107-error-fix-v2"></script>
+    <!-- 🚀 新增：進階照片壓縮器 -->
+    <script defer src="/js/modules/learning-upload/advanced-photo-compressor.js?v=20251106-error-handling"></script>
+    <!-- 🚀 新增：進階上傳進度視覺化 -->
+    <script defer src="/js/modules/learning-upload/advanced-upload-progress.js?v=20251106-error-handling"></script>
+    <!-- 🚀 新增：效能監控系統 -->
+    <script defer src="/js/modules/learning-upload/performance-monitor.js?v=20251106-error-handling"></script>
+    <script defer src="/js/modules/learning-upload/utils/debounce-throttle.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/utils/dom-utils.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/utils/memory-cleanup.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/attendance-resolver.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/course-manager.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/student-manager.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/retry-manager.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/upload-queue.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/media-cache.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/video-poster-manager.js?v=20251108-syntax-fix"></script>
+    <script defer src="/js/modules/learning-upload/virtual-scroller.js?v=20251105-optimized"></script>
+    <!-- 🔥 新增模組：上傳管理、進度追蹤、媒體預覽 -->
+    <script defer src="/js/modules/learning-upload/upload-manager.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/upload-progress.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/media-preview-manager.js?v=20251105-optimized"></script>
+    <!-- 🚀 共用模組：統一上傳/預覽/載入邏輯（學生、課程總覽、抽屜共用）-->
+    <script defer src="/js/modules/learning-upload/shared-media-uploader.js?v=20251105-shared"></script>
+    <script defer src="/js/modules/learning-upload/shared-media-previewer.js?v=1762589904"></script>
+    <script defer src="/js/modules/learning-upload/shared-media-loader.js?v=20251105-shared"></script>
+    <script defer src="/js/modules/learning-upload/shared-integration.js?v=20251105-shared"></script>
+    <!-- 🔥 企業級流式上傳系統 -->
+    <script defer src="/js/modules/learning-upload/streaming-uploader.js?v=20251107-enterprise"></script>
+    <script defer src="/js/modules/learning-upload/lazy-preview-loader.js?v=20251107-enterprise"></script>
+    <!-- 🎨 UI 渲染模組：課程、學生、總覽 -->
+    <script defer src="/js/modules/learning-upload/ui/course-renderer.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/ui/student-renderer.js?v=20251105-optimized"></script>
+    <script defer src="/js/modules/learning-upload/ui/overview-renderer.js?v=20251105-optimized"></script>
+    <!-- 🔗 整合層：連接新舊代碼，確保向後兼容 -->
+    <script defer src="/js/modules/learning-upload/integration-layer.js?v=20251105-optimized"></script>
+    <!-- 🔧 正規化工具（必須優先載入，供其他模組使用） -->
+    <script defer src="/js/modules/normalize-utils.js?v=20251101-lrm10"></script>
+    <!-- 🔥 學生資料處理模組（使用穩定的簡單版 - 無依賴問題） -->
+    <script defer src="/js/modules/course-title-parser.js?v=20251101-lrm10"></script>
+    <script defer src="/js/modules/course-student-matcher.js?v=20251101-lrm10"></script>
+    <script defer src="/js/modules/student-filter.js?v=20251101-lrm10"></script>
+    <!-- UI 模組：滑動、底部標籤、進度條、虛擬清單、檢查清單 -->
+    <script defer src="/js/modules/ui/swipe.js?v=20251101-lrm10"></script>
+    <script defer src="/js/modules/ui/bottom-tabs.js?v=20251101-lrm10"></script>
+    <script defer src="/js/modules/ui/progress-indicator.js?v=20251101-lrm10"></script>
+    <script defer src="/js/modules/checklist.js?v=20251101-lrm10"></script>
+    <script defer src="/js/modules/virtual-list.js?v=20251101-lrm10"></script>
+    <!-- 分片上傳模組 -->
+    <!-- ChunkedUploader 已废弃，使用 Drive API (2025-11-08) -->
+    <!-- 🔥 照片壓縮模組（前端優化） -->
+    <script defer src="/js/modules/photo-preprocessor.js?v=20251103-compress"></script>
+    <!-- 🔥 統一媒體預覽組件（漸進式載入） -->
+    <script defer src="/js/modules/media-preview.js?v=20251103-preview"></script>
+    <!-- 🚀 智能上傳管理器（多設備自適應，內存監控，防限流） -->
+    <script defer src="/js/modules/smart-upload-manager.js?v=1762706000"></script>
+    <!-- 頁面腳本 -->
+    <script defer src="/js/pages/learning-record-upload.js?v=1762715401"></script>
+    <!-- 🧪 自動測試工具（開發環境） -->
+    <script defer src="/js/modules/learning-upload/self-test.js?v=20251108-syntax-fix"></script>
+    <script defer src="/js/modules/learning-upload/optimization-test-tool.js?v=20251106-worker-optimization"></script>
+    <script defer src="/js/modules/learning-upload/error-handling-test.js?v=20251106-error-handling"></script>
+    <!-- 🔗 優化整合連接器（最後載入，確保所有模組都已就緒） -->
+    <script defer src="/js/modules/learning-upload/optimization-integration.js?v=20251106-integration"></script>
+    <!-- 🔍 整合驗證工具（用於檢查所有優化是否正確整合） -->
+    <script defer src="/js/modules/learning-upload/integration-verification.js?v=20251106-integration"></script>
+  <style>
+      /* 📱 模板面板手機優化：縮小字體、避免換行 */
+      @media (max-width: 480px) {
+        #commentTemplatesPanel .nav-btn,
+        #videoTemplatesPanel .nav-btn { font-size: 13px; padding: 8px 10px; white-space: nowrap; }
+        #commentTemplatesPanel .template-item .template-title,
+        #videoTemplatesPanel .template-item .template-title { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #templateTargetList label span,
+        #videoTemplateTargetList label span { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 28px); display: inline-block; }
+        /* 標題與按鈕在窄螢幕自動換行 */
+        #commentTemplatesPanel .panel-header,
+        #videoTemplatesPanel .panel-header { flex-wrap: wrap !important; gap: 8px; }
+        #commentTemplatesPanel .panel-header .panel-actions,
+        #videoTemplatesPanel .panel-header .panel-actions { width: 100%; justify-content: space-between; }
+        #commentTemplatesPanel .panel-grid,
+        #videoTemplatesPanel .panel-grid { grid-template-columns: 1fr; }
+      }
+      /* 超窄螢幕 <= 360px：再縮小一階 */
+      @media (max-width: 360px) {
+        #commentTemplatesPanel .nav-btn,
+        #videoTemplatesPanel .nav-btn { font-size: 12px; padding: 7px 8px; }
+        #commentTemplatesPanel .template-title,
+        #videoTemplatesPanel .template-title { font-size: 13px; }
+      }
+      /* 桌面也盡量避免長字換行，維持一致外觀 */
+      #commentTemplatesPanel .nav-btn,
+      #videoTemplatesPanel .nav-btn { white-space: nowrap; }
+      #templateTargetList label span,
+      #videoTemplateTargetList label span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      /* 🎞️ 影片模板列表：縮小每個預覽的視窗高度，避免佔位過大影響閱讀 */
+      #videoTemplatesPanel #videoTemplateList .template-item video {
+        display: block;
+        width: 100%;
+        height: 140px;            /* 預設高度較小，方便同頁多列閱讀 */
+        object-fit: contain;      /* 不拉伸，維持比例 */
+        background: #0b1220;      /* 深底，提升對比 */
+        border-radius: 8px;
+      }
+      @media (max-width: 480px) {
+        #videoTemplatesPanel #videoTemplateList .template-item video { height: 110px; }
+      }
+
+      /* 📱 極窄螢幕 360–420px：標題列二排、左右留白更小、按鈕更緊湊 */
+      @media (min-width: 360px) and (max-width: 420px) {
+        #commentTemplatesPanel .panel-header,
+        #videoTemplatesPanel .panel-header { padding: 10px 12px !important; flex-wrap: wrap !important; gap: 8px; }
+        #commentTemplatesPanel .panel-header .panel-actions,
+        #videoTemplatesPanel .panel-header .panel-actions { width: 100%; justify-content: space-between; }
+        #commentTemplatesPanel .nav-btn,
+        #videoTemplatesPanel .nav-btn { font-size: 12.5px; padding: 7px 10px; }
+      }
+
+      /* 📱 中等螢幕 420–520px：輕量緊湊（約 0.9x） */
+      @media (min-width: 420px) and (max-width: 520px) {
+        #commentTemplatesPanel .panel-header,
+        #videoTemplatesPanel .panel-header { padding: 12px 14px !important; }
+        #commentTemplatesPanel .nav-btn,
+        #videoTemplatesPanel .nav-btn { font-size: 13px; padding: 8px 12px; }
+        #commentTemplatesPanel .template-title,
+        #videoTemplatesPanel .template-title { font-size: 15px; }
+      }
+
+      /* ☁️ 上傳中心 FAB 進度環（以 CSS 變數 --ucp 控制進度%） */
+      #uploadCenterFab.progress { position: fixed; }
+      #uploadCenterFab.progress::before {
+        content: '';
+        position: absolute;
+        inset: -6px; /* 外圈厚度 */
+        border-radius: 50%;
+        background: conic-gradient(#10b981 var(--ucp, 0%), #e5e7eb 0);
+        -webkit-mask: radial-gradient(farthest-side, transparent 70%, #000 71%);
+                mask: radial-gradient(farthest-side, transparent 70%, #000 71%);
+        pointer-events: none;
+      }
+
+      /* 🧩 課程總覽：行動裝置友善輸入布局 */
+      .ov-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+      .ov-col-2 { grid-column: 1 / -1; }
+      .ov-input { height:34px; }
+      .comment-area.ov-input, input.comment-area.ov-input { height:34px !important; min-height:34px !important; padding:6px 10px !important; line-height:1.2 !important; }
+      @media (max-width: 520px) {
+        .ov-grid { grid-template-columns: 1fr; }
+      }
+
+      /* 模式切換條：左右排列（藍色調，符合頁面設計語言） */
+      .mode-switch-bar { position: sticky; top: 8px; z-index: 6; margin-bottom: 10px; }
+      /* 兩組懸浮選單不覆蓋：當學生籤列吸附時，模式切換往下讓位 */
+      body.with-sticky-tabs #modeSwitchBar,
+      body.with-sticky-tabs #modeSwitchBarOv { top: 64px; }
+      /* 層級：學生籤列在上，模式切換其下，但視覺可疊加（陰影） */
+      .lr-top-tabs.is-sticky { position: sticky; top: 8px; z-index: 8; }
+      #modeSwitchBar, #modeSwitchBarOv { z-index: 7; }
+      .mode-switch-inner { display:flex; flex-direction: row; flex-wrap: nowrap; gap:10px; align-items:center; justify-content:center; background: rgba(239,246,255,0.9); border:1px solid rgba(59,130,246,0.25); padding:8px 10px; border-radius:16px; box-shadow: 0 8px 18px rgba(59,130,246,0.18); }
+      .mode-switch-inner .nav-btn { flex:1 1 0; border-radius:999px; padding:10px 14px; font-size:14px; line-height:1; border:1.5px solid rgba(59,130,246,0.55); background: linear-gradient(180deg, #eaf2ff, #dbeafe); color:#0f2a59; font-weight:800; letter-spacing: 0.5px; }
+      .mode-switch-inner .nav-btn.active { border-color:#3b82f6; box-shadow: 0 14px 26px rgba(59,130,246,0.32); background: linear-gradient(180deg, #dbeafe, #bfdbfe); color:#0b1f46; transform: translateY(-1px); }
+      @media (max-width: 420px) { .mode-switch-inner { gap:8px; padding:6px 8px; } .mode-switch-inner .nav-btn { padding:8px 12px; font-size:13px; } }
+
+      /* 頂部學生籤列：顯示出缺席狀態與玻璃膠囊質感 */
+      .lr-top-tabs .tab-item {
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        padding:9px 16px;
+        margin-right:10px;
+        border-radius:999px;
+        border:1.5px solid rgba(255,255,255,0.45);
+        background:linear-gradient(135deg, rgba(255,255,255,0.82), rgba(226,232,240,0.45));
+        color:#0f172a;
+        font-size:13px;
+        font-weight:700;
+        cursor:pointer;
+        box-shadow:0 12px 26px rgba(15,23,42,0.12);
+        backdrop-filter:blur(18px);
+        -webkit-backdrop-filter:blur(18px);
+        transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease;
+        white-space:nowrap;
+      }
+      .lr-top-tabs .tab-item:last-child { margin-right:0; }
+      .lr-top-tabs .tab-item .tab-shell { display:flex; align-items:center; gap:6px; }
+      .lr-top-tabs .tab-item .att-icon { font-size:14px; line-height:1; }
+      .lr-top-tabs .tab-item .name { font-weight:700; letter-spacing:0.2px; }
+      .lr-top-tabs .tab-item .suggest-badge {
+        padding:2px 6px;
+        font-size:11px;
+        line-height:1;
+        border-radius:999px;
+        color:#854d0e;
+        background:rgba(251,191,36,0.2);
+        border:1px solid rgba(251,191,36,0.4);
+        backdrop-filter:blur(12px);
+        -webkit-backdrop-filter:blur(12px);
+      }
+      .lr-top-tabs .tab-item.needs-video .tab-shell { gap:6px; }
+      .lr-top-tabs .tab-item.active {
+        transform:translateY(-1px) scale(1.03);
+        border-color:rgba(59,130,246,0.65);
+        box-shadow:0 18px 36px rgba(59,130,246,0.24);
+      }
+      .lr-top-tabs .tab-item.att-present {
+        border-color:rgba(34,197,94,0.45);
+        color:#047857;
+        box-shadow:0 16px 34px rgba(16,185,129,0.16);
+      }
+      .lr-top-tabs .tab-item.att-present.active { box-shadow:0 20px 42px rgba(16,185,129,0.26); }
+      .lr-top-tabs .tab-item.att-leave { border-color:rgba(59,130,246,0.45); color:#1d4ed8; }
+      .lr-top-tabs .tab-item.att-absent { border-color:rgba(248,113,113,0.55); color:#b91c1c; }
+      .lr-top-tabs .tab-item.att-unknown { border-color:rgba(148,163,184,0.45); color:#0f172a; }
+      .lr-top-tabs .tab-item.done:not(.att-absent):not(.att-leave) { box-shadow: inset 0 0 0 1.5px rgba(34,197,94,0.3); }
+
+      /* 液態玻璃 FAB 共用樣式 */
+      .glass-fab {
+        position:fixed;
+        width:56px;
+        height:56px;
+        border-radius:999px;
+        border:1.5px solid var(--glass-border, rgba(255,255,255,0.55));
+        background:linear-gradient(135deg, var(--glass-bg-start, rgba(255,255,255,0.82)), var(--glass-bg-end, rgba(226,232,240,0.45)));
+        color:var(--glass-ink, #0f172a);
+        box-shadow:0 18px 36px rgba(15,23,42,0.18);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:20px;
+        backdrop-filter:blur(18px);
+        -webkit-backdrop-filter:blur(18px);
+        transition:transform .2s ease, box-shadow .2s ease;
+        z-index:1000;
+      }
+      .glass-fab:hover { transform: translateY(-2px); box-shadow:0 22px 40px rgba(15,23,42,0.22); }
+      .glass-fab:active { transform: scale(0.94); }
+      .glass-fab--slate {
+        --glass-border: rgba(148,163,184,0.55);
+        --glass-bg-start: rgba(226,232,240,0.82);
+        --glass-bg-end: rgba(203,213,225,0.45);
+        --glass-ink: #0f172a;
+      }
+      .glass-fab--sky {
+        --glass-border: rgba(96,165,250,0.55);
+        --glass-bg-start: rgba(219,234,254,0.82);
+        --glass-bg-end: rgba(191,219,254,0.46);
+        --glass-ink: #0b1f46;
+      }
+      .glass-fab--teal {
+        --glass-border: rgba(94,234,212,0.55);
+        --glass-bg-start: rgba(204,251,241,0.82);
+        --glass-bg-end: rgba(153,246,228,0.42);
+        --glass-ink: #0f766e;
+      }
+      .glass-fab--violet {
+        --glass-border: rgba(167,139,250,0.6);
+        --glass-bg-start: rgba(224,231,255,0.84);
+        --glass-bg-end: rgba(199,210,254,0.46);
+        --glass-ink: #312e81;
+      }
+      /* 🔥 綠色 FAB（歷史記錄） */
+      .glass-fab--green {
+        --glass-border: rgba(34,197,94,0.6);
+        --glass-bg-start: rgba(220,252,231,0.84);
+        --glass-bg-end: rgba(187,247,208,0.46);
+        --glass-ink: #14532d;
+      }
+
+      /* 自動跳至總覽後的高亮效果 */
+      .overview-highlight { box-shadow:0 0 0 3px rgba(16,185,129,.35) inset, 0 0 0 0 rgba(16,185,129,.0); animation: ovPulse 1.6s ease 2; }
+      @keyframes ovPulse { 0% { box-shadow:0 0 0 3px rgba(16,185,129,.35) inset; } 100% { box-shadow:0 0 0 0 rgba(16,185,129,0) inset; } }
+      .attendance-status { margin:0 0 12px 0; padding:8px 12px; border-radius:12px; font-weight:600; display:flex; align-items:center; gap:8px; background:rgba(226,232,240,0.85); color:#0f172a; transition:background 0.2s ease, color 0.2s ease; }
+      .attendance-status.status-present { background:rgba(16,185,129,0.15); color:#047857; }
+      .attendance-status.status-leave { background:rgba(59,130,246,0.18); color:#1d4ed8; }
+      .attendance-status.status-absent { background:rgba(248,113,113,0.2); color:#b91c1c; }
+      .attendance-status.status-unknown { background:rgba(148,163,184,0.2); color:#1f2937; }
+      .file-drop-zone.disabled { pointer-events:none; opacity:0.45; }
+      .upload-btn.locked { background:linear-gradient(180deg,#e2e8f0,#dbeafe); color:#475569; cursor:not-allowed; box-shadow:none; }
+      .upload-btn.locked i { color:#475569; }
+      .comment-area.disabled { background:#f1f5f9; color:#64748b; cursor:not-allowed; }
+
+      /* 🔥 歷史記錄面板樣式 */
+      .history-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        display: none;
+      }
+
+      .history-panel.open {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .history-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+      }
+
+      .history-container {
+        position: relative;
+        width: 90%;
+        max-width: 800px;
+        max-height: 85vh;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 1;
+      }
+
+      .history-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .history-title-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .history-close-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: none;
+        background: #f1f5f9;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .history-close-btn:hover {
+        background: #e2e8f0;
+        color: #334155;
+      }
+
+      /* 🔥 篩選區優化 - 可折疊 */
+      .history-filters-container {
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
+      }
+
+      .history-filters-toggle {
+        width: 100%;
+        padding: 12px 20px;
+        border: none;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.2s;
+      }
+
+      .history-filters-toggle:hover {
+        background: #f1f5f9;
+      }
+
+      .history-filters-toggle i.fa-chevron-down {
+        transition: transform 0.3s;
+      }
+
+      .history-filters-container.collapsed .history-filters-toggle i.fa-chevron-down {
+        transform: rotate(-90deg);
+      }
+
+      .history-filters-content {
+        max-height: 500px;
+        overflow: hidden;
+        transition: max-height 0.3s ease, opacity 0.3s ease;
+        opacity: 1;
+        padding: 12px 20px 16px;
+      }
+
+      .history-filters-container.collapsed .history-filters-content {
+        max-height: 0;
+        opacity: 0;
+        padding: 0 20px;
+      }
+
+      .history-quick-filters {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+
+      .quick-filter-btn {
+        padding: 8px 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: white;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .quick-filter-btn:hover {
+        border-color: #10b981;
+        color: #10b981;
+      }
+
+      .quick-filter-btn.active {
+        background: #10b981;
+        border-color: #10b981;
+        color: white;
+      }
+
+      .history-filters-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .history-filter-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .history-filter-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .history-filter-input {
+        padding: 8px 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 13px;
+        background: white;
+        transition: border-color 0.2s;
+      }
+
+      .history-filter-input:focus {
+        outline: none;
+        border-color: #10b981;
+      }
+
+      @media (max-width: 768px) {
+        .history-filters-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .history-filters-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .history-records-container {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 16px 20px;
+        min-height: 0;
+      }
+
+      /* 🔥 記錄卡片優化 - 可折疊 */
+      .history-record {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0;
+        margin-bottom: 12px;
+        overflow: hidden;
+        transition: all 0.2s;
+      }
+
+      .history-record:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border-color: #cbd5e1;
+      }
+
+      .history-record.expanded {
+        border-color: #10b981;
+        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
+      }
+
+      /* 卡片摘要區（可點擊） */
+      .history-record-summary {
+        padding: 14px 16px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .history-record-summary:hover {
+        background: #f8fafc;
+      }
+
+      .history-record.expanded .history-record-summary {
+        background: #f0fdf4;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      /* 卡片詳細內容區 */
+      .history-record-details {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, opacity 0.3s ease;
+        opacity: 0;
+      }
+
+      .history-record.expanded .history-record-details {
+        max-height: 500px;
+        opacity: 1;
+      }
+
+      /* 記錄卡片內的元素 - 摘要區 */
+      .history-record .record-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .history-record .record-main-info {
+        flex: 1;
+      }
+
+      .history-record .record-course {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 4px;
+        line-height: 1.3;
+      }
+
+      .history-record .record-student {
+        font-size: 13px;
+        font-weight: 600;
+        color: #64748b;
+      }
+
+      .history-record .record-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .history-record .record-date {
+        font-size: 12px;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .history-record .record-stats {
+        display: flex;
+        gap: 10px;
+      }
+
+      .history-record .record-stats span {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        color: #64748b;
+        background: #f1f5f9;
+        padding: 3px 8px;
+        border-radius: 12px;
+      }
+
+      .history-record .record-stats span i {
+        font-size: 12px;
+      }
+
+      .history-record .record-expand-icon {
+        color: #94a3b8;
+        font-size: 18px;
+        transition: transform 0.3s;
+        flex-shrink: 0;
+      }
+
+      .history-record.expanded .record-expand-icon {
+        transform: rotate(180deg);
+      }
+
+      /* txt 內容區域 - 在詳細內容中 */
+      .record-comment-section {
+        padding: 14px 16px;
+      }
+
+      .record-comment-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .record-comment-preview {
+        padding: 12px;
+        background: #f8fafc;
+        border-left: 3px solid #10b981;
+        border-radius: 6px;
+        color: #334155;
+        font-size: 14px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 250px;
+        overflow-y: auto;
+      }
+
+      .record-type-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        background: #e0f2fe;
+        color: #0369a1;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+
+      /* 🔥 講師和課別浮動標籤 */
+      .record-tags {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+
+.record-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  /* 🔥 顏色將由內聯樣式動態設定，不在此固定 */
+  transition: all 0.2s ease;
+}
+
+.record-tag--teacher {
+  /* 🔥 講師標籤：顏色由後端 API 動態載入 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.record-tag--course-type {
+  /* 🔥 課別標籤：顏色由後端 API 動態載入 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+      .record-tag i {
+        font-size: 10px;
+      }
+
+      .record-no-comment {
+        padding: 12px;
+        background: #fef3c7;
+        border-left: 3px solid #fbbf24;
+        border-radius: 6px;
+        color: #92400e;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* 🔥 查看詳情按鈕 */
+      .record-actions {
+        padding: 12px 16px;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .record-view-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        background: #10b981;
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+      }
+
+      .record-view-btn:hover {
+        background: #059669;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      }
+
+      .record-view-btn:active {
+        transform: translateY(0);
+      }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 標題區 -->
+        <header class="header" role="banner">
+            <div class="header-content">
+                <div class="header-left">
+                    <img src="logo.jpg" alt="FLB Logo" class="header-logo" width="48" height="48">
+                    <div>
+                        <h1>FLB學習歷程</h1>
+                        <div class="date" id="currentDate" aria-live="polite">載入中...</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 導航按鈕 -->
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i> 返回行事曆
+            </button>
+            <button class="nav-btn" onclick="openHistory()">
+                <i class="fas fa-history"></i> 查看歷史記錄
+            </button>
+            <button class="nav-btn" onclick="refreshCourses()">
+                <i class="fas fa-sync-alt"></i> 重新整理
+            </button>
+            <button class="nav-btn" onclick="openCommentTemplatesPanel()">
+                <i class="fas fa-quote-right"></i> 評語模板
+            </button>
+            <button class="nav-btn" onclick="openVideoTemplatesPanel()">
+                <i class="fas fa-film"></i> 影片模板
+            </button>
+        </div>
+
+        <!-- 視圖：課程選擇 -->
+        <main id="view-select" class="glass-card course-selector" role="main">
+            <h2 style="color: white; margin-bottom: 15px;">
+                <i class="fas fa-chalkboard-teacher"></i> 待上傳的已結束課程
+            </h2>
+            <!-- 🗓️ 快速星期篩選：一二三四五六日（與行事曆一致風格） -->
+            <div id="weekdayFilterBar" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
+                <style>
+                  /* 📅 星期快速篩選按鈕（輕量樣式） */
+                  .wd-btn{ background:rgba(255,255,255,.9); border:1px solid rgba(59,130,246,.25); color:#0f172a; font-weight:800; border-radius:999px; padding:6px 10px; font-size:13px; box-shadow:0 4px 12px rgba(59,130,246,.12); }
+                  .wd-btn.active{ background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.45); color:#065f46; box-shadow:0 6px 16px rgba(16,185,129,.18); }
+                </style>
+                <button type="button" class="wd-btn" data-wd="1">一</button>
+                <button type="button" class="wd-btn" data-wd="2">二</button>
+                <button type="button" class="wd-btn" data-wd="3">三</button>
+                <button type="button" class="wd-btn" data-wd="4">四</button>
+                <button type="button" class="wd-btn" data-wd="5">五</button>
+                <button type="button" class="wd-btn" data-wd="6">六</button>
+                <button type="button" class="wd-btn" data-wd="7">日</button>
+            </div>
+        <div class="course-toolbar">
+                <div class="toolbar-left">
+                    <div class="filter-group">
+                        <label for="rangeFilter"><i class="fas fa-calendar-check"></i> 範圍：</label>
+                        <select id="rangeFilter" class="filter-select">
+                            <option value="today">今日已結束</option>
+                            <option value="week">本週課程</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="datePicker"><i class="fas fa-calendar-day"></i> 日期：</label>
+                        <input id="datePicker" type="date" class="filter-select" />
+                    </div>
+                    <div class="filter-group">
+                        <label for="statusFilter"><i class="fas fa-tasks"></i> 狀態：</label>
+                        <select id="statusFilter" class="filter-select">
+                            <option value="all">全部</option>
+                            <option value="completed">已結束</option>
+                            <option value="upcoming">尚未開始</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="instructorFilter"><i class="fas fa-chalkboard-teacher"></i> 講師：</label>
+                        <select id="instructorFilter" class="filter-select">
+                            <option value="">全部講師</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="courseTypeFilter"><i class="fas fa-layer-group"></i> 類別：</label>
+                        <select id="courseTypeFilter" class="filter-select">
+                            <option value="">全部類別</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="studentSearch"><i class="fas fa-user"></i> 學生：</label>
+                        <input id="studentSearch" class="filter-select" placeholder="輸入學生姓名" />
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <div class="summary-chip" id="courseSummary">
+                        <i class="fas fa-info-circle"></i>
+                        <span>載入中...</span>
+                    </div>
+                </div>
+            </div>
+        <div class="filter-meta" id="courseMeta"></div>
+            <section class="course-list" id="courseList" aria-label="課程列表" aria-live="polite">
+                <!-- 課程列表將動態載入 -->
+            </section>
+        </main>
+
+        <!-- 視圖：學生個別上傳 -->
+        <section class="students-section" id="studentsSection" aria-label="學生學習記錄上傳">
+            <div id="recordsLoadingOverlay" class="lr-loading-overlay" aria-live="polite" aria-busy="false">
+                <div class="lr-loading-spinner" aria-hidden="true"></div>
+                <div class="lr-loading-text">
+                    <div id="recordsLoadingMessage">資料同步中…</div>
+                    <div id="recordsLoadingSub" class="lr-loading-sub">首次載入時間較長，請稍候</div>
+                </div>
+            </div>
+            <div id="topTabsSentinel"></div>
+            <!-- 頂部學生籤列（Mobile） -->
+            <div id="topTabs" class="lr-top-tabs" style="display: none;"></div>
+            <div class="glass-card" id="studentCardPanel">
+                <!-- 模式切換（置於學生卡片上方，手機更容易點到） -->
+                <div id="modeSwitchBar" class="mode-switch-bar">
+                    <style>
+                      #modeSwitchBar .nav-btn, #modeSwitchBarOv .nav-btn { position: relative; overflow: visible; padding-right: 56px; padding-bottom: 28px; }
+                      #modeSwitchBar .mode-switch-inner, #modeSwitchBarOv .mode-switch-inner { align-items: flex-end; }
+                      .capbar{ position:absolute; left:10px; right:10px; bottom:8px; height:6px; border-radius:999px; background:linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.25)); box-shadow: inset 0 1px 2px rgba(0,0,0,.06); }
+                      .capbar .fill{ position:absolute; left:0; top:0; bottom:0; width:0; background:linear-gradient(90deg, #7dd3fc, #60a5fa); border-radius:999px; transition: width .45s cubic-bezier(.22,.61,.36,1); overflow:hidden; filter: drop-shadow(0 0 6px rgba(96,165,250,.45)); }
+                      .capbar .fill::after{ content:''; position:absolute; inset:0; background:linear-gradient(90deg, rgba(255,255,255,.00) 0%, rgba(255,255,255,.45) 30%, rgba(255,255,255,.00) 60%); transform:translateX(-100%); animation:capflow 2.2s linear infinite }
+                      @keyframes capflow{ to{ transform:translateX(100%); } }
+                      .capbar .fill.done{ background:linear-gradient(90deg, #34d399, #10b981); filter: drop-shadow(0 0 8px rgba(16,185,129,.45)); animation:capdone .6s ease both; }
+                      @keyframes capdone{ 0%{ transform:scaleX(.96) } 60%{ transform:scaleX(1.02) } 100%{ transform:scaleX(1) } }
+                      /* 浮動標籤：顯示於膠囊下方 */
+                      .capbar .pct{ position:absolute; bottom:-22px; left:50%; transform:translateX(-50%); font-weight:700; color:#0f172a; font-size:11px; padding:3px 12px; border-radius:999px; background:rgba(255,255,255,.96); border:1px solid rgba(148,163,184,.35); box-shadow:0 6px 14px rgba(15,23,42,.12); white-space:nowrap; pointer-events:none; letter-spacing:0.2px; }
+                      .capbar .pct.done{ color:#0f766e; border-color:rgba(16,185,129,.35); box-shadow:0 6px 16px rgba(16,185,129,.18); }
+                      #overviewSyncStatus .capbar{ bottom:4px; }
+                      #overviewSyncStatus .capbar .pct{ display:none; }
+                    </style>
+                    <div class="mode-switch-inner">
+                        <button class="nav-btn" id="btnStudentMode">
+                            <i class="fas fa-users"></i> 學生模式
+                            <span class="capbar"><span class="fill" id="studentModeProgressFill"></span><span class="pct" id="studentModeProgressText">0%</span></span>
+                        </button>
+                        <button class="nav-btn" id="btnOverviewMode">
+                            <i class="fas fa-clipboard-list"></i> 課程總覽
+                            <span class="capbar"><span class="fill" id="overviewModeProgressFill"></span><span class="pct" id="overviewModeProgressText">0%</span></span>
+                        </button>
+                    </div>
+                </div>
+                <div class="students-grid" id="studentsGrid"><!-- 學生卡片將動態載入 --></div>
+            </div>
+
+            <!-- 桌面：左側學生清單（僅桌面顯示） -->
+            <div class="glass-card desktop-student-list" id="desktopStudentList" style="display:none;"></div>
+
+            <!-- 已上傳記錄（改用 FAB 抽屜，主區塊在手機隱藏） -->
+            <div class="glass-card" style="margin-top: 16px; display: none;">
+                <h2 style="color: white; margin-bottom: 20px;">
+                    <i class="fas fa-folder-open"></i> 已上傳記錄
+                </h2>
+                <div id="uploadedRecordsSection" style="background: white; border-radius: 12px; padding: 16px;">
+                    <div class="empty-state"><i class="fas fa-info-circle"></i> 尚未選擇課程</div>
+                </div>
+            </div>
+
+            <!-- 視圖：課程總覽 -->
+            <section class="glass-card overview-section" id="view-overview" aria-label="課程總覽">
+                <!-- 模式切換（課程總覽也顯示） -->
+                <div id="modeSwitchBarOv" class="mode-switch-bar">
+                    <div class="mode-switch-inner">
+                        <button class="nav-btn" id="btnStudentMode2">
+                            <i class="fas fa-users"></i> 學生模式
+                            <span class="capbar"><span class="fill" id="studentModeProgressFill"></span><span class="pct" id="studentModeProgressText">0%</span></span>
+                        </button>
+                        <button class="nav-btn" id="btnOverviewMode2">
+                            <i class="fas fa-clipboard-list"></i> 課程總覽
+                            <span class="capbar"><span class="fill" id="overviewModeProgressFill"></span><span class="pct" id="overviewModeProgressText">0%</span></span>
+                        </button>
+                    </div>
+                </div>
+                <h2 style="color: white; margin-bottom: 20px;">
+                    <i class="fas fa-clipboard-list"></i> 課程總覽
+                </h2>
+                <div style="background: white; border-radius: 15px; padding: 20px;">
+                <div class="upload-area">
+                    <label class="upload-label">📸🎬 課程照片與影片（可多檔）</label>
+                    <div id="overviewCourseTitle" style="margin:6px 0 12px; font-weight:800; font-size:15px; color:#1d4ed8; letter-spacing:0.4px;"></div>
+                    
+                    <!-- 🔥 進度顯示面板（分批處理時顯示） -->
+                    <div id="overviewUploadProgress" class="upload-progress-panel" style="display:none; margin-bottom:12px; padding:12px; background:#f0f9ff; border:1px solid #bfdbfe; border-radius:10px;">
+                        <div class="progress-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span class="progress-title" style="font-weight:700; color:#1e40af; font-size:13px;">
+                                <i class="fas fa-sync fa-spin"></i> 處理中...
+                            </span>
+                            <span class="progress-stats" style="font-weight:600; color:#3b82f6; font-size:12px;" id="overviewProgressStats">0 / 0</span>
+                        </div>
+                        <div class="progress-bar" style="height:8px; background:#e0e7ff; border-radius:999px; overflow:hidden;">
+                            <div class="progress-fill" id="overviewProgressFill" style="height:100%; width:0%; background:linear-gradient(90deg, #60a5fa, #3b82f6); transition:width 0.3s ease; border-radius:999px;"></div>
+                        </div>
+                        <div class="progress-details" style="display:flex; justify-content:space-between; margin-top:6px; font-size:11px; color:#64748b;">
+                            <span class="current-step" id="overviewProgressStep">準備中</span>
+                            <span class="eta" id="overviewProgressEta">預估剩餘: --</span>
+                        </div>
+                    </div>
+                    
+                    <div class="file-drop-zone" id="overviewPhotosDropZone">
+                        <i class="fas fa-images"></i>
+                        <div class="text">點擊或拖放照片/影片</div>
+                    </div>
+                    <input type="file" id="overviewPhotosInput" class="file-input" accept="image/*,video/*" multiple>
+                    <div class="file-previews" id="overviewPhotosPreviews"></div>
+                        <!-- 影片：改為獨立區塊，與學生頁一致 -->
+                        
+                        <div class="upload-area" style="margin-top:8px">
+                          <label class="upload-label">🗂️ 已上傳（課程總覽）</label>
+                          <div class="file-previews" id="overviewExistingPreviews"></div>
+                        </div>
+                    </div>
+
+                    <div class="upload-area">
+                        <label class="upload-label">🧾 課程紀錄內容（自動帶入，可調整）</label>
+                        <div class="ov-grid">
+                            <div>
+                                <div style="font-size:12px;color:#475569;margin-bottom:4px">課程種類</div>
+                                <input id="ov_type" class="comment-area ov-input" list="ov_type_list" placeholder="教室 / 線上" />
+                                <datalist id="ov_type_list">
+                                    <option value="教室"></option>
+                                    <option value="線上"></option>
+                                </datalist>
+                            </div>
+                            <div>
+                                <div style="font-size:12px;color:#475569;margin-bottom:4px">日期</div>
+                                <input id="ov_date" type="date" class="comment-area ov-input" />
+                            </div>
+                            <div class="ov-col-2">
+                                <div style="font-size:12px;color:#475569;margin-bottom:4px">學生姓名（以空白分隔）</div>
+                                <textarea id="ov_names" class="comment-area" rows="2" inputmode="text" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="範例：石介紹 王小明 李同學"></textarea>
+                            </div>
+                            <div>
+                                <div style="font-size:12px;color:#475569;margin-bottom:4px">上課人數</div>
+                                <input id="ov_count" type="number" inputmode="numeric" min="0" class="comment-area ov-input" placeholder="0" />
+                            </div>
+                            <div>
+                                <div style="font-size:12px;color:#475569;margin-bottom:4px">講師姓名</div>
+                                <input id="ov_teacher" class="comment-area ov-input" autocomplete="name" />
+                            </div>
+                            <div class="ov-col-2">
+                                <div style="font-size:12px;color:#475569;margin-bottom:4px">課程主題</div>
+                                <input id="ov_topic" class="comment-area ov-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 🧾 預覽區塊移除：避免頁面過長（需求調整） -->
+                    <div class="upload-area">
+                        <label class="upload-label">🧑‍🏫 課堂狀況紀錄（講師填寫）</label>
+                        
+                        <!-- 學生的狀況與表現 -->
+                        <label class="field-label" for="ov_perf" style="display: block; margin-top: 12px; margin-bottom: 4px; font-weight: 600; color: #374151; font-size: 13px;">
+                            📝 學生的狀況與表現
+                        </label>
+                        <textarea class="comment-area" id="ov_perf" placeholder="例如：學生表現積極、專注度高..." rows="4"></textarea>
+                        
+                        <!-- 遇到的問題 -->
+                        <label class="field-label" for="ov_issue" style="display: block; margin-top: 12px; margin-bottom: 4px; font-weight: 600; color: #374151; font-size: 13px;">
+                            ❓ 遇到的問題
+                        </label>
+                        <textarea class="comment-area" id="ov_issue" placeholder="例如：部分學生對某個概念理解困難..." rows="3"></textarea>
+                        
+                        <!-- 解決的方法 -->
+                        <label class="field-label" for="ov_solution" style="display: block; margin-top: 12px; margin-bottom: 4px; font-weight: 600; color: #374151; font-size: 13px;">
+                            💡 解決的方法
+                        </label>
+                        <textarea class="comment-area" id="ov_solution" placeholder="例如：使用實例演示、個別指導..." rows="3"></textarea>
+                    </div>
+
+                    <!-- ✅ 改為同步狀態顯示（自動同步開啟，無需手動按鈕） -->
+                    <div class="upload-btn" id="overviewSyncStatus" style="cursor:default">
+                        <i class="fas fa-cloud"></i> 自動同步
+                        <span class="capbar" style="position:relative; display:block; margin-top:8px; height:6px;">
+                            <span class="fill" id="overviewSyncFill" style="width:0%"></span>
+                            <span class="pct" id="overviewSyncText" style="position:absolute; right:4px; bottom:12px;">待命</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 預留：底部學生標籤（Desktop 可開） -->
+    <div id="bottomTabs" class="lr-bottom-tabs" style="display:none"></div>
+
+    <!-- 評語模板面板（簡易彈出層） -->
+    <div id="commentTemplatesPanel" style="display:none; position:fixed; inset:0; z-index:1002;">
+        <div style="position:absolute; inset:0; background:rgba(15,23,42,0.35);" onclick="closeCommentTemplatesPanel()"></div>
+        <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(880px, calc(100% - 32px)); max-height:80vh; overflow:auto; background:#fff; border-radius:16px; box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+            <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid rgba(0,0,0,0.06)">
+                <div class="template-title" style="font-weight:800"><i class="fas fa-quote-right"></i> 評語模板</div>
+                <div class="panel-actions" style="display:flex; gap:8px">
+                    <button class="nav-btn" onclick="addCurrentCommentAsTemplate()"><i class="fas fa-plus"></i> 加入目前評語</button>
+                    <button class="nav-btn" onclick="closeCommentTemplatesPanel()"><i class="fas fa-times"></i> 關閉</button>
+                </div>
+            </div>
+            <div class="panel-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; padding:16px;">
+                <div style="border:1px solid rgba(0,0,0,0.06); border-radius:12px; padding:12px;">
+                    <div style="font-weight:700; margin-bottom:8px">模板列表（最多 10 則）</div>
+                    <div id="templateList"></div>
+                </div>
+                <div style="border:1px solid rgba(0,0,0,0.06); border-radius:12px; padding:12px;">
+                    <div style="font-weight:700; margin-bottom:8px">套用至學生</div>
+                    <div style="margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+                        <button class="nav-btn" onclick="selectAllTemplateTargets(true)"><i class="fas fa-check-double"></i> 全選</button>
+                        <button class="nav-btn" onclick="selectAllTemplateTargets(false)"><i class="fas fa-undo"></i> 全不選</button>
+                        <label style="display:inline-flex; align-items:center; gap:6px; font-weight:700"><input id="applyOnlyEmpty" type="checkbox" checked /> 僅填空白</label>
+                    </div>
+                    <div id="templateTargetList" style="max-height:38vh; overflow:auto; border:1px dashed rgba(0,0,0,0.08); border-radius:8px; padding:8px;"></div>
+                    <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end">
+                        <button class="nav-btn" onclick="applySelectedTemplate()"><i class="fas fa-magic"></i> 套用到已選</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 影片模板面板 -->
+    <div id="videoTemplatesPanel" style="display:none; position:fixed; inset:0; z-index:1002;">
+        <div style="position:absolute; inset:0; background:rgba(15,23,42,0.35);" onclick="closeVideoTemplatesPanel()"></div>
+        <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(880px, calc(100% - 32px)); max-height:80vh; overflow:auto; background:#fff; border-radius:16px; box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+            <div class="panel-header" style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid rgba(0,0,0,0.06)">
+                <div class="template-title" style="font-weight:800"><i class="fas a-film"></i> 影片模板</div>
+                <div class="panel-actions" style="display:flex; gap:8px">
+                    <button class="nav-btn" onclick="addLatestVideoToTemplates()"><i class="fas fa-plus"></i> 加入最近影片</button>
+                    <button class="nav-btn" onclick="closeVideoTemplatesPanel()"><i class="fas fa-times"></i> 關閉</button>
+                </div>
+            </div>
+            <div class="panel-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; padding:16px;">
+                <div style="border:1px solid rgba(0,0,0,0.06); border-radius:12px; padding:12px;">
+                    <div style="font-weight:700; margin-bottom:8px">模板列表（最多 8 筆）</div>
+                    <div id="videoTemplateList"></div>
+                </div>
+                <div style="border:1px solid rgba(0,0,0,0.06); border-radius:12px; padding:12px;">
+                    <div style="font-weight:700; margin-bottom:8px">套用至學生</div>
+                    <div style="margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+                        <button class="nav-btn" onclick="selectAllVideoTargets(true)"><i class="fas fa-check-double"></i> 全選</button>
+                        <button class="nav-btn" onclick="selectAllVideoTargets(false)"><i class="fas fa-undo"></i> 全不選</button>
+                        <label style="display:inline-flex; align-items:center; gap:6px; font-weight:700"><input id="videoApplyOnlyEmpty" type="checkbox" checked /> 僅當前無影片</label>
+                    </div>
+                    <div id="videoTemplateTargetList" style="max-height:38vh; overflow:auto; border:1px dashed rgba(0,0,0,0.08); border-radius:8px; padding:8px;"></div>
+                    <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end">
+                        <button class="nav-btn" onclick="applySelectedVideoTemplate()"><i class="fas fa-magic"></i> 套用到已選</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 背景上傳中心：浮動按鈕 + 抽屜 -->
+    <button id="uploadCenterFab" class="glass-fab glass-fab--teal" title="背景上傳" onclick="openUploadCenter()" style="right:16px; bottom:86px;">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <span id="uploadCenterBadge" style="position:absolute; top:-6px; right:-6px; background:#f97316; color:#fff; min-width:20px; height:20px; border-radius:10px; display:none; align-items:center; justify-content:center; font-size:12px; font-weight:800; padding:0 6px; box-shadow:0 4px 10px rgba(0,0,0,0.25);"></span>
+    </button>
+    <div id="uploadCenterBackdrop" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.25); z-index:999;" onclick="closeUploadCenter()"></div>
+    <div id="uploadCenterDrawer" style="position:fixed; left:0; right:0; bottom:0; height:55vh; background:#fff; border-top-left-radius:14px; border-top-right-radius:14px; box-shadow:0 -10px 24px rgba(0,0,0,0.18); z-index:1000; transform:translateY(110%); transition:transform .25s ease; display:none;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid rgba(0,0,0,0.06)">
+            <div style="font-weight:800"><i class="fas fa-cloud-upload-alt"></i> 背景上傳中心</div>
+            <div style="display:flex; gap:8px">
+                <button id="uploadCenterClose" class="nav-btn" onclick="closeUploadCenter()"><i class="fas fa-times"></i> 關閉</button>
+            </div>
+        </div>
+        <div id="uploadCenterList" style="padding:10px 12px; max-height: calc(55vh - 56px); overflow:auto;"></div>
+    </div>
+
+    <!-- 左下角返回浮動按鈕 -->
+    <button id="backFab" class="glass-fab glass-fab--slate" title="返回行事曆" style="left:16px; bottom:16px;">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+    <!-- 左下角查課程（位於返回之上） -->
+    <button id="coursePickerFab" class="glass-fab glass-fab--sky" title="查課程/換課程" style="left:16px; bottom:76px;">
+        <i class="fas fa-search"></i>
+    </button>
+
+    <!-- 📱 浮動篩選選單（僅在課程清單 step 顯示） -->
+    <button id="filterFab" title="篩選" style="position:fixed; left:16px; bottom:136px; width:52px; height:52px; border-radius:26px; border:none; background:#10b981; color:#fff; box-shadow:0 6px 18px rgba(0,0,0,0.2); z-index:1000; display:none; align-items:center; justify-content:center;">
+        <i class="fas fa-sliders-h"></i>
+    </button>
+    <div id="filterDrawer" style="position:fixed; left:0; right:0; bottom:0; height:auto; max-height:70vh; background:#fff; border-top-left-radius:16px; border-top-right-radius:16px; box-shadow:0 -10px 24px rgba(0,0,0,0.18); z-index:1000; transform:translateY(110%); transition:transform .25s ease; display:block;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid rgba(0,0,0,0.06)">
+            <div style="font-weight:800"><i class="fas fa-sliders-h"></i> 篩選課程</div>
+            <div style="display:flex; gap:8px">
+                <button id="filterCloseBtn" class="nav-btn"><i class="fas fa-times"></i> 關閉</button>
+            </div>
+        </div>
+        <div style="padding:12px 14px; overflow:auto; max-height:calc(70vh - 56px)">
+            <!-- 📅 星期快速篩選（Mobile 抽屜） -->
+            <div id="m_weekdayFilterBar" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
+                <style>
+                  .wd-btn{ background:rgba(255,255,255,.98); border:1px solid rgba(59,130,246,.25); color:#0f172a; font-weight:800; border-radius:999px; padding:6px 10px; font-size:13px; box-shadow:0 4px 12px rgba(59,130,246,.10); }
+                  .wd-btn.active{ background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.45); color:#065f46; box-shadow:0 6px 16px rgba(16,185,129,.16); }
+                </style>
+                <button type="button" class="wd-btn" data-wd="1">一</button>
+                <button type="button" class="wd-btn" data-wd="2">二</button>
+                <button type="button" class="wd-btn" data-wd="3">三</button>
+                <button type="button" class="wd-btn" data-wd="4">四</button>
+                <button type="button" class="wd-btn" data-wd="5">五</button>
+                <button type="button" class="wd-btn" data-wd="6">六</button>
+                <button type="button" class="wd-btn" data-wd="7">日</button>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                <div>
+                    <label class="filter-label" style="font-weight:700; font-size:13px">範圍</label>
+                    <select id="m_rangeFilter" class="filter-select"><option value="today">今日已結束</option><option value="week">本週課程</option></select>
+                </div>
+                <div>
+                    <label class="filter-label" style="font-weight:700; font-size:13px">日期</label>
+                    <input type="date" id="m_datePicker" class="filter-select" />
+                </div>
+                <div>
+                    <label class="filter-label" style="font-weight:700; font-size:13px">狀態</label>
+                    <select id="m_statusFilter" class="filter-select"><option value="all">全部</option><option value="completed">已結束</option><option value="upcoming">尚未開始</option></select>
+                </div>
+                <div>
+                    <label class="filter-label" style="font-weight:700; font-size:13px">講師</label>
+                    <select id="m_instructorFilter" class="filter-select"><option value="">全部講師</option></select>
+                </div>
+                <div style="grid-column:1 / -1">
+                    <label class="filter-label" style="font-weight:700; font-size:13px">類別</label>
+                    <select id="m_courseTypeFilter" class="filter-select"><option value="">全部類別</option></select>
+                </div>
+                <div style="grid-column:1 / -1">
+                    <label class="filter-label" style="font-weight:700; font-size:13px">學生</label>
+                    <input id="m_studentSearch" class="filter-select" placeholder="輸入學生姓名" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 浮動進度指示（全域） -->
+    <div id="progressIndicator" style="position:fixed;right:10px;bottom:64px;left:10px;z-index:998"></div>
+
+    <!-- 🔥 FAB：歷史記錄（右上角） -->
+    <button id="historyFab" class="glass-fab glass-fab--green" title="歷史記錄" style="left:10px; top:10px; position:fixed;">
+        <i class="fas fa-history"></i>
+    </button>
+
+    <!-- FAB：已上傳記錄抽屜（右下角） -->
+    <button id="recordsFab" class="glass-fab glass-fab--violet" title="已上傳記錄" style="right:16px; bottom:16px;">
+        <i class="fas fa-folder-open"></i>
+        <span id="recordsFabBadge">0</span>
+    </button>
+    <div id="recordsBackdrop" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.25); z-index:998;" onclick="document.getElementById('recordsFab').click()"></div>
+    <div id="recordsDrawer">
+        <div class="drawer-header" style="padding:12px 16px;border-bottom:1px solid rgba(0,0,0,0.08);display:flex;justify-content:space-between;align-items:center; gap:8px;">
+            <div class="drawer-title" style="font-weight:600"><i class="fas fa-folder-open"></i> 已上傳記錄</div>
+            <button id="recordsDrawerClose" class="nav-btn"><i class="fas fa-times"></i> 關閉</button>
+        </div>
+        <div id="recordsDrawerContent" style="height:calc(60vh - 48px);overflow:auto;padding:12px 16px"></div>
+    </div>
+
+    <!-- 🔥 歷史記錄面板（全新玻璃質感設計） -->
+    <div class="history-panel" id="historyPanel">
+        <!-- 背景遮罩 -->
+        <div class="history-backdrop" onclick="closeHistory()"></div>
+        
+        <!-- 主要內容區 -->
+        <div class="history-container">
+            <!-- 標題列 -->
+            <div class="history-header">
+                <div class="history-title-group">
+                    <i class="fas fa-history" style="font-size:24px; color:#10b981;"></i>
+                    <h2 style="margin:0; font-size:22px; font-weight:800; color:#0f172a;">歷史記錄</h2>
+                </div>
+                <button class="history-close-btn" onclick="closeHistory()" title="關閉">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- 🔥 篩選區（可折疊） -->
+            <div class="history-filters-container collapsed" id="historyFiltersContainer">
+                <!-- 折疊按鈕 -->
+                <button class="history-filters-toggle" onclick="toggleHistoryFilters()">
+                    <span><i class="fas fa-filter"></i> 進階篩選</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                
+                <!-- 篩選內容 -->
+                <div class="history-filters-content">
+                    <!-- 🔥 快速篩選按鈕組 -->
+                    <div class="history-quick-filters">
+                        <button class="quick-filter-btn active" data-filter="all" onclick="applyQuickFilter('all')">
+                            <i class="fas fa-list"></i> 全部
+                        </button>
+                        <button class="quick-filter-btn" data-filter="today" onclick="applyQuickFilter('today')">
+                            <i class="fas fa-calendar-day"></i> 本日
+                        </button>
+                        <button class="quick-filter-btn" data-filter="week" onclick="applyQuickFilter('week')">
+                            <i class="fas fa-calendar-week"></i> 本週
+                        </button>
+                    </div>
+                    
+                    <!-- 詳細篩選（下拉選單） -->
+                    <div class="history-filters-grid">
+                        <div class="history-filter-item">
+                            <label class="history-filter-label">
+                                <i class="fas fa-calendar-alt"></i> 學期
+                            </label>
+                            <select class="history-filter-input" id="filterSemester" onchange="onSemesterChange()">
+                                <option value="">載入中...</option>
+                            </select>
+                        </div>
+                        <div class="history-filter-item">
+                            <label class="history-filter-label">
+                                <i class="fas fa-chalkboard-teacher"></i> 課程
+                            </label>
+                            <select class="history-filter-input" id="filterCourse" onchange="loadHistory()">
+                                <option value="">全部課程</option>
+                            </select>
+                        </div>
+                        <div class="history-filter-item">
+                            <label class="history-filter-label">
+                                <i class="fas fa-user-tie"></i> 講師
+                            </label>
+                            <select class="history-filter-input" id="filterTeacher" onchange="loadHistory()">
+                                <option value="">全部講師</option>
+                            </select>
+                        </div>
+                        <div class="history-filter-item">
+                            <label class="history-filter-label">
+                                <i class="fas fa-tag"></i> 課別
+                            </label>
+                            <select class="history-filter-input" id="filterCourseType" onchange="loadHistory()">
+                                <option value="">全部課別</option>
+                            </select>
+                        </div>
+                        <div class="history-filter-item">
+                            <label class="history-filter-label">
+                                <i class="fas fa-calendar-day"></i> 日期
+                            </label>
+                            <input type="date" class="history-filter-input" id="filterDate" onchange="loadHistory()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 記錄列表區 -->
+            <div class="history-records-container">
+                <div id="historyRecords" class="history-records-list">
+                    <!-- 初始載入提示 -->
+                    <div class="history-loading">
+                        <i class="fas fa-spinner fa-spin" style="font-size:32px; color:#10b981;"></i>
+                        <p style="margin-top:12px; color:#64748b;">載入歷史記錄中...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 圖片 / 影片預覽疊層 -->
+    <div id="previewOverlay" class="preview-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="previewOverlayTitle">
+        <div class="preview-overlay-backdrop" aria-label="關閉預覽"></div>
+        <div class="preview-overlay-content">
+            <h2 id="previewOverlayTitle" class="sr-only">媒體預覽</h2>
+            <button id="previewOverlayClose" class="preview-overlay-close" aria-label="關閉預覽" type="button">
+                <i class="fas fa-times" aria-hidden="true"></i>
+                <span class="sr-only">關閉</span>
+            </button>
+            <div id="previewOverlayBody" class="preview-overlay-body" role="region" aria-label="預覽內容"></div>
+        </div>
+    </div>
+
+    <!-- 懸浮：課程總覽整體進度條（自動顯示/隱藏） -->
+    <div id="overviewFloatBar" style="position:fixed; right:14px; bottom:86px; z-index:999; display:none; background:rgba(255,255,255,.86); border:1px solid rgba(0,0,0,.06); border-radius:999px; box-shadow:0 10px 20px rgba(2,6,23,.18); padding:8px 12px; min-width:180px; cursor:pointer">
+      <div class="float-line">
+        <div style="font-weight:800; color:#0f172a; font-size:12px; margin-bottom:6px"><i class="fas fa-clipboard-list"></i> 課程總覽上傳</div>
+        <div style="height:8px; background:#e5e7eb; border-radius:999px; overflow:hidden"><div id="overviewFloatFill" style="height:100%; width:0%; background:#60a5fa; transition:width .35s ease"></div></div>
+      </div>
+      <div id="overviewFloatDot" class="float-dot" style="display:none; width:28px; height:28px; border-radius:50%; background:conic-gradient(#60a5fa 0%, #e5e7eb 0%); box-shadow:0 6px 14px rgba(2,6,23,.20);"></div>
+    </div>
+
+    <div id="posterErrorPanel" class="poster-error-panel" role="status" aria-live="polite"></div>
+</body>
+</html>

@@ -1,0 +1,410 @@
+/* ================================================
+   歷史記錄 - 全新UI樣式
+   清晰、易讀、現代化的卡片設計
+   ================================================ */
+
+/* 🎯 課程卡片容器 */
+.history-course-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  cursor: pointer;
+  border: 1px solid #e5e7eb;
+}
+
+.history-course-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.history-course-card.expanded {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* 📚 課程標題區 */
+.course-card-header {
+  padding: 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.course-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.course-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.course-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.course-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.course-date,
+.course-teacher {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.course-date i,
+.course-teacher i {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.course-teacher {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-weight: 500;
+}
+
+/* 📊 統計資訊區 */
+.course-stats-row {
+  display: flex;
+  gap: 8px;
+  padding: 16px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #475569;
+  transition: background 0.2s;
+}
+
+.stat-item:hover {
+  background: #e2e8f0;
+}
+
+.stat-item i {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.stat-item span {
+  font-weight: 500;
+}
+
+/* 📝 詳細內容區 */
+.course-details-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  background: #ffffff;
+}
+
+.history-course-card.expanded .course-details-panel {
+  max-height: 3000px;
+}
+
+.detail-section {
+  padding: 24px 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.detail-section:last-child {
+  border-bottom: none;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.section-header i {
+  font-size: 18px;
+  color: #3b82f6;
+}
+
+.section-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.section-content {
+  margin-top: 12px;
+}
+
+.overview-text {
+  margin: 0 0 16px 0;
+  line-height: 1.7;
+  color: #334155;
+  font-size: 15px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.btn-view-full {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-view-full:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-view-full i {
+  font-size: 13px;
+}
+
+/* 🎓 學生卡片網格 */
+.students-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+@media (max-width: 768px) {
+  .students-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.student-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.student-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.student-card-header {
+  padding: 14px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.student-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.student-info i {
+  font-size: 18px;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.student-name-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.student-stats {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.mini-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.mini-stat i {
+  font-size: 11px;
+}
+
+.student-card-body {
+  padding: 16px;
+  min-height: 80px;
+}
+
+.student-card-body.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.student-comment-text {
+  margin: 0;
+  line-height: 1.6;
+  color: #475569;
+  font-size: 14px;
+  word-wrap: break-word;
+}
+
+.empty-hint {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 13px;
+}
+
+.student-card-footer {
+  padding: 12px 16px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-student-detail {
+  width: 100%;
+  padding: 8px 16px;
+  background: #ffffff;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-student-detail:hover {
+  background: #3b82f6;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.btn-student-detail i {
+  font-size: 12px;
+}
+
+/* 空狀態提示 */
+.empty-students-hint {
+  padding: 40px 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.empty-students-hint i {
+  font-size: 32px;
+  margin-bottom: 12px;
+  display: block;
+  opacity: 0.5;
+}
+
+/* 展開指示器 */
+.expand-indicator {
+  padding: 12px;
+  text-align: center;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  transition: background 0.2s;
+}
+
+.history-course-card:hover .expand-indicator {
+  background: #f1f5f9;
+}
+
+.expand-indicator i {
+  color: #64748b;
+  font-size: 14px;
+  transition: transform 0.3s;
+}
+
+.history-course-card.expanded .expand-indicator i {
+  transform: rotate(180deg);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .course-name {
+    font-size: 16px;
+  }
+  
+  .course-stats-row {
+    gap: 6px;
+  }
+  
+  .stat-item {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  
+  .course-card-header {
+    padding: 16px;
+  }
+  
+  .detail-section {
+    padding: 20px 16px;
+  }
+}
+
+/* 動畫優化 */
+@media (prefers-reduced-motion: reduce) {
+  .history-course-card,
+  .course-details-panel,
+  .expand-indicator i {
+    transition: none;
+  }
+}

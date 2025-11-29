@@ -1,0 +1,721 @@
+'use strict';
+
+(function() {
+    const API_ENDPOINT = '/api/admin/student-sheet';
+    const BOOLEAN_KEYS = new Set(['isEarlyBird', 'isReturning', 'isGroupSignup', 'isSuperEarlyBird']);
+    const NUMERIC_KEYS = new Set(['purchasedSessions', 'remainingSessions', 'currentTuition']);
+    const LONG_TEXT_KEYS = new Set(['note', 'billingInfo', 'coursePlan', 'formulaMemo']);
+    const DISPLAY_COLUMNS = [
+        'name',
+        'courseName',
+        'remainingSessions',
+        'courseCategory',
+        'parentName',
+        'parentPhone',
+        'parentContact',
+        'userId',
+        'note'
+    ];
+
+    const state = {
+        columns: [],
+        rows: [],
+        visibleRows: [],
+        fetchedAt: null,
+        isLoading: false,
+        editingRowNumber: null,
+        isCreating: false,
+        filters: {
+            keyword: '',
+            courseName: '',
+            category: '',
+            remaining: 'all',
+            missingUserId: false
+        },
+        parentUsers: []
+    };
+    let keywordDebounceTimer = null;
+
+    const elements = {
+        tableBody: document.getElementById('studentTableBody'),
+        statusSummary: document.getElementById('statusSummary'),
+        statusTimestamp: document.getElementById('statusTimestamp'),
+        toast: document.getElementById('toast'),
+        refreshBtn: document.getElementById('refreshBtn'),
+        forceRefreshBtn: document.getElementById('forceRefreshBtn'),
+        addStudentBtn: document.getElementById('addStudentBtn'),
+        modalBackdrop: document.getElementById('editorModal'),
+        modalTitle: document.getElementById('modalTitle'),
+        formContainer: document.getElementById('formFields'),
+        cancelEditBtn: document.getElementById('cancelEditBtn'),
+        saveStudentBtn: document.getElementById('saveStudentBtn'),
+        form: document.getElementById('studentForm'),
+        filterKeyword: document.getElementById('filterKeyword'),
+        filterCourse: document.getElementById('filterCourse'),
+        filterCategory: document.getElementById('filterCategory'),
+        filterRemaining: document.getElementById('filterRemaining'),
+        filterMissingUserId: document.getElementById('filterMissingUserId'),
+        parentNameDatalist: document.getElementById('parentNameOptions')
+    };
+
+    function showToast(message, type = 'info') {
+        if (!elements.toast) return;
+        elements.toast.textContent = message;
+
+        let bgColor = '#1F2937';
+        if (type === 'success') bgColor = '#047857';
+        if (type === 'error') bgColor = '#B91C1C';
+        if (type === 'warning') bgColor = '#B45309';
+
+        elements.toast.style.background = bgColor;
+        elements.toast.classList.add('show');
+
+        setTimeout(() => {
+            elements.toast.classList.remove('show');
+        }, 3200);
+    }
+
+    function toggleLoading(isLoading) {
+        state.isLoading = isLoading;
+        if (elements.refreshBtn) elements.refreshBtn.disabled = isLoading;
+        if (elements.forceRefreshBtn) elements.forceRefreshBtn.disabled = isLoading;
+        if (elements.addStudentBtn) elements.addStudentBtn.disabled = isLoading;
+    }
+
+    function boolToBadge(value) {
+        const truthy = ['TRUE', 'true', '1', '是', 'Yes', 'yes', 'y', 'Y', '✅'];
+        const isTrue = truthy.includes(String(value).trim());
+        return isTrue ? '<span class="badge-boolean"><i class="fas fa-check"></i> 是</span>' : '';
+    }
+
+    function populateFilterOptions() {
+        const rows = state.rows || [];
+        const courses = new Set();
+        const categories = new Set();
+
+        rows.forEach(row => {
+            const courseName = (row.values.courseName || '').trim();
+            const category = (row.values.courseCategory || '').trim();
+            if (courseName) courses.add(courseName);
+            if (category) categories.add(category);
+        });
+
+        if (elements.filterCourse) {
+            const previous = state.filters.courseName;
+            const sortedCourses = Array.from(courses).sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+            elements.filterCourse.innerHTML = '<option value="">全部</option>' + sortedCourses.map(course => `<option value="${course}">${course}</option>`).join('');
+            if (previous && courses.has(previous)) {
+                elements.filterCourse.value = previous;
+            } else {
+                state.filters.courseName = '';
+            }
+        }
+
+        if (elements.filterCategory) {
+            const previous = state.filters.category;
+            const sortedCategories = Array.from(categories).sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+            elements.filterCategory.innerHTML = '<option value="">全部</option>' + sortedCategories.map(category => `<option value="${category}">${category}</option>`).join('');
+            if (previous && categories.has(previous)) {
+                elements.filterCategory.value = previous;
+            } else {
+                state.filters.category = '';
+            }
+        }
+    }
+
+    function applyFilters() {
+        const rows = state.rows || [];
+        const filters = state.filters;
+        const keyword = filters.keyword.trim().toLowerCase();
+
+        let visible = rows.slice();
+
+        if (keyword) {
+            visible = visible.filter(row => {
+                const values = row.values;
+                const fields = [
+                    values.name,
+                    values.courseName,
+                    values.courseCategory,
+                    values.parentName,
+                    values.parentPhone,
+                    values.parentContact,
+                    values.userId,
+                    values.note
+                ];
+                return fields.some(field => field && String(field).toLowerCase().includes(keyword));
+            });
+        }
+
+        if (filters.courseName) {
+            visible = visible.filter(row => (row.values.courseName || '') === filters.courseName);
+        }
+
+        if (filters.category) {
+            visible = visible.filter(row => (row.values.courseCategory || '') === filters.category);
+        }
+
+        if (filters.remaining === 'zero') {
+            visible = visible.filter(row => Number(row.values.remainingSessions) === 0);
+        } else if (filters.remaining === 'low') {
+            visible = visible.filter(row => {
+                const num = Number(row.values.remainingSessions);
+                return !Number.isNaN(num) && num <= 5;
+            });
+        }
+
+        if (filters.missingUserId) {
+            visible = visible.filter(row => !row.values.userId);
+        }
+
+        state.visibleRows = visible;
+        renderTable();
+        updateStatusBar();
+    }
+
+    function populateParentNameOptions() {
+        if (!elements.parentNameDatalist) return;
+        const uniqueNames = Array.from(
+            new Set(state.parentUsers.map(parent => (parent.name || '').trim()).filter(Boolean))
+        ).sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+        elements.parentNameDatalist.innerHTML = uniqueNames.map(name => `<option value="${name}"></option>`).join('');
+    }
+
+    function filterParentList(searchTerm = '') {
+        const term = searchTerm.trim().toLowerCase();
+        if (!term) return state.parentUsers;
+        return state.parentUsers.filter(parent => {
+            const name = (parent.name || '').toLowerCase();
+            const userId = (parent.userId || '').toLowerCase();
+            return name.includes(term) || userId.includes(term);
+        });
+    }
+
+    function populateParentSelector(select, searchTerm = '') {
+        if (!select) return;
+        const filtered = filterParentList(searchTerm);
+        select.innerHTML = '<option value="">-- 選擇家長 --</option>' + filtered.map(parent => {
+            const displayId = parent.userId ? parent.userId.slice(0, 10) + '…' : '無 userId';
+            return `<option value="${parent.userId || ''}">${parent.name || '(未命名)'}｜${displayId}</option>`;
+        }).join('');
+    }
+
+    function maybeAutoFillUserId(nameInput, userIdInput, silent = false) {
+        if (!nameInput || !userIdInput || !state.parentUsers.length) return;
+        const name = nameInput.value.trim();
+        if (!name) return;
+        const matches = state.parentUsers.filter(parent => (parent.name || '').trim() === name);
+        if (matches.length === 1) {
+            userIdInput.value = matches[0].userId || '';
+            userIdInput.dataset.autoFilled = 'true';
+            if (!silent) {
+                showToast('✅ 已根據家長姓名自動填入 LINE User ID', 'success');
+            }
+        } else if (matches.length > 1 && !silent) {
+            showToast('⚠️ 找到多位同名家長，請從下方列表選擇正確的家長', 'warning');
+        }
+    }
+
+    function setupParentHelper(wrapper, nameInput, getUserIdInput) {
+        if (!wrapper || !nameInput) return;
+        const userIdInput = typeof getUserIdInput === 'function' ? getUserIdInput() : null;
+
+        nameInput.setAttribute('list', 'parentNameOptions');
+        nameInput.addEventListener('change', () => maybeAutoFillUserId(nameInput, userIdInput));
+        nameInput.addEventListener('blur', () => maybeAutoFillUserId(nameInput, userIdInput, true));
+
+        const helper = document.createElement('div');
+        helper.className = 'parent-helper';
+        helper.innerHTML = `
+            <input type="text" class="parent-helper-search" placeholder="搜尋家長...">
+            <select class="parent-helper-select">
+                <option value="">-- 選擇家長 --</option>
+            </select>
+        `;
+        wrapper.appendChild(helper);
+
+        const hint = document.createElement('small');
+        hint.className = 'field-hint';
+        hint.textContent = '選擇或輸入家長姓名後，系統會自動填入對應的 LINE User ID。';
+        wrapper.appendChild(hint);
+
+        const searchInput = helper.querySelector('.parent-helper-search');
+        const select = helper.querySelector('.parent-helper-select');
+
+        populateParentSelector(select);
+
+        searchInput.addEventListener('input', () => {
+            populateParentSelector(select, searchInput.value);
+        });
+
+        select.addEventListener('change', () => {
+            const targetUserId = select.value;
+            if (!targetUserId) return;
+            const parent = state.parentUsers.find(p => p.userId === targetUserId);
+            if (parent) {
+                nameInput.value = parent.name || '';
+                if (userIdInput) {
+                    userIdInput.value = parent.userId || '';
+                    userIdInput.dataset.autoFilled = 'true';
+                }
+                showToast(`✅ 已套用家長「${parent.name || ''}」的 LINE User ID`, 'success');
+            }
+        });
+
+        if (nameInput.value) {
+            maybeAutoFillUserId(nameInput, userIdInput, true);
+        }
+    }
+
+    function renderTable() {
+        if (!elements.tableBody) return;
+
+        const rows = state.visibleRows || [];
+
+        if (!rows.length) {
+            const message = state.rows.length
+                ? '沒有符合篩選條件的學生，請調整上方的篩選條件或重新整理。'
+                : '目前沒有任何學生資料，請點選「重新整理」或「新增學生」。';
+            elements.tableBody.innerHTML = `<tr><td colspan="9" class="empty-placeholder">${message}</td></tr>`;
+            return;
+        }
+
+        const displayCols = DISPLAY_COLUMNS.filter(key => state.columns.some(col => col.key === key));
+
+        elements.tableBody.innerHTML = rows.map(row => {
+            const values = row.values;
+            const remaining = values.remainingSessions;
+            const remainingNum = Number(remaining);
+            let badgeClass = 'badge-success';
+            if (!Number.isNaN(remainingNum)) {
+                if (remainingNum <= 0) {
+                    badgeClass = 'badge-danger';
+                } else if (remainingNum <= 5) {
+                    badgeClass = 'badge-warning';
+                }
+            }
+
+            const cells = displayCols.map(key => {
+                const value = values[key] || '';
+                if (BOOLEAN_KEYS.has(key)) {
+                    return `<td>${boolToBadge(value)}</td>`;
+                }
+                if (key === 'remainingSessions') {
+                    return `<td><span class="badge ${badgeClass}">${value || '-'}</span></td>`;
+                }
+                if (key === 'parentName') {
+                    const contact = values.parentPhone || values.parentContact;
+                    const contactHtml = contact ? `<div style="color:#6B7280;font-size:0.8rem;">${contact}</div>` : '';
+                    return `<td><strong>${value || '-'}</strong>${contactHtml}</td>`;
+                }
+                return `<td>${value || '-'}</td>`;
+            }).join('');
+
+            return `
+                <tr data-row="${row.rowNumber}">
+                    <td><strong>${row.rowNumber}</strong></td>
+                    ${cells}
+                    <td class="actions-column">
+                        <div class="table-actions">
+                            <button class="btn btn-secondary btn-sm" data-action="edit" data-row="${row.rowNumber}">
+                                <i class="fas fa-pen-to-square"></i> 編輯
+                            </button>
+                            <button class="btn btn-danger btn-sm" data-action="delete" data-row="${row.rowNumber}">
+                                <i class="fas fa-trash"></i> 刪除
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function updateStatusBar() {
+        if (elements.statusSummary) {
+            const total = state.rows.length;
+            const visibleRows = state.visibleRows || [];
+            const visible = visibleRows.length;
+            const lowRemaining = visibleRows.filter(row => {
+                const remaining = Number(row.values.remainingSessions);
+                return !Number.isNaN(remaining) && remaining <= 5;
+            }).length;
+            elements.statusSummary.innerHTML = `<i class="fas fa-chart-bar"></i> 顯示 ${visible} / ${total} 筆資料，剩餘堂數 ≤ 5：${lowRemaining} 位`;
+        }
+
+        if (elements.statusTimestamp) {
+            if (state.fetchedAt) {
+                const date = new Date(state.fetchedAt);
+                const formatted = date.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
+                elements.statusTimestamp.innerHTML = `<i class="fas fa-clock"></i> 讀取時間：${formatted}`;
+            } else {
+                elements.statusTimestamp.innerHTML = '<i class="fas fa-clock"></i> 尚未讀取資料';
+            }
+        }
+    }
+
+    async function fetchStudentSheet(force = false) {
+        if (state.isLoading) return;
+        toggleLoading(true);
+        try {
+            const url = new URL(API_ENDPOINT, window.location.origin);
+            if (force) {
+                url.searchParams.set('force', '1');
+            }
+            const response = await fetch(url.toString());
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.message || '讀取失敗');
+            }
+            state.columns = result.columns || [];
+            state.rows = result.rows || [];
+            state.fetchedAt = result.fetchedAt || null;
+            populateFilterOptions();
+            applyFilters();
+            showToast('✅ 成功載入學生資料', 'success');
+        } catch (error) {
+            console.error('❌ 讀取學生試算表失敗:', error);
+            showToast(`❌ 讀取失敗：${error.message}`, 'error');
+        } finally {
+            toggleLoading(false);
+        }
+    }
+
+    async function fetchParentUsers() {
+        try {
+            const response = await fetch('/api/parent-users');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const result = await response.json();
+            if (result.success && Array.isArray(result.data)) {
+                state.parentUsers = result.data;
+                populateParentNameOptions();
+                document.querySelectorAll('.parent-helper-select').forEach(select => populateParentSelector(select));
+                const modalParentInputs = document.querySelectorAll('input[name="parentName"]');
+                modalParentInputs.forEach(input => {
+                    const userIdInput = elements.form ? elements.form.querySelector('input[name="userId"]') : null;
+                    maybeAutoFillUserId(input, userIdInput, true);
+                });
+            } else {
+                console.warn('⚠️ 無法載入家長資料：', result.message || '未知錯誤');
+            }
+        } catch (error) {
+            console.error('❌ 載入家長資料失敗:', error);
+        }
+    }
+
+    function closeModal() {
+        if (elements.modalBackdrop) {
+            elements.modalBackdrop.classList.remove('show');
+        }
+        state.editingRowNumber = null;
+        state.isCreating = false;
+        if (elements.form) {
+            elements.form.reset();
+        }
+        if (elements.formContainer) {
+            elements.formContainer.innerHTML = '';
+        }
+    }
+
+    function openModal({ rowNumber = null, isCreate = false }) {
+        state.editingRowNumber = rowNumber;
+        state.isCreating = isCreate;
+
+        if (elements.modalTitle) {
+            elements.modalTitle.textContent = isCreate ? '新增學生資料' : `編輯學生資料 - 第 ${rowNumber} 列`;
+        }
+
+        if (!elements.formContainer) return;
+
+        const editableColumns = state.columns.filter(column => column.editable);
+
+        let rowValues = {};
+        if (!isCreate && rowNumber) {
+            const target = state.rows.find(row => row.rowNumber === rowNumber);
+            if (target) {
+                rowValues = target.values;
+            }
+        }
+
+        const fragment = document.createDocumentFragment();
+        let parentFieldWrapper = null;
+        let parentNameInput = null;
+        let userIdInput = null;
+
+        editableColumns.forEach(column => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'form-group';
+
+            const label = document.createElement('label');
+            label.setAttribute('for', `field-${column.key}`);
+            label.textContent = column.header || column.key;
+            wrapper.appendChild(label);
+
+            const existingValue = rowValues[column.key] || '';
+            let fieldElement = null;
+
+            if (LONG_TEXT_KEYS.has(column.key)) {
+                const textarea = document.createElement('textarea');
+                textarea.id = `field-${column.key}`;
+                textarea.name = column.key;
+                textarea.value = existingValue;
+                textarea.placeholder = '請輸入內容';
+                fieldElement = textarea;
+            } else if (BOOLEAN_KEYS.has(column.key)) {
+                const select = document.createElement('select');
+                select.id = `field-${column.key}`;
+                select.name = column.key;
+
+                const options = [
+                    { value: '', label: '未設定' },
+                    { value: 'TRUE', label: '是' },
+                    { value: 'FALSE', label: '否' }
+                ];
+
+                options.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.label;
+                    if (existingValue === opt.value || (!existingValue && opt.value === '')) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+                fieldElement = select;
+            } else if (NUMERIC_KEYS.has(column.key)) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.id = `field-${column.key}`;
+                input.name = column.key;
+                input.value = existingValue;
+                input.placeholder = '請輸入數字';
+                fieldElement = input;
+            } else {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `field-${column.key}`;
+                input.name = column.key;
+                input.value = existingValue;
+                input.placeholder = '請輸入內容';
+                fieldElement = input;
+            }
+
+            if (fieldElement) {
+                wrapper.appendChild(fieldElement);
+            }
+
+            if (column.key === 'parentName') {
+                parentFieldWrapper = wrapper;
+                parentNameInput = fieldElement;
+            }
+
+            if (column.key === 'userId') {
+                userIdInput = fieldElement;
+            }
+
+            fragment.appendChild(wrapper);
+        });
+
+        elements.formContainer.innerHTML = '';
+        elements.formContainer.appendChild(fragment);
+
+        if (parentFieldWrapper && parentNameInput) {
+            setupParentHelper(parentFieldWrapper, parentNameInput, () => {
+                if (!userIdInput) {
+                    userIdInput = elements.form.querySelector('input[name="userId"]');
+                }
+                return userIdInput;
+            });
+        }
+
+        if (elements.modalBackdrop) {
+            elements.modalBackdrop.classList.add('show');
+        }
+    }
+
+    async function submitForm() {
+        if (!elements.form) return;
+
+        const formData = new FormData(elements.form);
+        const payload = {};
+        const editableColumns = state.columns.filter(column => column.editable);
+        let hasValue = false;
+
+        editableColumns.forEach(column => {
+            const value = formData.get(column.key);
+            if (value !== null && value !== undefined) {
+                const trimmed = typeof value === 'string' ? value.trim() : value;
+                if (trimmed !== '') {
+                    hasValue = true;
+                }
+                payload[column.key] = trimmed;
+            }
+        });
+
+        if (state.isCreating && (!payload.name || payload.name === '')) {
+            showToast('⚠️ 新增學生時必須填寫姓名', 'warning');
+            return;
+        }
+
+        if (!state.isCreating && !hasValue) {
+            showToast('⚠️ 請至少修改一個欄位', 'warning');
+            return;
+        }
+
+        try {
+            let response;
+            if (state.isCreating) {
+                response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ values: payload })
+                });
+            } else {
+                response = await fetch(`${API_ENDPOINT}/${state.editingRowNumber}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ values: payload })
+                });
+            }
+
+            if (!response.ok) {
+                const errorResult = await response.json().catch(() => ({}));
+                throw new Error(errorResult.message || `HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.message || '操作失敗');
+            }
+
+            showToast(state.isCreating ? '✅ 已新增學生資料' : '✅ 已更新學生資料', 'success');
+            closeModal();
+            await fetchStudentSheet(true);
+        } catch (error) {
+            console.error('❌ 儲存學生資料失敗:', error);
+            showToast(`❌ 儲存失敗：${error.message}`, 'error');
+        }
+    }
+
+    async function handleDelete(rowNumber) {
+        if (!rowNumber) return;
+        const confirmed = window.confirm(`確定要刪除 Google Sheets 中第 ${rowNumber} 列嗎？此動作無法復原。`);
+        if (!confirmed) return;
+        try {
+            const response = await fetch(`${API_ENDPOINT}/${rowNumber}`, { method: 'DELETE' });
+            if (!response.ok) {
+                const errorResult = await response.json().catch(() => ({}));
+                throw new Error(errorResult.message || `HTTP ${response.status}`);
+            }
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.message || '刪除失敗');
+            }
+            showToast('🗑️ 已刪除學生資料', 'success');
+            await fetchStudentSheet(true);
+        } catch (error) {
+            console.error('❌ 刪除學生資料失敗:', error);
+            showToast(`❌ 刪除失敗：${error.message}`, 'error');
+        }
+    }
+
+    function bindEvents() {
+        if (elements.refreshBtn) {
+            elements.refreshBtn.addEventListener('click', () => fetchStudentSheet(false));
+        }
+
+        if (elements.forceRefreshBtn) {
+            elements.forceRefreshBtn.addEventListener('click', () => fetchStudentSheet(true));
+        }
+
+        if (elements.addStudentBtn) {
+            elements.addStudentBtn.addEventListener('click', () => openModal({ isCreate: true }));
+        }
+
+        if (elements.cancelEditBtn) {
+            elements.cancelEditBtn.addEventListener('click', closeModal);
+        }
+
+        if (elements.saveStudentBtn) {
+            elements.saveStudentBtn.addEventListener('click', submitForm);
+        }
+
+        if (elements.modalBackdrop) {
+            elements.modalBackdrop.addEventListener('click', event => {
+                if (event.target === elements.modalBackdrop) {
+                    closeModal();
+                }
+            });
+        }
+
+        if (elements.tableBody) {
+            elements.tableBody.addEventListener('click', event => {
+                const target = event.target.closest('button[data-action]');
+                if (!target) return;
+                const action = target.dataset.action;
+                const rowNumber = Number(target.dataset.row);
+                if (action === 'edit') {
+                    openModal({ rowNumber, isCreate: false });
+                } else if (action === 'delete') {
+                    handleDelete(rowNumber);
+                }
+            });
+        }
+
+        if (elements.filterKeyword) {
+            elements.filterKeyword.addEventListener('input', event => {
+                const value = event.target.value;
+                if (keywordDebounceTimer) {
+                    clearTimeout(keywordDebounceTimer);
+                }
+                keywordDebounceTimer = setTimeout(() => {
+                    state.filters.keyword = value;
+                    applyFilters();
+                }, 220);
+            });
+        }
+
+        if (elements.filterCourse) {
+            elements.filterCourse.addEventListener('change', event => {
+                state.filters.courseName = event.target.value;
+                applyFilters();
+            });
+        }
+
+        if (elements.filterCategory) {
+            elements.filterCategory.addEventListener('change', event => {
+                state.filters.category = event.target.value;
+                applyFilters();
+            });
+        }
+
+        if (elements.filterRemaining) {
+            elements.filterRemaining.addEventListener('change', event => {
+                state.filters.remaining = event.target.value;
+                applyFilters();
+            });
+        }
+
+        if (elements.filterMissingUserId) {
+            elements.filterMissingUserId.addEventListener('change', event => {
+                state.filters.missingUserId = Boolean(event.target.checked);
+                applyFilters();
+            });
+        }
+    }
+
+    function init() {
+        bindEvents();
+        if (elements.filterRemaining) {
+            elements.filterRemaining.value = state.filters.remaining;
+        }
+        fetchStudentSheet(false);
+        fetchParentUsers();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+})();

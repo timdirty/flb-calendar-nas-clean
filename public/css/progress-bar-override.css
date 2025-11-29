@@ -1,0 +1,78 @@
+/* 🔥 進度條緊急修復 - 強制覆蓋所有問題 */
+
+/* 🔥 [修復 2025-11-18] 進度條絕對定位在預覽圖底部中央 */
+.file-preview .file-upload-progress {
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    height: 8px !important;
+    position: absolute !important;
+    bottom: 8px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    border-radius: 999px !important;
+    overflow: hidden !important;
+    z-index: 10 !important;
+}
+
+/* 🔥 [修復 2025-11-18] 進度條填充：鮮豔漸變 + 發光效果 */
+.file-preview .file-upload-progress-fill {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, #10b981, #06b6d4) !important;
+    border-radius: 999px !important;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.6) !important;
+    /* 🔥 [修復 2025-11-18] 移除 transition 和動畫，寬度必須立即更新 */
+    transition: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+    transform-origin: left center !important;
+}
+
+/* 特別處理上傳中狀態 */
+.file-preview.uploading .file-upload-progress,
+.file-preview.pending .file-upload-progress {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.file-preview.uploading .file-upload-progress-fill,
+.file-preview.pending .file-upload-progress-fill {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* 修復 overlay 文字溢出問題 */
+.file-preview .file-uploading-overlay {
+    overflow: hidden !important;
+}
+
+.file-preview .file-uploading-overlay .progress-text {
+    max-width: 90% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 修復特定狀態組合 */
+.file-preview.new-upload.uploading .file-upload-progress-fill,
+.file-preview.existing.synced-preview.uploading .file-upload-progress-fill {
+    /* 確保這些組合也能正確工作 */
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+/* 調試用 - 可視化容器邊界 */
+.debug-progress-bar .file-upload-progress {
+    border: 1px solid red !important;
+}
+
+.debug-progress-bar .file-upload-progress-fill {
+    opacity: 0.8 !important;
+}

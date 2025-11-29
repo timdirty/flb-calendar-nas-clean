@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>進度條動畫修復測試</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #34d399;
+        }
+        
+        .test-section {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .test-section h2 {
+            margin-top: 0;
+            color: #06b6d4;
+        }
+        
+        /* 容器樣式 */
+        .file-preview {
+            width: 120px;
+            height: 120px;
+            background: #374151;
+            border-radius: 8px;
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+        }
+        
+        .file-uploading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: inherit;
+        }
+        
+        /* 進度條容器 */
+        .file-upload-progress {
+            width: 70px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+            margin: 10px 0 0;
+        }
+        
+        /* 進度條填充 - 有問題的版本（帶動畫） */
+        .file-upload-progress-fill.with-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #34d399, #06b6d4);
+            box-shadow: 0 0 8px rgba(14, 165, 233, 0.45);
+            /* 問題：這個動畫會造成閃爍 */
+            animation: progress-pulse 1.5s ease-in-out infinite;
+        }
+        
+        /* 進度條填充 - 修復版本（無動畫） */
+        .file-upload-progress-fill.fixed {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #34d399, #06b6d4);
+            box-shadow: 0 0 8px rgba(14, 165, 233, 0.45);
+            /* 修復：移除動畫 */
+            animation: none !important;
+            opacity: 1 !important;
+        }
+        
+        /* 動畫定義 */
+        @keyframes progress-pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+        
+        .progress-text {
+            color: white;
+            font-size: 12px;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+        
+        .label {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #9ca3af;
+        }
+        
+        .bad {
+            color: #ef4444;
+        }
+        
+        .good {
+            color: #34d399;
+        }
+        
+        button {
+            background: #06b6d4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #0891b2;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .status {
+            background: #1f2937;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .explanation {
+            background: #1e40af;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+        
+        .comparison {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 進度條動畫修復測試</h1>
+    
+    <div class="explanation">
+        <strong>問題描述：</strong><br>
+        原始版本使用 <code>animation: progress-pulse</code> 讓進度條閃爍（opacity 1 ↔ 0.7），導致用戶看不到寬度增長效果。<br><br>
+        <strong>修復方案：</strong><br>
+        添加 <code>animation: none !important;</code> 和 <code>opacity: 1 !important;</code> 移除閃爍，確保進度條增長清晰可見。
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 比較測試</h2>
+        
+        <div class="comparison">
+            <div>
+                <div class="file-preview">
+                    <div class="file-uploading-overlay">
+                        <div class="file-upload-progress">
+                            <div class="file-upload-progress-fill with-animation" id="progress-bad"></div>
+                        </div>
+                        <div class="progress-text" id="percent-bad">0%</div>
+                    </div>
+                </div>
+                <div class="label bad">❌ 有問題的版本（閃爍）</div>
+            </div>
+            
+            <div>
+                <div class="file-preview">
+                    <div class="file-uploading-overlay">
+                        <div class="file-upload-progress">
+                            <div class="file-upload-progress-fill fixed" id="progress-good"></div>
+                        </div>
+                        <div class="progress-text" id="percent-good">0%</div>
+                    </div>
+                </div>
+                <div class="label good">✅ 修復後的版本（清晰）</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="startProgress()">▶️ 開始模擬上傳</button>
+            <button onclick="stopProgress()">⏸️ 停止</button>
+            <button onclick="resetProgress()">🔄 重置</button>
+        </div>
+        
+        <div class="status" id="status">
+            點擊「開始模擬上傳」來觀察兩個進度條的差異
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔍 觀察重點</h2>
+        <ul>
+            <li><strong>有問題的版本（左側）</strong>：進度條會不斷「閃爍」，opacity 變化明顯，寬度增長不清楚</li>
+            <li><strong>修復後的版本（右側）</strong>：進度條「平滑增長」，無閃爍，寬度變化清晰可見</li>
+            <li><strong>對比效果</strong>：同時觀察兩個進度條，很容易看出差異</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>📈 診斷資訊</h2>
+        <div id="diagnostic" class="status">
+            等待測試...
+        </div>
+    </div>
+
+    <script>
+        let currentProgress = 0;
+        let intervalId = null;
+        
+        function updateProgress(percent) {
+            const pixelWidth = Math.round(70 * percent / 100);
+            
+            // 更新有問題的版本
+            const badProgress = document.getElementById('progress-bad');
+            badProgress.style.width = pixelWidth + 'px';
+            document.getElementById('percent-bad').textContent = percent + '%';
+            
+            // 更新修復後的版本
+            const goodProgress = document.getElementById('progress-good');
+            goodProgress.style.width = pixelWidth + 'px';
+            document.getElementById('percent-good').textContent = percent + '%';
+            
+            // 更新狀態
+            document.getElementById('status').innerHTML = `
+                <strong>當前進度：${percent}%</strong><br>
+                像素寬度：${pixelWidth}px / 70px<br>
+                <br>
+                <span style="color: #ef4444;">❌ 左側（有問題）：</span> opacity 在閃爍，寬度增長不明顯<br>
+                <span style="color: #34d399;">✅ 右側（修復後）：</span> 清晰可見，寬度平滑增長
+            `;
+            
+            // 更新診斷資訊
+            const badStyle = getComputedStyle(badProgress);
+            const goodStyle = getComputedStyle(goodProgress);
+            
+            document.getElementById('diagnostic').innerHTML = `
+                <strong>有問題版本：</strong><br>
+                animation: ${badStyle.animation || 'progress-pulse 1.5s ease-in-out infinite'}<br>
+                opacity: ${badStyle.opacity}<br>
+                width: ${badStyle.width}<br>
+                <br>
+                <strong>修復版本：</strong><br>
+                animation: ${goodStyle.animation || 'none'}<br>
+                opacity: ${goodStyle.opacity}<br>
+                width: ${goodStyle.width}<br>
+            `;
+        }
+        
+        function startProgress() {
+            if (intervalId) return;
+            
+            intervalId = setInterval(() => {
+                currentProgress += 1;
+                if (currentProgress > 100) {
+                    currentProgress = 100;
+                    stopProgress();
+                }
+                updateProgress(currentProgress);
+            }, 50);
+        }
+        
+        function stopProgress() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+        }
+        
+        function resetProgress() {
+            stopProgress();
+            currentProgress = 0;
+            updateProgress(0);
+        }
+        
+        // 初始化
+        updateProgress(0);
+    </script>
+</body>
+</html>

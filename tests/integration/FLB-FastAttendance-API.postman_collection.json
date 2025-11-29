@@ -1,0 +1,185 @@
+{
+  "info": {
+    "name": "FLB 極速簽到 API",
+    "description": "FLB Calendar 極速簽到系統 - Google Sheets API 終極方案",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "健康檢查",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://calendar.funlearnbar.synology.me/api/health",
+          "protocol": "https",
+          "host": ["calendar", "funlearnbar", "synology", "me"],
+          "path": ["api", "health"]
+        },
+        "description": "檢查系統健康狀態"
+      }
+    },
+    {
+      "name": "極速簽到 - 正常出席",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"studentName\": \"c\",\n    \"courseName\": \"Minecraft\",\n    \"date\": \"2025-10-29\",\n    \"mark\": \"V\"\n}"
+        },
+        "url": {
+          "raw": "https://calendar.funlearnbar.synology.me/api/attendance/fast",
+          "protocol": "https",
+          "host": ["calendar", "funlearnbar", "synology", "me"],
+          "path": ["api", "attendance", "fast"]
+        },
+        "description": "極速簽到 API - 標記學生出席\n\n預期效能：150-500ms"
+      }
+    },
+    {
+      "name": "極速簽到 - 請假",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"studentName\": \"c\",\n    \"courseName\": \"Minecraft\",\n    \"date\": \"2025-10-29\",\n    \"mark\": \"X\"\n}"
+        },
+        "url": {
+          "raw": "https://calendar.funlearnbar.synology.me/api/attendance/fast",
+          "protocol": "https",
+          "host": ["calendar", "funlearnbar", "synology", "me"],
+          "path": ["api", "attendance", "fast"]
+        },
+        "description": "極速簽到 API - 標記學生請假"
+      }
+    },
+    {
+      "name": "極速簽到 - 測試錯誤（未報名課程）",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"studentName\": \"c\",\n    \"courseName\": \"Python進階\",\n    \"date\": \"2025-10-29\",\n    \"mark\": \"V\"\n}"
+        },
+        "url": {
+          "raw": "https://calendar.funlearnbar.synology.me/api/attendance/fast",
+          "protocol": "https",
+          "host": ["calendar", "funlearnbar", "synology", "me"],
+          "path": ["api", "attendance", "fast"]
+        },
+        "description": "測試錯誤處理 - 學生未報名該課程\n\n預期回應：錯誤訊息 + 可用課程清單"
+      }
+    },
+    {
+      "name": "極速簽到 - 測試錯誤（學生不存在）",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"studentName\": \"不存在的學生\",\n    \"courseName\": \"Minecraft\",\n    \"date\": \"2025-10-29\",\n    \"mark\": \"V\"\n}"
+        },
+        "url": {
+          "raw": "https://calendar.funlearnbar.synology.me/api/attendance/fast",
+          "protocol": "https",
+          "host": ["calendar", "funlearnbar", "synology", "me"],
+          "path": ["api", "attendance", "fast"]
+        },
+        "description": "測試錯誤處理 - 學生不存在\n\n預期回應：錯誤訊息"
+      }
+    },
+    {
+      "name": "極速簽到 - 測試錯誤（缺少參數）",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"studentName\": \"c\",\n    \"courseName\": \"Minecraft\"\n}"
+        },
+        "url": {
+          "raw": "https://calendar.funlearnbar.synology.me/api/attendance/fast",
+          "protocol": "https",
+          "host": ["calendar", "funlearnbar", "synology", "me"],
+          "path": ["api", "attendance", "fast"]
+        },
+        "description": "測試錯誤處理 - 缺少必要參數\n\n預期回應：400 錯誤 + 錯誤訊息"
+      }
+    },
+    {
+      "name": "清除快取",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://calendar.funlearnbar.synology.me/api/attendance/clear-cache",
+          "protocol": "https",
+          "host": ["calendar", "funlearnbar", "synology", "me"],
+          "path": ["api", "attendance", "clear-cache"]
+        },
+        "description": "清除學生索引和課程結構快取\n\n用於：\n- 學生資料更新後\n- 課程結構變更後\n- 測試快取機制"
+      }
+    },
+    {
+      "name": "原有簽到隊列 API（比較用）",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"teacher\": \"TIM\",\n    \"course\": \"Minecraft\",\n    \"time\": \"2025-10-29\",\n    \"start\": \"10:00\",\n    \"end\": \"11:30\",\n    \"studentId\": \"123\",\n    \"studentName\": \"c\",\n    \"attendanceStatus\": \"present\"\n}"
+        },
+        "url": {
+          "raw": "https://calendar.funlearnbar.synology.me/api/attendance/queue",
+          "protocol": "https",
+          "host": ["calendar", "funlearnbar", "synology", "me"],
+          "path": ["api", "attendance", "queue"]
+        },
+        "description": "原有的簽到隊列 API（透過 Apps Script）\n\n用於效能比較：\n- 原有方案：2-5 秒\n- 極速方案：150-500ms"
+      }
+    }
+  ]
+}
+

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>临时学生调试工具</title>
+    <style>
+        body { 
+            font-family: monospace; 
+            padding: 20px; 
+            background: #1e1e1e; 
+            color: #d4d4d4;
+        }
+        .section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            background: #2d2d2d; 
+            border-radius: 8px;
+        }
+        .title { 
+            color: #4ec9b0; 
+            font-weight: bold; 
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        pre { 
+            background: #1e1e1e; 
+            padding: 10px; 
+            border-radius: 4px; 
+            overflow-x: auto;
+        }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .warning { color: #dcdcaa; }
+    </style>
+</head>
+<body>
+    <h1>🔍 临时学生匹配调试工具</h1>
+    
+    <div class="section">
+        <div class="title">1️⃣ 后端 API 返回的临时学生</div>
+        <pre id="apiData">加载中...</pre>
+    </div>
+    
+    <div class="section">
+        <div class="title">2️⃣ 当天课程列表</div>
+        <pre id="eventsData">加载中...</pre>
+    </div>
+    
+    <div class="section">
+        <div class="title">3️⃣ 匹配测试</div>
+        <pre id="matchResult">加载中...</pre>
+    </div>
+
+    <script src="/js/student-filter.js"></script>
+    <script>
+        async function debugTempStudents() {
+            try {
+                // 1. 获取临时学生数据
+                const tempResp = await fetch('/api/temporary-students', {
+                    cache: 'no-cache',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                const tempData = await tempResp.json();
+                document.getElementById('apiData').innerHTML = 
+                    `<span class="success">✅ API返回成功</span>\n` +
+                    JSON.stringify(tempData, null, 2);
+                
+                // 2. 获取2025-10-24的课程
+                const eventsResp = await fetch('/api/events?date=2025-10-24');
+                const eventsData = await eventsResp.json();
+                const spmEvents = eventsData.data.filter(e => 
+                    e.start.startsWith('2025-10-24') && e.title.includes('SPM')
+                );
+                document.getElementById('eventsData').innerHTML = 
+                    `<span class="success">✅ 找到 ${spmEvents.length} 个SPM课程</span>\n` +
+                    JSON.stringify(spmEvents, null, 2);
+                
+                // 3. 测试匹配
+                if (tempData.success && tempData.data.length > 0 && spmEvents.length > 0) {
+                    const tempStudent = tempData.data[0];
+                    const event = spmEvents[0];
+                    
+                    const result = {
+                        '临时学生': {
+                            name: tempStudent.name,
+                            course: tempStudent.course,
+                            period: tempStudent.period,
+                            remaining: tempStudent.remaining
+                        },
+                        '行事历课程': {
+                            title: event.title,
+                            start: event.start
+                        },
+                        '匹配参数': {
+                            course: 'SPM',
+                            time: event.title
+                        }
+                    };
+                    
+                    // 调用 student-filter.js 的匹配函数
+                    const allStudents = [tempStudent];
+                    const filtered = await filterStudentsWithConfig(
+                        allStudents, 
+                        'SPM', 
+                        event.title,
+                        { 
+                            debugMode: true,
+                            courseDate: '2025-10-24'
+                        }
+                    );
+                    
+                    result['匹配结果'] = {
+                        inputCount: allStudents.length,
+                        filteredCount: filtered.length,
+                        matched: filtered.length > 0 ? '✅ 匹配成功' : '❌ 匹配失败',
+                        filteredStudents: filtered.map(s => s.name)
+                    };
+                    
+                    document.getElementById('matchResult').innerHTML = 
+                        JSON.stringify(result, null, 2);
+                } else {
+                    document.getElementById('matchResult').innerHTML = 
+                        '<span class="error">❌ 无法进行匹配测试（数据不足）</span>';
+                }
+                
+            } catch (error) {
+                console.error('调试失败:', error);
+                document.getElementById('apiData').innerHTML = 
+                    `<span class="error">❌ 错误: ${error.message}</span>`;
+            }
+        }
+        
+        debugTempStudents();
+    </script>
+</body>
+</html>
+

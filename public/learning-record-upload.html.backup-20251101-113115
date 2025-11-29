@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>學習歷程上傳 - FLB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/learning-records.css?v=20251101-lrm8">
+    <!-- 共用模組（非 ES Modules） -->
+    <script defer src="/js/modules/url-utils.js?v=20250129"></script>
+    <script defer src="/js/modules/id-utils.js?v=20250129"></script>
+    <script defer src="/js/modules/course-utils.js?v=20250129"></script>
+    <script defer src="/js/modules/api-client.js?v=20250131-lrm4"></script>
+    <script defer src="/js/modules/ui/toast.js?v=20250129"></script>
+    <!-- 路由與狀態 -->
+    <script defer src="/js/core/router.js?v=20250131"></script>
+    <script defer src="/js/core/state-store.js?v=20250131"></script>
+    <!-- 🔧 正規化工具（必須優先載入，供其他模組使用） -->
+    <script defer src="/js/modules/normalize-utils.js?v=2025-02-01"></script>
+    <!-- 🔥 學生資料處理模組（使用穩定的簡單版 - 無依賴問題） -->
+    <script defer src="/js/modules/course-title-parser.js?v=2025-02-01-stable"></script>
+    <script defer src="/js/modules/course-student-matcher.js?v=2025-02-01-stable"></script>
+    <script defer src="/js/modules/student-filter.js?v=2025-02-01-stable"></script>
+    <!-- UI 模組：滑動、底部標籤、進度條、虛擬清單、檢查清單 -->
+    <script defer src="/js/modules/ui/swipe.js?v=20250131"></script>
+    <script defer src="/js/modules/ui/bottom-tabs.js?v=20250131"></script>
+    <script defer src="/js/modules/ui/progress-indicator.js?v=20250131"></script>
+    <script defer src="/js/modules/checklist.js?v=20250131"></script>
+    <script defer src="/js/modules/virtual-list.js?v=20250131"></script>
+    <!-- 頁面腳本 -->
+    <script defer src="/js/pages/learning-record-upload.js?v=20251101-lrm8"></script>
+    <style>
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 標題區 -->
+        <div class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <img src="logo.jpg" alt="FLB Logo" class="header-logo">
+                    <div>
+                        <h1> FLB學習歷程</h1>
+                        <div class="date" id="currentDate">載入中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 導航按鈕 -->
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i> 返回行事曆
+            </button>
+            <button class="nav-btn" onclick="openHistory()">
+                <i class="fas fa-history"></i> 查看歷史記錄
+            </button>
+            <button class="nav-btn" onclick="refreshCourses()">
+                <i class="fas fa-sync-alt"></i> 重新整理
+            </button>
+        </div>
+
+        <!-- 視圖：課程選擇 -->
+        <div id="view-select" class="glass-card course-selector">
+            <h2 style="color: white; margin-bottom: 15px;">
+                <i class="fas fa-chalkboard-teacher"></i> 待上傳的已結束課程
+            </h2>
+        <div class="course-toolbar">
+                <div class="toolbar-left">
+                    <div class="filter-group">
+                        <label for="rangeFilter"><i class="fas fa-calendar-check"></i> 範圍：</label>
+                        <select id="rangeFilter" class="filter-select">
+                            <option value="today">今日已結束</option>
+                            <option value="week">本週課程</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="datePicker"><i class="fas fa-calendar-day"></i> 日期：</label>
+                        <input id="datePicker" type="date" class="filter-select" />
+                    </div>
+                    <div class="filter-group">
+                        <label for="statusFilter"><i class="fas fa-tasks"></i> 狀態：</label>
+                        <select id="statusFilter" class="filter-select">
+                            <option value="all">全部</option>
+                            <option value="completed">已結束</option>
+                            <option value="upcoming">尚未開始</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="instructorFilter"><i class="fas fa-chalkboard-teacher"></i> 講師：</label>
+                        <select id="instructorFilter" class="filter-select">
+                            <option value="">全部講師</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="courseTypeFilter"><i class="fas fa-layer-group"></i> 類別：</label>
+                        <select id="courseTypeFilter" class="filter-select">
+                            <option value="">全部類別</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="studentSearch"><i class="fas fa-user"></i> 學生：</label>
+                        <input id="studentSearch" class="filter-select" placeholder="輸入學生姓名" />
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <div class="summary-chip" id="courseSummary">
+                        <i class="fas fa-info-circle"></i>
+                        <span>載入中...</span>
+                    </div>
+                </div>
+            </div>
+        <div class="filter-meta" id="courseMeta"></div>
+            <div class="course-list" id="courseList">
+                <!-- 課程列表將動態載入 -->
+            </div>
+        </div>
+
+        <!-- 視圖：學生個別上傳 -->
+        <div class="students-section" id="studentsSection">
+            <div id="topTabsSentinel"></div>
+            <!-- 頂部學生籤列（Mobile） -->
+            <div id="topTabs" class="lr-top-tabs" style="display: none;"></div>
+            <div class="glass-card" style="margin-bottom: 12px;">
+                <div style="display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap;">
+                    <button class="nav-btn" id="btnStudentMode">
+                        <i class="fas fa-users"></i> 學生模式
+                    </button>
+                    <button class="nav-btn" id="btnOverviewMode">
+                        <i class="fas fa-clipboard-list"></i> 課程總覽模式
+                    </button>
+                </div>
+            </div>
+            <div class="glass-card" id="studentCardPanel">
+                <h2 style="color: white; margin-bottom: 20px;">
+                    <i class="fas fa-users"></i> 學生學習記錄上傳
+                </h2>
+                <div class="students-grid" id="studentsGrid">
+                    <!-- 學生卡片將動態載入 -->
+                </div>
+            </div>
+
+            <!-- 桌面：左側學生清單（僅桌面顯示） -->
+            <div class="glass-card desktop-student-list" id="desktopStudentList" style="display:none;"></div>
+
+            <!-- 已上傳記錄（改用 FAB 抽屜，主區塊在手機隱藏） -->
+            <div class="glass-card" style="margin-top: 16px; display: none;">
+                <h2 style="color: white; margin-bottom: 20px;">
+                    <i class="fas fa-folder-open"></i> 已上傳記錄
+                </h2>
+                <div id="uploadedRecordsSection" style="background: white; border-radius: 12px; padding: 16px;">
+                    <div class="empty-state"><i class="fas fa-info-circle"></i> 尚未選擇課程</div>
+                </div>
+            </div>
+
+            <!-- 視圖：課程總覽 -->
+            <div class="glass-card overview-section" id="view-overview">
+                <h2 style="color: white; margin-bottom: 20px;">
+                    <i class="fas fa-clipboard-list"></i> 課程總覽
+                </h2>
+                <div style="background: white; border-radius: 15px; padding: 20px;">
+                    <div class="upload-area">
+                        <label class="upload-label">課程照片（不限張數）</label>
+                        <div class="file-drop-zone" id="overviewPhotosDropZone">
+                            <i class="fas fa-images"></i>
+                            <div class="text">點擊或拖放照片到此處</div>
+                        </div>
+                        <input type="file" id="overviewPhotosInput" class="file-input" accept="image/*" multiple>
+                        <div class="file-previews" id="overviewPhotosPreviews"></div>
+                    </div>
+
+                    <div class="upload-area">
+                        <label class="upload-label">課程摘要</label>
+                        <textarea 
+                            class="comment-area" 
+                            id="overviewSummary" 
+                            placeholder="請輸入本次課程的教學重點、課程內容摘要等..."
+                            rows="6"
+                        ></textarea>
+                        <div class="char-count">
+                            <span id="overviewSummaryCount">0</span> 字
+                        </div>
+                    </div>
+
+                    <button class="upload-btn" id="uploadOverviewBtn" onclick="uploadOverview()">
+                        <i class="fas fa-cloud-upload-alt"></i> 上傳課程總覽
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 預留：底部學生標籤（Desktop 可開） -->
+    <div id="bottomTabs" class="lr-bottom-tabs" style="display:none"></div>
+
+    <!-- 浮動進度指示（全域） -->
+    <div id="progressIndicator" style="position:fixed;right:10px;bottom:64px;left:10px;z-index:998"></div>
+
+    <!-- FAB：已上傳記錄抽屜 -->
+    <button id="recordsFab" title="已上傳記錄">
+        <i class="fas fa-folder-open"></i>
+        <span id="recordsFabBadge">0</span>
+    </button>
+    <div id="recordsDrawer">
+        <div style="padding:12px 16px;border-bottom:1px solid rgba(0,0,0,0.08);display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:600"><i class="fas fa-folder-open"></i> 已上傳記錄</div>
+            <button id="recordsDrawerClose" class="nav-btn"><i class="fas fa-times"></i> 關閉</button>
+        </div>
+        <div id="recordsDrawerContent" style="height:calc(60vh - 48px);overflow:auto;padding:12px 16px"></div>
+    </div>
+
+    <!-- 歷史記錄面板 -->
+    <div class="history-panel" id="historyPanel">
+        <div class="history-header">
+            <h2><i class="fas fa-history"></i> 歷史記錄</h2>
+            <button class="history-close" onclick="closeHistory()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="history-content">
+            <div class="history-filters">
+                <div class="filter-group">
+                    <label class="filter-label">學期</label>
+                    <select class="filter-select" id="filterSemester" onchange="loadHistory()">
+                        <option value="">當前學期</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">課程</label>
+                    <select class="filter-select" id="filterCourse" onchange="loadHistory()">
+                        <option value="">全部課程</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">日期</label>
+                    <input type="date" class="filter-select" id="filterDate" onchange="loadHistory()">
+                </div>
+            </div>
+            <div class="history-records" id="historyRecords">
+                <!-- 歷史記錄將動態載入 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 圖片 / 影片預覽疊層 -->
+    <div id="previewOverlay" class="preview-overlay" aria-hidden="true">
+        <div class="preview-overlay-backdrop"></div>
+        <div class="preview-overlay-content">
+            <button id="previewOverlayClose" class="preview-overlay-close">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="previewOverlayBody" class="preview-overlay-body"></div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+====================================
+🚨 緊急：後端無事件診斷
+====================================
+
+請在 NAS SSH 執行以下指令：
+
+# 方法 1: 快速診斷（推薦）
+------------------------------------
+cd /volume1/docker/flb-calendar-nas
+chmod +x 🔍診斷-後端無事件.sh
+./🔍診斷-後端無事件.sh
+
+
+# 方法 2: 手動檢查日誌
+------------------------------------
+cd /volume1/docker/flb-calendar-nas
+
+# 查看最新日誌
+docker logs flb-calendar-nas --tail 100
+
+# 查看 CalDAV 相關訊息
+docker logs flb-calendar-nas 2>&1 | grep -i "caldav\|初始化\|login\|事件\|error"
+
+
+# 方法 3: 檢查快取狀態
+------------------------------------
+curl -s "https://calendar.funlearnbar.synology.me/api/events/cache-status" | python3 -m json.tool
+
+
+# 方法 4: 手動觸發快取更新
+------------------------------------
+curl -X POST "https://calendar.funlearnbar.synology.me/api/events/refresh-cache"
+sleep 5
+curl -s "https://calendar.funlearnbar.synology.me/api/events/cache-status" | python3 -m json.tool
+
+
+====================================
+🎯 期望看到的結果
+====================================
+
+✅ CalDAV 客戶端初始化成功
+✅ CalDAV 登入成功
+✅ 獲取 XX 個事件
+✅ 事件快取更新成功
+
+如果看到 ❌ 錯誤訊息，請複製完整的錯誤內容回報。
+
+
+====================================
+⚡ 快速修復嘗試
+====================================
+
+# 如果診斷後發現問題，嘗試重啟容器
+cd /volume1/docker/flb-calendar-nas
+docker-compose restart
+sleep 15
+docker logs flb-calendar-nas --tail 50
+
+
+====================================
+

@@ -1,0 +1,534 @@
+/**
+ * 學習歷程影片管理 - 前端邏輯（2025-11-03 重構）
+ * 1. 分片上傳（呼叫新版 /api/media/videos/* API）
+ * 2. 任務監控與進度條
+ * 3. 影片清單、縮圖、下載操作
+ */
+
+(function (global) {
+    'use strict';
+
+    const API_BASE = '/api/media/videos';
+    const state = {
+        queue: [],
+        queueElements: new Map(),
+        tasks: [],
+        media: [],
+        filters: {
+            status: '',
+            instructor: '',
+            student: '',
+            dateKey: ''
+        },
+        uploading: false
+    };
+
+    const dom = {};
+
+    function $(selector) {
+        return document.querySelector(selector);
+    }
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+        if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+        return (bytes / 1024 / 1024 / 1024).toFixed(2) + ' GB';
+    }
+
+    function todayISO() {
+        const now = new Date();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${now.getFullYear()}-${month}-${day}`;
+    }
+
+    function pushToast(type, message) {
+        const container = dom.toastContainer;
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => container.removeChild(toast), 320);
+        }, 4200);
+    }
+
+    function updateQueueIndicator() {
+        if (!dom.queueIndicator) return;
+        const waiting = state.queue.filter(item => item.status === 'waiting').length;
+        const active = state.queue.filter(item => item.status === 'uploading').length;
+        if (!waiting && !active) {
+            dom.queueIndicator.innerHTML = '<i class="fa-solid fa-circle-check"></i> 排程空閒';
+            return;
+        }
+        dom.queueIndicator.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> 待處理 ${waiting} / 上傳中 ${active}`;
+    }
+
+    function createQueueItem(file) {
+        const id = crypto.randomUUID ? crypto.randomUUID() : `q_${Date.now()}_${Math.random()}`;
+        const entry = {
+            id,
+            file,
+            progress: 0,
+            status: 'waiting'
+        };
+        state.queue.push(entry);
+
+        const li = document.createElement('li');
+        li.className = 'queue-item';
+        li.dataset.id = id;
+        li.innerHTML = [
+            '<div class="thumb"><i class="fa-solid fa-video"></i></div>',
+            '<div class="info">',
+            `<div class="name">${file.name}</div>`,
+            `<div class="meta">${formatBytes(file.size)}</div>`,
+            '<div class="progress"><span></span></div>',
+            '</div>',
+            '<button type="button" class="remove-btn" aria-label="移除"><i class="fa-solid fa-xmark"></i></button>'
+        ].join('');
+
+        const removeBtn = li.querySelector('.remove-btn');
+        removeBtn.addEventListener('click', () => {
+            if (entry.status === 'uploading') return;
+            removeQueueItem(id);
+        });
+
+        dom.fileQueue.appendChild(li);
+        state.queueElements.set(id, li);
+        updateQueueIndicator();
+    }
+
+    function removeQueueItem(id) {
+        const index = state.queue.findIndex(item => item.id === id);
+        if (index === -1) return;
+        state.queue.splice(index, 1);
+        const el = state.queueElements.get(id);
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+        state.queueElements.delete(id);
+        if (!state.queue.length) {
+            dom.fileQueue.innerHTML = '';
+        }
+        updateQueueIndicator();
+    }
+
+    function clearQueue() {
+        state.queue = [];
+        state.queueElements.forEach(el => {
+            if (el && el.parentNode) el.parentNode.removeChild(el);
+        });
+        state.queueElements.clear();
+        updateQueueIndicator();
+    }
+
+    function updateQueueProgress(id, percent, status) {
+        const el = state.queueElements.get(id);
+        if (!el) return;
+        const bar = el.querySelector('.progress span');
+        if (bar) {
+            bar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+        }
+        if (status) {
+            const entry = state.queue.find(item => item.id === id);
+            if (entry) entry.status = status;
+            if (status === 'completed') {
+                setTimeout(() => removeQueueItem(id), 1200);
+            }
+        }
+        updateQueueIndicator();
+    }
+
+    function prependTask(task) {
+        state.tasks.unshift(task);
+        if (state.tasks.length > 20) {
+            state.tasks.length = 20;
+        }
+        renderTaskList();
+    }
+
+    function updateTask(taskId, updates) {
+        const target = state.tasks.find(item => item.id === taskId);
+        if (!target) return;
+        Object.assign(target, updates);
+        renderTaskList();
+    }
+
+    function renderTaskList() {
+        if (!dom.taskList) return;
+        dom.taskList.innerHTML = '';
+        if (!state.tasks.length) {
+            const li = document.createElement('li');
+            li.className = 'empty';
+            li.textContent = '尚未開始上傳';
+            dom.taskList.appendChild(li);
+            return;
+        }
+        state.tasks.forEach(task => {
+            const li = document.createElement('li');
+            li.className = `task-item ${task.status || ''}`;
+            li.innerHTML = [
+                `<div class="title">${task.title}</div>`,
+                `<div class="status"><i class="fa-solid fa-clock"></i>${task.message || '準備中'}</div>`
+            ].join('');
+            dom.taskList.appendChild(li);
+        });
+    }
+
+    function buildMetadata() {
+        const courseName = dom.courseNameInput.value.trim();
+        const instructorName = dom.instructorInput.value.trim();
+        const studentName = dom.studentInput.value.trim();
+        const dateKey = dom.dateInput.value;
+        const courseCode = dom.courseCodeInput.value.trim();
+        const notes = dom.notesInput.value.trim();
+        const mode = dom.modeOverview.checked ? 'overview' : 'student';
+
+        if (!courseName) throw new Error('請輸入課程名稱');
+        if (!instructorName) throw new Error('請輸入授課講師');
+        if (!dateKey) throw new Error('請選擇授課日期');
+        if (mode === 'student' && !studentName) throw new Error('請輸入學生姓名');
+
+        return {
+            courseName,
+            instructorName,
+            studentName: mode === 'student' ? studentName : '',
+            dateKey,
+            courseId: courseCode,
+            notes,
+            mode
+        };
+    }
+
+    async function startUploadQueue() {
+        if (!state.queue.length) {
+            pushToast('info', '⚠️ 未選擇任何影片檔案');
+            return;
+        }
+        let metadata;
+        try {
+            metadata = buildMetadata();
+        } catch (error) {
+            pushToast('error', `❌ ${error.message}`);
+            return;
+        }
+
+        if (state.uploading) {
+            pushToast('info', '⚠️ 已有上傳任務在進行中');
+            return;
+        }
+
+        state.uploading = true;
+        dom.startUploadBtn.disabled = true;
+        dom.startUploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 上傳中...';
+
+        for (const entry of [...state.queue]) {
+            const taskId = crypto.randomUUID ? crypto.randomUUID() : `task_${Date.now()}_${Math.random()}`;
+            prependTask({
+                id: taskId,
+                title: entry.file.name,
+                status: '',
+                message: '準備上傳...'
+            });
+            updateQueueProgress(entry.id, 0, 'uploading');
+
+            try {
+                await ChunkedUploader.uploadFileChunked(
+                    entry.file,
+                    (percent) => {
+                        updateQueueProgress(entry.id, percent);
+                        updateTask(taskId, {
+                            message: `上傳進度 ${percent}%`
+                        });
+                    },
+                    null,
+                    { metadata }
+                );
+
+                updateQueueProgress(entry.id, 100, 'completed');
+                updateTask(taskId, {
+                    status: 'success',
+                    message: '✅ 影片已上傳並排入處理佇列'
+                });
+                pushToast('success', `✅ ${entry.file.name} 上傳完成`);
+            } catch (error) {
+                console.error('❌ 上傳失敗:', error);
+                updateQueueProgress(entry.id, 0, 'failed');
+                updateTask(taskId, {
+                    status: 'error',
+                    message: error.message || '上傳失敗'
+                });
+                pushToast('error', `❌ ${entry.file.name} 上傳失敗：${error.message}`);
+            }
+        }
+
+        state.uploading = false;
+        dom.startUploadBtn.disabled = false;
+        dom.startUploadBtn.innerHTML = '<i class="fa-solid fa-cloud-upload-alt"></i> 開始上傳';
+        updateQueueIndicator();
+        await loadMediaList();
+    }
+
+    async function loadMediaList() {
+        try {
+            const params = new URLSearchParams();
+            if (state.filters.status) params.append('status', state.filters.status);
+            if (state.filters.instructor) params.append('instructorName', state.filters.instructor);
+            if (state.filters.student) params.append('studentName', state.filters.student);
+            if (state.filters.dateKey) params.append('dateKey', state.filters.dateKey);
+            const query = params.toString();
+            const res = await fetch(query ? `${API_BASE}?${query}` : API_BASE);
+            if (!res.ok) {
+                throw new Error(`查詢失敗 (${res.status})`);
+            }
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || '查詢失敗');
+            }
+            state.media = Array.isArray(data.items) ? data.items : [];
+            renderMediaList();
+        } catch (error) {
+            console.error('❌ 讀取媒體列表失敗:', error);
+            pushToast('error', `❌ 無法取得影片列表：${error.message}`);
+        }
+    }
+
+    function renderMediaList() {
+        if (!dom.libraryBody) return;
+        dom.libraryBody.innerHTML = '';
+
+        if (!state.media.length) {
+            const tr = document.createElement('tr');
+            tr.className = 'empty-row';
+            const td = document.createElement('td');
+            td.colSpan = 5;
+            td.textContent = '尚無資料，請先上傳影片或調整篩選條件。';
+            tr.appendChild(td);
+            dom.libraryBody.appendChild(tr);
+            return;
+        }
+
+        state.media.forEach(item => {
+            const tr = document.createElement('tr');
+
+            const thumbTd = document.createElement('td');
+            thumbTd.className = 'thumb-cell';
+            if (item.thumbnail && item.thumbnail.relativePath) {
+                const img = document.createElement('img');
+                img.alt = '影片縮圖';
+                img.src = `${API_BASE}/${item.id}/thumbnail?ts=${Date.now()}`;
+                thumbTd.appendChild(img);
+            } else {
+                thumbTd.textContent = '—';
+            }
+
+            const infoTd = document.createElement('td');
+            infoTd.innerHTML = [
+                `<div><strong>${item.courseName || '未命名課程'}</strong></div>`,
+                `<div class="muted">${item.studentName ? '🎯 ' + item.studentName : '📚 課程總覽'}</div>`
+            ].join('');
+
+            const metaTd = document.createElement('td');
+            metaTd.innerHTML = [
+                `<div>講師：${item.instructorName || '—'}</div>`,
+                `<div>日期：${item.dateKey || '—'}</div>`,
+                `<div>檔名：${item.origin ? item.origin.originalName || item.origin.filename : '—'}</div>`,
+                `<div>大小：${item.origin ? formatBytes(item.origin.fileSize || 0) : '—'}</div>`
+            ].join('');
+
+            const statusTd = document.createElement('td');
+            const statusSpan = document.createElement('span');
+            statusSpan.className = `status-tag ${item.status}`;
+            if (item.status === 'ready') {
+                statusSpan.innerHTML = '<i class="fa-solid fa-circle-check"></i> 已完成';
+            } else if (item.status === 'failed') {
+                statusSpan.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> 失敗';
+            } else {
+                statusSpan.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 處理中';
+            }
+            statusTd.appendChild(statusSpan);
+            if (item.error) {
+                const err = document.createElement('div');
+                err.className = 'muted';
+                err.textContent = `訊息：${item.error}`;
+                statusTd.appendChild(err);
+            }
+
+            const actionTd = document.createElement('td');
+            actionTd.className = 'table-actions';
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'primary';
+            downloadBtn.innerHTML = '<i class="fa-solid fa-download"></i> 下載';
+            downloadBtn.addEventListener('click', () => {
+                window.open(`${API_BASE}/${item.id}/download`, '_blank');
+            });
+            actionTd.appendChild(downloadBtn);
+
+            if (item.status !== 'ready') {
+                const refreshBtn = document.createElement('button');
+                refreshBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> 檢查';
+                refreshBtn.addEventListener('click', () => refreshSingleMedia(item.id));
+                actionTd.appendChild(refreshBtn);
+            }
+
+            tr.appendChild(thumbTd);
+            tr.appendChild(infoTd);
+            tr.appendChild(metaTd);
+            tr.appendChild(statusTd);
+            tr.appendChild(actionTd);
+
+            dom.libraryBody.appendChild(tr);
+        });
+    }
+
+    async function refreshSingleMedia(recordId) {
+        try {
+            const res = await fetch(`${API_BASE}/${recordId}`);
+            if (!res.ok) {
+                throw new Error(`查詢失敗 (${res.status})`);
+            }
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.message || '查詢失敗');
+            }
+            const existingIndex = state.media.findIndex(item => item.id === recordId);
+            if (existingIndex >= 0) {
+                state.media.splice(existingIndex, 1, data.record);
+                renderMediaList();
+            } else {
+                await loadMediaList();
+            }
+        } catch (error) {
+            pushToast('error', `❌ 更新影片狀態失敗：${error.message}`);
+        }
+    }
+
+    function bindDropzone() {
+        if (!dom.dropzone) return;
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dom.dropzone.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                dom.dropzone.classList.add('dragover');
+            });
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dom.dropzone.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                dom.dropzone.classList.remove('dragover');
+            });
+        });
+        dom.dropzone.addEventListener('drop', (event) => {
+            const files = event.dataTransfer?.files;
+            if (files && files.length) {
+                handleFiles(files);
+            }
+        });
+        dom.fileInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            if (files && files.length) {
+                handleFiles(files);
+            }
+            dom.fileInput.value = '';
+        });
+    }
+
+    function handleFiles(fileList) {
+        Array.from(fileList).forEach(file => {
+            createQueueItem(file);
+        });
+    }
+
+    function bindFilters() {
+        dom.statusFilter.addEventListener('change', async (event) => {
+            state.filters.status = event.target.value;
+            await loadMediaList();
+        });
+        dom.filterInstructor.addEventListener('input', debounce(async (event) => {
+            state.filters.instructor = event.target.value.trim();
+            await loadMediaList();
+        }, 400));
+        dom.filterStudent.addEventListener('input', debounce(async (event) => {
+            state.filters.student = event.target.value.trim();
+            await loadMediaList();
+        }, 400));
+        dom.filterDate.addEventListener('change', async (event) => {
+            state.filters.dateKey = event.target.value;
+            await loadMediaList();
+        });
+    }
+
+    function debounce(fn, delay) {
+        let timer = null;
+        return function (...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+
+    function toggleStudentField() {
+        const overview = dom.modeOverview.checked;
+        dom.studentInput.disabled = overview;
+        if (overview) {
+            dom.studentInput.value = '';
+        }
+    }
+
+    async function init() {
+        dom.courseNameInput = $('#courseNameInput');
+        dom.instructorInput = $('#instructorInput');
+        dom.studentInput = $('#studentInput');
+        dom.courseCodeInput = $('#courseCodeInput');
+        dom.dateInput = $('#dateInput');
+        dom.notesInput = $('#notesInput');
+        dom.modeOverview = document.querySelector('input[name="uploadMode"][value="overview"]');
+        dom.modeStudent = document.querySelector('input[name="uploadMode"][value="student"]');
+        dom.fileInput = $('#fileInput');
+        dom.dropzone = $('#dropzone');
+        dom.fileQueue = $('#fileQueue');
+        dom.clearQueueBtn = $('#clearQueueBtn');
+        dom.startUploadBtn = $('#startUploadBtn');
+        dom.refreshListBtn = $('#refreshListBtn');
+        dom.taskList = $('#taskList');
+        dom.libraryBody = $('#libraryBody');
+        dom.statusFilter = $('#statusFilter');
+        dom.filterInstructor = $('#filterInstructor');
+        dom.filterStudent = $('#filterStudent');
+        dom.filterDate = $('#filterDate');
+        dom.uploadForm = $('#uploadForm');
+        dom.queueIndicator = $('#queueIndicator');
+        dom.toastContainer = $('#toastContainer');
+        dom.mediaRootHint = $('#mediaRootHint');
+
+        dom.dateInput.value = todayISO();
+        renderTaskList();
+        bindDropzone();
+        bindFilters();
+
+        dom.clearQueueBtn.addEventListener('click', () => {
+            clearQueue();
+        });
+        dom.refreshListBtn.addEventListener('click', async () => {
+            await loadMediaList();
+        });
+        dom.modeOverview.addEventListener('change', toggleStudentField);
+        dom.modeStudent.addEventListener('change', toggleStudentField);
+        toggleStudentField();
+
+        dom.uploadForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            startUploadQueue();
+        });
+
+        const root = document.body.getAttribute('data-media-root');
+        if (root && dom.mediaRootHint) {
+            dom.mediaRootHint.textContent = `儲存路徑：${root}`;
+        } else if (dom.mediaRootHint) {
+            dom.mediaRootHint.textContent = '儲存路徑：/data/learning-media';
+        }
+
+        await loadMediaList();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+})(window);

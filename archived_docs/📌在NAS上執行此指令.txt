@@ -1,0 +1,46 @@
+🚀 在 NAS 上執行此指令重啟服務
+═══════════════════════════════════════════════════════════════
+
+您已經在 NAS 上了！請直接複製貼上以下指令：
+
+════════════════════════════════════════════════════════════════
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas && \
+echo "🔍 檢查新 API..." && \
+grep -c "GET /api/students" server.js && \
+grep -c "GET /api/admin/info" server.js && \
+grep -c "POST /api/admin/set" server.js && \
+grep -c "POST /api/test-line-notification" server.js && \
+echo "" && \
+echo "🔄 重啟容器..." && \
+sudo docker-compose restart && \
+sleep 10 && \
+echo "" && \
+echo "📊 容器狀態:" && \
+sudo docker-compose ps && \
+echo "" && \
+echo "📋 最新日誌:" && \
+sudo docker-compose logs --tail=30 | grep -E "(API|api|端點|錯誤|✅|❌)" && \
+echo "" && \
+echo "🧪 測試 API:" && \
+curl -s https://calendar.funlearnbar.synology.me/api/students | jq '.success' && \
+curl -s https://calendar.funlearnbar.synology.me/api/admin/info | jq '.data'
+════════════════════════════════════════════════════════════════
+
+或者使用腳本（等待 Synology Drive 同步後）：
+
+════════════════════════════════════════════════════════════════
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas/scripts
+./restart-on-nas.sh
+════════════════════════════════════════════════════════════════
+
+📝 注意：
+1. Synology Drive 需要 1-2 分鐘同步 server.js
+2. 如果 grep 返回 0，表示 API 還沒同步過來，請等待
+3. 如果 grep 返回 1 或以上，表示 API 已存在，可以重啟
+
+🎯 成功標準：
+- grep 每個 API 都返回 > 0
+- 容器狀態為 Up
+- curl 測試返回 true 和管理員資訊
+
+

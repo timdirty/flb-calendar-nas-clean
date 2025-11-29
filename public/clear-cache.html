@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清除快取工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .status.info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #90caf9;
+        }
+        
+        .status.success {
+            background: #e8f5e9;
+            color: #388e3c;
+            border: 1px solid #81c784;
+        }
+        
+        .status.warning {
+            background: #fff3e0;
+            color: #f57c00;
+            border: 1px solid #ffb74d;
+        }
+        
+        .status.error {
+            background: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #e57373;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        .log {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .log-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .log-item:last-child {
+            border-bottom: none;
+        }
+        
+        .icon {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 清除快取工具</h1>
+        <p class="subtitle">解決前端顯示問題的快速工具</p>
+        
+        <div class="status info" id="statusBox">
+            <span class="icon">ℹ️</span>
+            <span id="statusText">準備清除快取...</span>
+        </div>
+        
+        <button class="btn btn-primary" onclick="clearAllCache()">
+            🗑️ 清除所有快取
+        </button>
+        
+        <button class="btn btn-danger" onclick="clearServiceWorker()">
+            🚫 清除 Service Worker
+        </button>
+        
+        <button class="btn btn-success" onclick="clearAndReload()">
+            🔄 清除快取並重新載入
+        </button>
+        
+        <button class="btn btn-primary" onclick="goToCalendar()">
+            📅 返回行事曆系統
+        </button>
+        
+        <div class="log" id="logBox">
+            <div class="log-item">等待操作...</div>
+        </div>
+    </div>
+    
+    <script>
+        const logBox = document.getElementById('logBox');
+        const statusBox = document.getElementById('statusBox');
+        const statusText = document.getElementById('statusText');
+        
+        function log(message, type = 'info') {
+            const logItem = document.createElement('div');
+            logItem.className = 'log-item';
+            logItem.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logBox.appendChild(logItem);
+            logBox.scrollTop = logBox.scrollHeight;
+            
+            // 更新狀態
+            statusBox.className = 'status ' + type;
+            statusText.textContent = message;
+        }
+        
+        // 清除 localStorage
+        function clearLocalStorage() {
+            try {
+                localStorage.clear();
+                log('✅ 已清除 localStorage', 'success');
+                return true;
+            } catch (error) {
+                log('❌ 清除 localStorage 失敗: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        // 清除 sessionStorage
+        function clearSessionStorage() {
+            try {
+                sessionStorage.clear();
+                log('✅ 已清除 sessionStorage', 'success');
+                return true;
+            } catch (error) {
+                log('❌ 清除 sessionStorage 失敗: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        // 清除 Service Worker
+        async function clearServiceWorker() {
+            log('🔄 開始清除 Service Worker...', 'info');
+            
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    
+                    if (registrations.length === 0) {
+                        log('ℹ️ 沒有發現 Service Worker', 'info');
+                        return true;
+                    }
+                    
+                    for (const registration of registrations) {
+                        await registration.unregister();
+                        log('✅ 已清除 Service Worker: ' + registration.scope, 'success');
+                    }
+                    
+                    return true;
+                } catch (error) {
+                    log('❌ 清除 Service Worker 失敗: ' + error.message, 'error');
+                    return false;
+                }
+            } else {
+                log('ℹ️ 此瀏覽器不支援 Service Worker', 'info');
+                return true;
+            }
+        }
+        
+        // 清除 Cache API
+        async function clearCacheAPI() {
+            log('🔄 開始清除 Cache API...', 'info');
+            
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    
+                    if (cacheNames.length === 0) {
+                        log('ℹ️ 沒有發現快取', 'info');
+                        return true;
+                    }
+                    
+                    for (const cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                        log('✅ 已清除快取: ' + cacheName, 'success');
+                    }
+                    
+                    return true;
+                } catch (error) {
+                    log('❌ 清除 Cache API 失敗: ' + error.message, 'error');
+                    return false;
+                }
+            } else {
+                log('ℹ️ 此瀏覽器不支援 Cache API', 'info');
+                return true;
+            }
+        }
+        
+        // 清除 IndexedDB
+        async function clearIndexedDB() {
+            log('🔄 開始清除 IndexedDB...', 'info');
+            
+            if ('indexedDB' in window) {
+                try {
+                    const databases = await indexedDB.databases();
+                    
+                    if (databases.length === 0) {
+                        log('ℹ️ 沒有發現 IndexedDB', 'info');
+                        return true;
+                    }
+                    
+                    for (const db of databases) {
+                        indexedDB.deleteDatabase(db.name);
+                        log('✅ 已清除 IndexedDB: ' + db.name, 'success');
+                    }
+                    
+                    return true;
+                } catch (error) {
+                    log('❌ 清除 IndexedDB 失敗: ' + error.message, 'error');
+                    return false;
+                }
+            } else {
+                log('ℹ️ 此瀏覽器不支援 IndexedDB', 'info');
+                return true;
+            }
+        }
+        
+        // 清除所有快取
+        async function clearAllCache() {
+            log('🚀 開始清除所有快取...', 'info');
+            
+            const results = await Promise.all([
+                clearLocalStorage(),
+                clearSessionStorage(),
+                clearServiceWorker(),
+                clearCacheAPI(),
+                clearIndexedDB()
+            ]);
+            
+            if (results.every(r => r)) {
+                log('🎉 所有快取已清除完成！', 'success');
+                alert('✅ 快取清除完成！\n\n建議：\n1. 關閉所有瀏覽器分頁\n2. 重新開啟瀏覽器\n3. 使用 Ctrl+Shift+R (或 Cmd+Shift+R) 硬重新整理');
+            } else {
+                log('⚠️ 部分快取清除失敗，請查看日誌', 'warning');
+            }
+        }
+        
+        // 清除快取並重新載入
+        async function clearAndReload() {
+            await clearAllCache();
+            log('🔄 3 秒後將重新載入頁面...', 'info');
+            
+            setTimeout(() => {
+                window.location.href = '/perfect-calendar-modular.html';
+            }, 3000);
+        }
+        
+        // 返回行事曆
+        function goToCalendar() {
+            window.location.href = '/perfect-calendar-modular.html';
+        }
+        
+        // 頁面載入時檢查狀態
+        window.addEventListener('load', () => {
+            log('✅ 清除快取工具已就緒', 'success');
+            
+            // 顯示當前快取狀態
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    if (registrations.length > 0) {
+                        log(`ℹ️ 發現 ${registrations.length} 個 Service Worker`, 'info');
+                    }
+                });
+            }
+            
+            if ('caches' in window) {
+                caches.keys().then(cacheNames => {
+                    if (cacheNames.length > 0) {
+                        log(`ℹ️ 發現 ${cacheNames.length} 個快取`, 'info');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

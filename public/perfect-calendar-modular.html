@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-page-build="2025-11-19-topic-override-v6">
+<head>
+    <!-- 🔥 版本：2025-11-19-TOPIC-OVERRIDE-V6 - 簽到改課題欄位 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- ⚡ 效能提示 -->
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="color-scheme" content="light dark">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="description" content="FLB 講師行事曆，快速檢視與管理教學行程的最佳入口。">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    
+    <!-- ✅ 啟用快取 - 使用版本號控制更新 -->
+    <meta http-equiv="Cache-Control" content="public, max-age=3600, must-revalidate">
+    
+    <!-- ⚡ 資源提示：提前載入關鍵資源 -->
+    <link rel="preload" href="css/styles.css?v=2025-11-19-topic-override-v6" as="style">
+    <link rel="preload" href="js/core/config.js?v=2025-11-19-topic-override-v6" as="script">
+    <link rel="preload" href="js/core/error-handler.js?v=2025-11-19-topic-override-v6" as="script">
+    <link rel="preload" href="logo.jpg" as="image" type="image/jpeg">
+    
+    <!-- CSP 安全策略 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.line-scdn.net https://cdnjs.cloudflare.com https://script.google.com https://liffsdk.line-scdn.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://script.google.com https://api.line.me https://api-data.line.me https://liffsdk.line-scdn.net https://course-viewer.funlearnbar.synology.me; frame-src 'self' https://liffsdk.line-scdn.net;">
+    
+    <title>⭐︎ FLB CMS ⭐︎</title>
+    
+    <!-- ⚡ DNS預取和預連接 -->
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://static.line-scdn.net">
+    <link rel="dns-prefetch" href="https://script.google.com">
+    <link rel="dns-prefetch" href="https://api.line.me">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://static.line-scdn.net" crossorigin>
+    
+    <!-- 預取 LIFF SDK -->
+    <link rel="prefetch" href="https://static.line-scdn.net/liff/edge/2/sdk.js" as="script">
+    
+    <!-- 🔧 建置資訊配置 -->
+    <script>
+        window.FLBCalendarManifest = Object.freeze({
+            buildId: '2025-11-19-topic-override-v6',
+            generatedAt: '2025-11-02T22:03:07+08:00',
+            critical: {
+                styles: ['css/styles.css?v=2025-11-19-topic-override-v6'],
+                scripts: [
+                    'js/core/config.js?v=2025-11-19-topic-override-v6',
+                    'js/core/error-handler.js?v=2025-11-19-topic-override-v6',
+                    'js/core/dom-optimizer.js?v=2025-11-19-topic-override-v6'
+                ]
+            }
+        });
+        if (window.LOAD_PROGRESS && typeof window.LOAD_PROGRESS.updateProgress === 'function') {
+            window.LOAD_PROGRESS.updateProgress('Manifest');
+        }
+    </script>
+    
+    <!-- 🔥 關鍵 CSS：首屏載入畫面 (內嵌，約 1KB) -->
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* 🔥 確保 body 和 html 初始就可以滾動 */
+        html, body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f3f4f6;
+            overflow-x: hidden;
+            overflow-y: auto !important;
+            position: relative !important;
+            height: auto !important;
+            min-height: 100vh;
+        }
+        
+        body {
+            color: #111827;
+        }
+        
+        body.is-loading {
+            cursor: progress;
+        }
+        
+        body.is-loading #app,
+        body.is-loading #mainContainer {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        
+        body.is-ready #app,
+        body.is-ready #mainContainer {
+            display: block;
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* 🔥 初始隱藏主內容（但不用 !important，讓 JS 可以覆蓋） */
+        #app,
+        #mainContainer {
+            opacity: 0;
+        }
+        
+        /* 🔥 載入畫面必須完全覆蓋 */
+        #loadingOverlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 99999 !important;
+            background: rgba(0, 0, 0, 0.95) !important;
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 0 24px;
+            opacity: 1 !important;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loading-overlay:focus-visible {
+            outline: 3px solid rgba(255, 255, 255, 0.65);
+            outline-offset: 3px;
+        }
+        
+        body.is-ready #loadingOverlay {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        
+        .loading-close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            border: none;
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            font-size: 1.4rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+        
+        .loading-close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+        
+        .loading-close-btn:focus-visible {
+            outline: 2px solid rgba(255, 255, 255, 0.85);
+            outline-offset: 2px;
+        }
+        
+        .noscript-warning {
+            padding: 24px;
+            background: #fde68a;
+            color: #7c2d12;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+            #loadingOverlay {
+                transition: none;
+            }
+            
+            .loading-spinner {
+                animation-duration: 1.6s !important;
+            }
+        }
+        
+        /* 🔥 手機端：從頁面載入開始就隱藏日曆區塊（最高優先級） */
+        @media (max-width: 768px) {
+            .calendar-section,
+            #calendarSection {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                position: absolute !important;
+                left: -9999px !important;
+            }
+        }
+    </style>
+    
+    <!-- 🔥 階段1：核心配置（立即載入） -->
+    <script src="js/core/config.js?v=2025-11-19-topic-override-v6"></script>
+    
+    <!-- 🔥 階段1：錯誤處理器（立即載入） -->
+    <script src="js/core/error-handler.js?v=2025-11-19-topic-override-v6"></script>
+    
+    <!-- 🔥 階段1：DOM 優化工具（立即載入，後續所有模組都會使用） -->
+    <script src="js/core/dom-optimizer.js?v=2025-11-19-topic-override-v6"></script>
+    
+    <!-- 🔥 階段1：懶加載管理器（立即載入） -->
+    <script src="js/core/lazy-loader.js?v=2025-11-19-topic-override-v6"></script>
+    <!-- 🔥 圖片懶載入觀察器（立即載入） -->
+    <script src="js/core/lazy-image-observer.js?v=2025-11-19-topic-override-v6"></script>
+    
+    <!-- 🔥 階段1：記憶體管理工具（立即載入，防止記憶體洩漏） -->
+    <script src="js/core/memory-manager.js?v=2025-11-19-topic-override-v6"></script>
+    
+    <!-- 🎬 智能動畫管理器（立即載入，按需啟動動畫以節省 GPU） -->
+    <script src="js/core/smart-animation-manager.js?v=2025-11-19-topic-override-v6"></script>
+    
+    <!-- ⚡ 效能增強器（立即載入，全面優化 GPU/CPU 功耗） -->
+    <script src="js/core/performance-booster.js?v=2025-11-19-topic-override-v6"></script>
+    
+    <!-- 🔥 階段2：主要 CSS（立即載入，避免 FOUC） -->
+    <link rel="stylesheet" href="css/styles.css?v=2025-11-19-topic-override-v6">
+    <script>
+        // 通知載入進度
+        if (window.LOAD_PROGRESS) window.LOAD_PROGRESS.updateProgress('Styles');
+    </script>
+    
+    <!-- 🔥 階段2：效能監控（defer 載入） -->
+    <script defer src="js/core/performance-monitor.js?v=2025-11-19-topic-override-v6"></script>
+    
+    <!-- 🔥 階段2：效能優化器（defer 載入） -->
+    <script defer src="js/core/performance-optimizer.js?v=2025-11-19-topic-override-v6"></script>
+    
+    <!-- 🔥 階段2：虛擬滾動組件（defer 載入） -->
+    <script defer src="js/core/virtual-scroller.js?v=2025-11-19-topic-override-v6"></script>
+    
+    <!-- 🔥 階段3：功能模組（defer 載入，不阻塞渲染） -->
+    <!-- 🔧 時間工具模組（必須優先載入，統一處理台北時區） -->
+    <script defer src="js/modules/time-utils.js?v=2025-11-19-topic-override-v6"></script>
+    <!-- 🔧 正規化工具（必須優先載入，供其他模組使用） -->
+    <script defer src="js/modules/normalize-utils.js?v=2025-11-19-topic-override-v6"></script>
+    <script defer src="js/modules/cache-utils.js?v=2025-11-19-topic-override-v6"></script>
+    <script defer src="js/modules/ui/skeleton.js?v=2025-11-19-topic-override-v6"></script>
+    <!-- 🔥 學生資料處理模組（使用穩定的簡單版 - 無依賴問題） -->
+    <script defer src="js/modules/course-title-parser.js?v=2025-11-19-topic-override-v6"></script>
+    <script defer src="js/modules/course-student-matcher.js?v=2025-11-19-topic-override-v6"></script>
+    <script defer src="js/modules/student-course-matcher.js?v=2025-11-19-topic-override-v6"></script>
+    <script defer src="js/modules/student-filter.js?v=2025-11-19-topic-override-v6"></script>
+    <script defer src="js/modules/advanced-search-parser.js?v=2025-11-19-topic-override-v6"></script>
+    <script defer src="js/modules/search-manager.js?v=2025-11-19-topic-override-v6"></script>
+    
+    <!-- 🔥 階段4：主應用程式（defer 載入，最後載入） -->
+    <script defer src="js/main.js?v=2025-11-19-topic-override-v6"></script>
+    
+    <!-- Font Awesome：立即載入（確保圖標正常顯示） -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" 
+          rel="stylesheet" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <script>
+        // 通知載入進度
+        if (window.LOAD_PROGRESS && !window.LOAD_PROGRESS.modules['Icons']) {
+            window.LOAD_PROGRESS.updateProgress('Icons');
+        }
+    </script>
+    
+    <!-- 🔥 Service Worker 註冊（啟用離線/快取版本管理） -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js?v=2025-11-19-topic-override-v6')
+                    .then(reg => {
+                        console.log('✅ Service Worker 註冊成功:', reg.scope);
+                        reg.update();
+                        reg.addEventListener('updatefound', () => {
+                            const nw = reg.installing;
+                            if (!nw) return;
+                            nw.addEventListener('statechange', () => {
+                                if (nw.state === 'activated') {
+                                    console.log('🔄 Service Worker 已更新');
+                                }
+                            });
+                        });
+                    })
+                    .catch(err => console.warn('⚠️ Service Worker 註冊失敗:', err));
+            });
+        }
+    </script>
+    
+    <!-- 🔥 全域函數定義（修復 defer 載入導致的函數未定義問題） -->
+    <script>
+        // 這些函數會在 main.js 載入前就定義，避免動態生成的 HTML 中的事件處理器報錯
+        
+        // 課程類型篩選處理
+        window.handleCourseTypeCheckboxChange = function(courseType, isChecked) {
+            console.log('⏳ handleCourseTypeCheckboxChange 佔位符被調用，等待 main.js 載入...');
+            // 這是一個佔位符，實際函數會在 main.js 載入後被替換
+            if (window.handleCourseTypeCheckboxChangeImpl) {
+                window.handleCourseTypeCheckboxChangeImpl(courseType, isChecked);
+            }
+        };
+        
+        // 日曆導航函數
+        window.previousPeriod = function() {
+            console.log('⏳ previousPeriod 佔位符被調用，等待 main.js 載入...');
+            if (window.previousPeriodImpl) window.previousPeriodImpl();
+        };
+        
+        window.nextPeriod = function() {
+            console.log('⏳ nextPeriod 佔位符被調用，等待 main.js 載入...');
+            if (window.nextPeriodImpl) window.nextPeriodImpl();
+        };
+        
+        window.goToToday = function() {
+            console.log('⏳ goToToday 佔位符被調用，等待 main.js 載入...');
+            if (window.goTodayImpl) window.goTodayImpl();
+        };
+        
+        // 講師綁定函數
+        window.closeTeacherBindModal = function() {
+            console.log('⏳ closeTeacherBindModal 佔位符被調用，等待 main.js 載入...');
+            if (window.closeTeacherBindModalImpl) window.closeTeacherBindModalImpl();
+        };
+        
+        window.confirmTeacherBinding = function() {
+            console.log('⏳ confirmTeacherBinding 佔位符被調用，等待 main.js 載入...');
+            if (window.confirmTeacherBindingImpl) window.confirmTeacherBindingImpl();
+        };
+        
+        window.showUnbindConfirm = function() {
+            console.log('⏳ showUnbindConfirm 佔位符被調用，等待 main.js 載入...');
+            if (window.showUnbindConfirmImpl) window.showUnbindConfirmImpl();
+        };
+        
+        window.closeUnbindConfirm = function() {
+            console.log('⏳ closeUnbindConfirm 佔位符被調用，等待 main.js 載入...');
+            if (window.closeUnbindConfirmImpl) window.closeUnbindConfirmImpl();
+        };
+        
+        window.confirmUnbind = function() {
+        console.log('⏳ confirmUnbind 佔位符被調用，等待 main.js 載入...');
+        if (window.confirmUnbindImpl) window.confirmUnbindImpl();
+        };
+        
+        console.log('✅ 全域函數佔位符已定義');
+    </script>
+
+    <!-- 🎨 2025-11-16 UI/UX 快速優化覆寫：不動主樣式檔，集中在此覆寫小調整，方便回滾 -->
+    <style id="ui-ux-quick-tweaks">
+        :root {
+            --ui-surface: #ffffff;
+            --ui-border: #e5e7eb;
+            --ui-highlight: #4f46e5;
+            --ui-highlight-soft: #eef2ff;
+            --ui-text-strong: #0f172a;
+        }
+        /* 跳至主要內容：提升鍵盤可達性 */
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: 8px;
+            z-index: 100000;
+            padding: 10px 14px;
+            background: var(--ui-highlight);
+            color: #fff;
+            border-radius: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+        }
+        .skip-link:focus,
+        .skip-link:focus-visible {
+            left: 16px;
+            outline: 3px solid #fff;
+            outline-offset: 2px;
+        }
+        /* 更大的觸控與焦點區域 */
+        .floating-filter-btn,
+        .floating-weekday-btn,
+        .search-help-btn,
+        .search-clear-btn {
+            min-height: 22px;
+            min-width: 22px;
+            padding: 5px 7px;
+            border-radius: 12px;
+            font-weight: 600;
+            letter-spacing: 0.25px;
+            border: 1px solid transparent;
+        }
+        .floating-filter-btn[data-active="true"],
+        .floating-filter-btn[aria-pressed="true"],
+        .floating-weekday-btn[data-active="true"],
+        .floating-weekday-btn[aria-pressed="true"] {
+            background: var(--ui-highlight-soft);
+            color: var(--ui-highlight);
+            border-color: var(--ui-highlight-soft);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.18);
+        }
+        .floating-filter-btn:active,
+        .floating-weekday-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 6px 18px rgba(79, 70, 229, 0.24);
+        }
+        /* Tooltip/標題兩行截斷，避免小螢幕抖動 */
+        .event-chip .title,
+        .event-card .title,
+        .today-event-card .title {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-word;
+        }
+        /* 搜尋/篩選摘要膠囊 */
+        .search-filter-summary {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: var(--ui-highlight-soft);
+            color: var(--ui-text-strong);
+            border: 1px solid var(--ui-highlight-soft);
+            font-weight: 600;
+            font-size: 0.9rem;
+            line-height: 1.2;
+        }
+        .filter-chip .chip-label { opacity: 0.72; }
+        .filter-chip .chip-value { font-weight: 700; }
+        .filter-chip-clear {
+            background: transparent;
+            border: 1px dashed var(--ui-highlight);
+            color: var(--ui-highlight);
+            border-radius: 999px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .floating-weekday-btn {
+            padding-inline: 12px;
+        }
+        .floating-filter-btn:focus-visible,
+        .floating-weekday-btn:focus-visible,
+        .search-help-btn:focus-visible,
+        .search-clear-btn:focus-visible,
+        .loading-close-btn:focus-visible {
+            outline: 2px solid var(--ui-highlight);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px var(--ui-highlight-soft);
+        }
+        .floating-filter-btn:hover,
+        .floating-weekday-btn:hover {
+            background: var(--ui-highlight-soft);
+            border-color: var(--ui-highlight-soft);
+        }
+        /* 搜尋列間距與閱讀性 */
+        .control-group label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .search-input-wrapper {
+            gap: 6px;
+        }
+        .search-input {
+            min-height: 44px;
+            line-height: 1.4;
+            padding-right: 44px; /* 留給清除按鈕 */
+        }
+        /* 行動端邊距微調，避免懸浮列遮住內容 */
+        @media (max-width: 768px) {
+            .main-content {
+                padding-top: 12px;
+            }
+            .floating-stats-menu {
+                gap: 10px;
+            }
+        }
+        /* 降低動畫影響，尊重減少動態偏好 */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
+</head>
+<body class="is-loading" data-loading-state="loading" aria-busy="true">
+    <a class="skip-link" href="#mainContainer">跳至主要內容</a>
+    <noscript>
+        <div class="noscript-warning" role="alert">⚠️ 本服務需要啟用 JavaScript，請啟用後重新整理頁面。</div>
+    </noscript>
+    <!-- 🔥 載入畫面（完整版，黑金漸層） -->
+    <div class="loading-overlay" id="loadingOverlay" role="dialog" aria-modal="true" aria-labelledby="loadingTitle" aria-describedby="loadingSubtitle" tabindex="-1" data-force-hide="true">
+        <button type="button" class="loading-close-btn" id="loadingCloseBtn" aria-label="立即關閉載入畫面">×</button>
+        <div class="loading-container">
+            <div class="loading-logo">
+                <img src="logo.jpg" alt="FLB Logo" loading="eager" decoding="sync" width="120" height="120" />
+            </div>
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingTitle" role="status" aria-live="assertive">🚀 載入中...</div>
+            <div class="loading-subtitle" id="loadingSubtitle">正在初始化系統，請稍候</div>
+            <div class="loading-subtitle" id="loadingHint" style="margin-top: 8px; font-size: 0.85em; opacity: 0.7;">
+                💡 載入時間過長？點擊畫面任意處立即關閉
+            </div>
+                <div class="loading-progress">
+                    <div class="loading-progress-bar" id="loadingProgressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0%"></div>
+                </div>
+                <div class="loading-percentage" id="loadingPercentage" role="status" aria-live="polite" aria-atomic="true">0%</div>
+            <div class="loading-logs" id="loadingLogs" role="log" aria-live="polite">
+                <div class="loading-log-item info">
+                    <span class="loading-log-icon">ℹ️</span>
+                    <span>系統初始化中...</span>
+            </div>
+        </div>
+        </div>
+        <div class="loading-signature">Tim感恩戴德🙏🏻</div>
+    </div>
+    
+    <!-- 主要內容容器 -->
+    <div id="app" data-loading-target="shell">
+    <!-- 🔥 懸浮固定選單 - 雙排設計 -->
+    <div class="floating-stats-menu" id="floatingStatsMenu" data-lazy-load="floating-menu" role="navigation" aria-label="快速篩選">
+        <!-- 🔥 第一排：視圖切換 -->
+        <div class="floating-nav-row floating-nav-primary" role="group" aria-label="日期篩選快捷鍵">
+            <button type="button" class="floating-filter-btn" data-filter="today" aria-label="僅顯示今日行程">今日</button>
+            <button type="button" class="floating-filter-btn" data-filter="week" aria-label="顯示本週所有行程">本週</button>
+            <button type="button" class="floating-filter-btn" data-filter="month" aria-label="顯示本月所有行程">本月</button>
+            <button type="button" class="floating-filter-btn" data-filter="all" aria-label="顯示全部行程">全部</button>
+        </div>
+        
+        <!-- 🔥 第二排：星期快速導航（簡化版：關鍵字搜尋） -->
+        <div class="floating-nav-row floating-nav-weekday" id="floatingWeekdayNav" role="group" aria-label="星期快速跳轉">
+            <button type="button" class="floating-weekday-btn" data-weekday="日" data-week-index="0" aria-label="跳至星期日">日</button>
+            <button type="button" class="floating-weekday-btn" data-weekday="一" data-week-index="1" aria-label="跳至星期一">一</button>
+            <button type="button" class="floating-weekday-btn" data-weekday="二" data-week-index="2" aria-label="跳至星期二">二</button>
+            <button type="button" class="floating-weekday-btn" data-weekday="三" data-week-index="3" aria-label="跳至星期三">三</button>
+            <button type="button" class="floating-weekday-btn" data-weekday="四" data-week-index="4" aria-label="跳至星期四">四</button>
+            <button type="button" class="floating-weekday-btn" data-weekday="五" data-week-index="5" aria-label="跳至星期五">五</button>
+            <button type="button" class="floating-weekday-btn" data-weekday="六" data-week-index="6" aria-label="跳至星期六">六</button>
+            <!-- 🔥 新增：下週日（第8天）快捷鍵，對應 8 天週窗 -->
+            <button type="button" class="floating-weekday-btn" data-weekday="日" data-week-index="7" aria-label="跳至下週日">日</button>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer" role="main" aria-live="polite" data-loading-target="primary">
+        <!-- 頂部標題區域 -->
+        <div class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <!-- ⚡ 效能優化：指定圖片尺寸避免回流 -->
+                    <img src="logo.jpg" alt="FLB Logo" class="header-logo" loading="lazy" decoding="async" width="60" height="60">
+                    <div>
+                        <h1>FLB 課程檢視系統</h1>
+                        <p class="header-subtitle">Tim感恩戴德🙏🏻</p>
+                        <p class="header-tim-note">Tim感恩戴德🙏🏻</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 日期時間顯示 -->
+            <div class="datetime-display">
+                <div class="datetime-item">
+                    <i class="fas fa-calendar"></i>
+                    <span id="currentDate">2025年01月16日 星期四</span>
+                </div>
+                <div class="datetime-item">
+                    <i class="fas fa-clock"></i>
+                    <span id="currentTime">13:58:43</span>
+                </div>
+                <div class="datetime-item">
+                    <i class="fas fa-calendar-week"></i>
+                    <span id="currentWeek">2025年第3週</span>
+                </div>
+            </div>
+            
+            <!-- 進度指示器 -->
+            <div class="progress-steps">
+                <div class="step completed">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">選擇講師</div>
+                </div>
+                <div class="step active">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">查看行事曆</div>
+                </div>
+                <div class="step pending">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">管理行程</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主內容區域 -->
+        <div class="main-content">
+            <div class="content-header">
+                <i class="fas fa-calendar-alt"></i>
+                <h2>講師行事曆檢視</h2>
+            </div>
+
+            <!-- 控制面板 -->
+        <div class="controls">
+            <!-- 🔍 全文搜尋區塊 -->
+            <div class="control-row search-row">
+                <div class="control-group search-control-group" style="flex: 1;">
+                    <label for="globalSearch">
+                        <i class="fas fa-search"></i> 搜尋課程
+                        <button type="button" class="search-help-btn" id="searchHelpBtn" title="查看進階搜尋語法" aria-label="查看進階搜尋語法">
+                            <i class="fas fa-question-circle"></i>
+                        </button>
+                    </label>
+                    <!-- 🔥 搜尋講師統計標籤容器（移到搜尋欄位上方，避免被下拉選單擋住） -->
+                    <div id="searchInstructorSummary" class="search-instructor-summary" style="display: none;" role="status" aria-live="polite"></div>
+                    <div class="search-input-wrapper">
+                        <input 
+                            type="text" 
+                            id="globalSearch" 
+                            class="search-input" 
+                            placeholder="試試：spm 到府 或 spm OR scratch"
+                            autocomplete="off"
+                            role="combobox"
+                            aria-autocomplete="list"
+                            aria-expanded="false"
+                            aria-controls="searchSuggestions"
+                            aria-haspopup="listbox"
+                            aria-describedby="searchHelpDescription"
+                            aria-label="搜尋課程關鍵字"
+                            spellcheck="false"
+                        />
+                        <button type="button" class="search-clear-btn" id="searchClearBtn" style="display: none;" aria-label="清除搜尋關鍵字">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div class="search-suggestions" id="searchSuggestions" role="listbox" aria-label="搜尋建議列表" aria-hidden="true" style="display: none;"></div>
+                    </div>
+
+                    <!-- 篩選摘要膠囊（顯示目前視圖/日期/講師），動態填入 -->
+                    <div class="search-filter-summary" id="searchFilterSummary" aria-live="polite" style="display: none;"></div>
+                    
+                    <!-- 🔥 進階搜尋說明提示 -->
+                    <div class="search-help-tooltip" id="searchHelpTooltip" style="display: none;">
+                        <div class="search-help-header">
+                            <h4><i class="fas fa-magic"></i> 進階搜尋語法</h4>
+                            <button type="button" class="search-help-close" id="searchHelpClose" aria-label="關閉搜尋說明">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="search-help-content">
+                            <div class="search-help-section">
+                                <div class="search-help-title">🔍 基本搜尋</div>
+                                <div class="search-help-example">
+                                    <code>spm</code>
+                                    <span id="searchHelpDescription">搜尋包含 "spm" 的課程</span>
+                                </div>
+                            </div>
+                            
+                            <div class="search-help-section">
+                                <div class="search-help-title">🔗 多關鍵字（AND）</div>
+                                <div class="search-help-example">
+                                    <code>spm 到府</code>
+                                    <span>同時包含 "spm" <strong>和</strong> "到府"</span>
+                                </div>
+                            </div>
+                            
+                            <div class="search-help-section">
+                                <div class="search-help-title">🎯 OR 搜尋</div>
+                                <div class="search-help-example">
+                                    <code>spm OR scratch</code>
+                                    <span>包含 "spm" <strong>或</strong> "scratch"</span>
+                                </div>
+                            </div>
+                            
+                            <div class="search-help-section">
+                                <div class="search-help-title">📌 精確匹配</div>
+                                <div class="search-help-example">
+                                    <code>"Python 基礎"</code>
+                                    <span>完全匹配 "Python 基礎"</span>
+                                </div>
+                            </div>
+                            
+                            <div class="search-help-section">
+                                <div class="search-help-title">❌ 排除關鍵字</div>
+                                <div class="search-help-example">
+                                    <code>程式 -scratch</code>
+                                    <span>包含 "程式" 但<strong>不包含</strong> "scratch"</span>
+                                </div>
+                            </div>
+                            
+                            <div class="search-help-section">
+                                <div class="search-help-title">✅ 必須包含</div>
+                                <div class="search-help-example">
+                                    <code>+spm 到府</code>
+                                    <span>"spm" <strong>必須存在</strong>，"到府" 可選</span>
+                                </div>
+                            </div>
+                            
+                            <div class="search-help-section highlight">
+                                <div class="search-help-title">🚀 組合使用</div>
+                                <div class="search-help-example">
+                                    <code>+spm 到府 OR 線上 -取消</code>
+                                    <span>必須有 "spm"，包含 "到府" 或 "線上"，但不包含 "取消"</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="search-stats" id="searchStats" style="display: none;">
+                        找到 <span id="searchCount">0</span> 筆課程
+                        
+                        <!-- 搜尋結果導航 -->
+                        <div class="search-navigation" id="searchNavigation">
+                            <button type="button" class="search-nav-btn" id="searchPrevBtn" title="上一個結果 (←)">
+                                <i class="fas fa-chevron-up"></i>
+                            </button>
+                            <span class="search-current-index" id="searchCurrentIndex">1/1</span>
+                            <button type="button" class="search-nav-btn" id="searchNextBtn" title="下一個結果 (→)">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="instructorSelect">選擇講師</label>
+                    <select id="instructorSelect">
+                        <option value="">全部講師</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                        <label for="timeFilter">時段篩選</label>
+                        <select id="timeFilter">
+                            <option value="">全部時段</option>
+                            <option value="morning">早上 (06:00-12:00)</option>
+                            <option value="afternoon">下午 (12:00-18:00)</option>
+                            <option value="evening">晚上 (18:00-24:00)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                        <label for="dateFilter">指定日期</label>
+                        <input type="date" id="dateFilter" />
+                    </div>
+                    <div class="control-group">
+                        <div class="view-buttons">
+                            <button type="button" class="btn btn-primary active" data-view="today">今日</button>
+                            <button type="button" class="btn btn-primary" data-view="week">本週</button>
+                            <button type="button" class="btn btn-primary" data-view="month">本月</button>
+                            <button type="button" class="btn btn-primary" data-view="all">全部</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>排序方式</label>
+                        <div class="sort-toggle-container">
+                            <button type="button" class="sort-toggle-btn active" data-sort="near-to-far">
+                                <i class="fas fa-arrow-down"></i> 由近到遠
+                            </button>
+                            <button type="button" class="sort-toggle-btn" data-sort="far-to-near">
+                                <i class="fas fa-arrow-up"></i> 由遠到近
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Special Events Manager 整合區塊 ==================== -->
+        
+        <!-- 今日課程精簡區塊 -->
+        <div class="today-events-compact" id="todayEventsSection">
+            <div class="today-header">
+                <div class="today-title">
+                    <i class="fas fa-calendar-day"></i>
+                    今日課程
+                    <span class="today-count" id="todayCount">0</span>
+                </div>
+            </div>
+            <div class="today-events-grid" id="todayEventsGrid">
+                <div class="no-events-today">今日沒有課程</div>
+            </div>
+        </div>
+
+        <!-- 週/月日曆視圖容器 -->
+        <div class="calendar-section" id="calendarSection" style="display: none;">
+            <div class="calendar-header">
+                <div class="calendar-title" id="calendarTitle">
+                    <i class="fas fa-calendar"></i>
+                    日曆視圖
+                </div>
+                <div class="calendar-nav">
+                    <button type="button" onclick="previousPeriod()">
+                        <i class="fas fa-chevron-left"></i>
+                        上一期
+                    </button>
+                    <button type="button" onclick="goToToday()">
+                        <i class="fas fa-calendar-check"></i>
+                        今天
+                    </button>
+                    <button type="button" onclick="nextPeriod()">
+                        下一期
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="calendarView"></div>
+        </div>
+
+        <!-- 配色說明側邊面板 - 橫排布局 -->
+        <div class="color-legend-panel" id="colorLegendPanel">
+            <div class="color-legend-section">
+                <h4>課程類型配色</h4>
+                <div class="color-legend-grid" id="courseLegend"></div>
+            </div>
+            <div class="color-legend-section">
+                <h4>講師配色</h4>
+                <div class="color-legend-grid" id="instructorLegend"></div>
+            </div>
+        </div>
+
+        <!-- ==================== Special Events Manager 區塊結束 ==================== -->
+        
+        <div class="control-section" style="display: none;">
+            <!-- 🔥 隱藏頂部學習歷程上傳按鈕，改為在課程已結束的卡片中顯示 -->
+            <!--
+            <div class="control-group">
+                        <button type="button" class="btn btn-success" onclick="window.location.href='/learning-record-upload.html'" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s;">
+                            <i class="fas fa-book-open"></i> 學習歷程上傳
+                        </button>
+                    </div>
+            -->
+        </div>
+
+        <!-- 檢視模式切換已移除 - 使用列表檢視 -->
+        <!-- 未來如需桌面日曆視圖，請實作 FullCalendar 整合 -->
+
+        <div class="calendar-view-container" id="calendarViewContainer">
+            <div class="calendar-loading-state" id="calendarLoadingState">
+                <i class="fas fa-circle-notch"></i>
+                <span>日曆載入中...</span>
+            </div>
+            <div id="desktopCalendar" class="calendar-view"></div>
+        </div>
+
+                    <!-- 統計信息文字顯示 -->
+                    <div class="stats-text" id="statsText" style="text-align: center; margin-top: 8px; padding: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 6px; font-size: 0.75rem; color: rgba(51, 51, 51, 0.8); max-width: 100%;">
+                        <div class="stats-row" style="margin-bottom: 4px;">
+                            <span id="totalEventsText">總課程: 0</span> | 
+                            <span id="instructorCountText">講師: 0</span>
+                </div>
+                        <div class="stats-row">
+                            <span id="dateRangeText">日期: -</span>
+                </div>
+                </div>
+                    
+
+            </div>
+        </div>
+
+
+            <!-- 課程列表 -->
+        <div class="events-container" id="eventsContainer">
+            <div class="no-events">
+                <i class="fas fa-calendar-times"></i>
+                <h3>載入中...</h3>
+                <p>正在獲取行事曆資料</p>
+                </div>
+            </div>
+
+            <!-- 用戶資訊區域 -->
+            <div class="user-info-section" id="userInfoGroup" style="display: block;">
+                <div class="user-info-container">
+                    <h3>LINE 用戶資訊</h3>
+                    <div class="user-info">
+                        <div class="user-details">
+                            <div class="user-name" id="userDisplayName">未綁定</div>
+                            <div class="user-id" id="userDisplayId" style="display: none;"></div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="bindUserBtn">綁定帳號</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 設置畫面 -->
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-modal">
+            <div class="settings-header">
+                <h2><i class="fas fa-palette"></i> 顏色設置</h2>
+                <button type="button" class="close-settings" id="closeSettingsBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="settings-section">
+                <h3>教案類型顏色</h3>
+                <div class="color-picker-group">
+                    <div class="color-picker-item">
+                        <label>ESM</label>
+                        <input type="color" class="color-picker" id="esmColor" value="#ff6b9d">
+                    </div>
+                    <div class="color-picker-item">
+                        <label>SPM</label>
+                        <input type="color" class="color-picker" id="spmColor" value="#2c3e50">
+                    </div>
+                    <div class="color-picker-item">
+                        <label>BOOST</label>
+                        <input type="color" class="color-picker" id="boostColor" value="#74b9ff">
+                    </div>
+                    <div class="color-picker-item">
+                        <label>SPIKE</label>
+                        <input type="color" class="color-picker" id="spikeColor" value="#fdcb6e">
+                    </div>
+                    <div class="color-picker-item">
+                        <label>EV3</label>
+                        <input type="color" class="color-picker" id="ev3Color" value="#e17055">
+                    </div>
+                    <div class="color-picker-item">
+                        <label>MINECRAFT</label>
+                        <input type="color" class="color-picker" id="minecraftColor" value="#00b894">
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>講師底色設置</h3>
+                <div class="color-picker-group" id="instructorColorGroup">
+                    <!-- 講師顏色設置將由 JavaScript 動態生成 -->
+                </div>
+            </div>
+
+            <button type="button" class="save-settings" id="saveSettingsBtn">
+                <i class="fas fa-save"></i> 儲存設置
+            </button>
+        </div>
+    </div>
+
+     <!-- 重新整理浮動按鈕 -->
+     <div id="refreshButton" class="refresh-button" title="點擊：清除暫存並重新載入&#10;長按3秒：完全重置系統">
+         <i class="fas fa-sync-alt"></i>
+     </div>
+
+     <!-- 🔥 回到頂部按鈕 -->
+     <div id="scrollToTopBtn" class="scroll-to-top" title="回到頂部">
+         <i class="fas fa-arrow-up"></i>
+     </div>
+
+    <!-- 報表查詢懸浮選單 -->
+    <div id="reportMenu" class="attendance-menu" title="報表查詢">
+        <div class="attendance-menu-button">
+            <i class="fas fa-chart-bar"></i>
+        </div>
+        <div class="attendance-menu-tooltip">
+            <span>報表查詢</span>
+       </div>
+   </div>
+
+   <!-- 講師綁定對話框 - 液態玻璃風格彈出式選單 -->
+   <div id="teacherBindModal" class="teacher-bind-modal-overlay" style="display: none;">
+       <div class="teacher-bind-modal-content">
+           <div class="teacher-bind-modal-header">
+               <div class="teacher-bind-modal-title">
+                   <div class="teacher-bind-icon">
+                       <i class="fas fa-user-tag"></i>
+                   </div>
+                   <h2>講師身份綁定</h2>
+               </div>
+               <button type="button" class="teacher-bind-modal-close" onclick="closeTeacherBindModal()">
+                   <i class="fas fa-times"></i>
+               </button>
+           </div>
+           
+           <div class="teacher-bind-modal-body">
+               <!-- 系統提示 -->
+               <div class="teacher-bind-info-box">
+                   <div class="info-icon">
+                       <i class="fas fa-info-circle"></i>
+                   </div>
+                   <div class="info-content">
+                       <p class="info-title">🆕 歡迎使用系統</p>
+                       <p class="info-text">請選擇您在行事曆中對應的講師名稱，系統將自動記住您的身份。</p>
+                   </div>
+               </div>
+               
+               <!-- LINE 帳號資訊 -->
+               <div class="teacher-bind-section">
+                   <label class="teacher-bind-label">
+                       <i class="fas fa-user"></i> LINE 帳號資訊
+                   </label>
+                   <div class="teacher-bind-info-card">
+                       <div class="info-row">
+                           <span class="info-key">顯示名稱：</span>
+                           <span id="bindModalDisplayName" class="info-value">-</span>
+                       </div>
+                       <div class="info-row">
+                           <span class="info-key">User ID：</span>
+                           <span id="bindModalUserId" class="info-value info-value-small">-</span>
+                       </div>
+                   </div>
+               </div>
+               
+               <!-- 講師選擇 -->
+               <div class="teacher-bind-section">
+                   <label for="bindTeacherSelect" class="teacher-bind-label">
+                       <i class="fas fa-chalkboard-teacher"></i> 請選擇您的講師名稱
+                   </label>
+                   <div class="teacher-select-wrapper">
+                       <select id="bindTeacherSelect" class="teacher-select-input">
+                           <option value="">-- 請選擇講師 --</option>
+                       </select>
+                       <i class="fas fa-chevron-down teacher-select-icon"></i>
+                   </div>
+                   <p class="teacher-bind-hint">
+                       <i class="fas fa-lightbulb"></i> 選擇您在行事曆系統中顯示的講師名稱
+                   </p>
+               </div>
+               
+               <!-- 按鈕區 -->
+               <div class="teacher-bind-actions">
+                   <button type="button" onclick="confirmTeacherBinding()" class="teacher-bind-btn teacher-bind-btn-primary">
+                       <i class="fas fa-check"></i>
+                       <span>確認綁定</span>
+                   </button>
+                   <button type="button" onclick="closeTeacherBindModal()" class="teacher-bind-btn teacher-bind-btn-secondary">
+                       <i class="fas fa-times"></i>
+                       <span>取消</span>
+                   </button>
+               </div>
+           </div>
+       </div>
+   </div>
+
+   <!-- 解除綁定按鈕 (固定在頁面底部) - 液態玻璃風格 -->
+   <div id="unbindTeacherButton" class="unbind-button-container" style="display: none;">
+       <button type="button" onclick="showUnbindConfirm()" class="unbind-glass-button">
+           <i class="fas fa-unlink"></i>
+           <span>解除講師綁定</span>
+       </button>
+   </div>
+
+   <!-- 解除綁定確認對話框 - 液態玻璃風格 -->
+   <div id="unbindConfirmModal" class="modal-overlay" style="display: none;">
+       <div class="modal-content">
+           <div class="modal-header">
+               <h2>
+                   <i class="fas fa-exclamation-triangle"></i>
+                   確認解除綁定
+               </h2>
+               <button type="button" class="modal-close" onclick="closeUnbindConfirm()">
+                   <i class="fas fa-times"></i>
+               </button>
+           </div>
+           <div class="modal-body">
+               <!-- 警告提示框 -->
+               <div class="unbind-warning-box">
+                   <div class="warning-icon">
+                       <i class="fas fa-info-circle"></i>
+                   </div>
+                   <div class="warning-content">
+                       <p class="warning-text">您確定要解除目前的講師綁定嗎？</p>
+                   </div>
+               </div>
+               
+               <!-- 綁定資訊卡片 -->
+               <div class="unbind-info-card">
+                   <div class="unbind-info-row">
+                       <span class="unbind-info-key">目前綁定講師：</span>
+                       <span id="unbindCurrentTeacher" class="unbind-info-value">-</span>
+                   </div>
+                   <div class="unbind-info-hint">
+                       <i class="fas fa-arrow-right"></i>
+                       解除綁定後，系統將回到「全部講師」模式
+                   </div>
+               </div>
+               
+               <!-- 按鈕區 -->
+               <div class="unbind-actions">
+                   <button type="button" onclick="confirmUnbind()" class="unbind-btn unbind-btn-danger">
+                       <i class="fas fa-unlink"></i>
+                       <span>確認解除</span>
+                   </button>
+                   <button type="button" onclick="closeUnbindConfirm()" class="unbind-btn unbind-btn-secondary">
+                       <i class="fas fa-times"></i>
+                       <span>取消</span>
+                   </button>
+               </div>
+           </div>
+       </div>
+   </div>
+
+    </div> <!-- 結束 #app -->
+    
+    <!-- 完成標記 -->
+    <script>
+        (() => {
+            const overlay = document.getElementById('loadingOverlay');
+            const app = document.getElementById('app');
+            const mainContainer = document.getElementById('mainContainer');
+            const closeButton = document.getElementById('loadingCloseBtn');
+            const LOG_PREFIX = '🛡️ [備用機制]';
+            const TIMEOUT_THRESHOLD = 8;
+            const MAX_CHECK_COUNT = 15;
+            let checkCount = 0;
+            let overlayObserver = null;
+
+            const markReadyState = () => {
+                if (!document.body) return;
+                if (!document.body.classList.contains('is-ready')) {
+                    document.body.classList.remove('is-loading');
+                    document.body.classList.add('is-ready');
+                }
+                document.body.dataset.loadingState = 'ready';
+                document.body.setAttribute('aria-busy', 'false');
+                if (document.documentElement) {
+                    document.documentElement.dataset.loadingState = 'ready';
+                }
+            };
+
+            const ensureScrollable = () => {
+                document.documentElement.style.overflow = 'auto';
+                document.documentElement.style.overflowY = 'auto';
+                document.documentElement.style.position = 'relative';
+                document.body.style.overflow = 'auto';
+                document.body.style.overflowY = 'auto';
+                document.body.style.position = 'relative';
+                document.body.style.height = 'auto';
+                document.body.style.minHeight = '100vh';
+            };
+
+            const revealContent = () => {
+                if (app) {
+                    app.style.display = 'block';
+                    app.style.opacity = '1';
+                    app.style.visibility = 'visible';
+                }
+                if (mainContainer) {
+                    mainContainer.style.display = 'block';
+                    mainContainer.style.opacity = '1';
+                    mainContainer.style.visibility = 'visible';
+                }
+            };
+
+            const hideOverlayDirectly = () => {
+                if (!overlay) return;
+                overlay.style.setProperty('display', 'none', 'important');
+                overlay.style.setProperty('opacity', '0', 'important');
+                overlay.style.setProperty('visibility', 'hidden', 'important');
+                overlay.style.setProperty('pointer-events', 'none', 'important');
+                overlay.setAttribute('aria-hidden', 'true');
+            };
+
+            const stopMonitoring = () => {
+                if (window.loadingBackupCheckInterval) {
+                    clearInterval(window.loadingBackupCheckInterval);
+                    window.loadingBackupCheckInterval = null;
+                }
+                if (overlayObserver) {
+                    overlayObserver.disconnect();
+                    overlayObserver = null;
+                }
+            };
+
+            const finalizeDismiss = () => {
+                revealContent();
+                ensureScrollable();
+                markReadyState();
+                if (typeof window.waitingForBinding !== 'undefined') {
+                    window.waitingForBinding = false;
+                }
+                if (window.loadingCountdownInterval) {
+                    clearInterval(window.loadingCountdownInterval);
+                    window.loadingCountdownInterval = null;
+                }
+                stopMonitoring();
+            };
+
+            const fallbackDismiss = () => {
+                hideOverlayDirectly();
+                console.error('✅ [備用機制] 載入畫面已強制關閉');
+                finalizeDismiss();
+            };
+
+            const triggerDismiss = (reason) => {
+                console.error(`${LOG_PREFIX} ${reason}`);
+                if (typeof window.forceHideLoading === 'function') {
+                    window.forceHideLoading();
+                    finalizeDismiss();
+                } else {
+                    console.error('🛡️ [備用機制] forceHideLoading 不存在，改用備援流程');
+                    fallbackDismiss();
+                }
+            };
+
+            const registerOverlayInteractions = () => {
+                if (!overlay) return;
+                overlay.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    triggerDismiss('使用者點擊載入畫面觸發關閉');
+                });
+                overlay.addEventListener('keydown', (event) => {
+                    const actionableKeys = ['Enter', ' ', 'Spacebar', 'Escape'];
+                    if (!actionableKeys.includes(event.key)) return;
+                    event.preventDefault();
+                    const reason = event.key === 'Escape'
+                        ? '使用者按下 Esc 觸發關閉'
+                        : '使用者透過鍵盤觸發關閉';
+                    triggerDismiss(reason);
+                });
+                if (closeButton) {
+                    closeButton.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        triggerDismiss('使用者透過關閉按鈕觸發關閉');
+                    });
+                }
+                requestAnimationFrame(() => {
+                    if (overlay && typeof overlay.focus === 'function') {
+                        overlay.focus();
+                    }
+                });
+            };
+
+            const observeOverlay = () => {
+                if (!overlay || !window.MutationObserver) return;
+                overlayObserver = new MutationObserver(() => {
+                    const styles = window.getComputedStyle(overlay);
+                    if (styles.display === 'none' || styles.visibility === 'hidden') {
+                        console.error(`${LOG_PREFIX} 偵測到載入畫面已隱藏，結束監控`);
+                        finalizeDismiss();
+                    }
+                });
+                overlayObserver.observe(overlay, {
+                    attributes: true,
+                    attributeFilter: ['style', 'class', 'data-state']
+                });
+                window.loadingOverlayObserver = overlayObserver;
+            };
+
+            console.error(`${LOG_PREFIX} 載入畫面終極保護已啟動`);
+            registerOverlayInteractions();
+            observeOverlay();
+
+            if (!overlay) {
+                console.error(`${LOG_PREFIX} 無法找到載入畫面元素，直接標記頁面為就緒`);
+                finalizeDismiss();
+                return;
+            }
+
+            const checkOverlay = () => {
+                checkCount += 1;
+                const isVisible = overlay.style.display !== 'none' &&
+                    window.getComputedStyle(overlay).display !== 'none';
+                console.error(`${LOG_PREFIX} 第 ${checkCount} 次檢查 - 載入畫面狀態:`, isVisible ? '顯示中' : '已隱藏');
+                if (!isVisible) {
+                    console.error(`${LOG_PREFIX} 載入畫面已正常關閉，停止檢查`);
+                    finalizeDismiss();
+                    return;
+                }
+                if (checkCount >= TIMEOUT_THRESHOLD) {
+                    console.error('🚨 [備用機制] 載入畫面超時 8 秒，強制關閉！');
+                    triggerDismiss('超時保護觸發強制關閉');
+                    return;
+                }
+                if (checkCount >= MAX_CHECK_COUNT) {
+                    console.error('🛡️ [備用機制] 已達到最大檢查次數，停止檢查');
+                    stopMonitoring();
+                }
+            };
+
+            const loadingCheckInterval = setInterval(checkOverlay, 1000);
+            window.loadingBackupCheckInterval = loadingCheckInterval;
+            console.error(`${LOG_PREFIX} 載入畫面終極保護已就緒（8秒強制關閉）`);
+
+            const initSearchHelp = () => {
+                const helpBtn = document.getElementById('searchHelpBtn');
+                const helpTooltip = document.getElementById('searchHelpTooltip');
+                const helpClose = document.getElementById('searchHelpClose');
+                const searchSuggestions = document.getElementById('searchSuggestions');
+                
+                if (!helpBtn || !helpTooltip || !helpClose) {
+                    console.warn('⚠️ 搜尋幫助元素不完整');
+                    return;
+                }
+                
+                helpBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const isVisible = helpTooltip.style.display === 'block';
+                    
+                    if (isVisible) {
+                        helpTooltip.style.display = 'none';
+                    } else {
+                        if (searchSuggestions) {
+                            searchSuggestions.style.display = 'none';
+                        }
+                        
+                        helpTooltip.style.display = 'block';
+                        console.log('💡 顯示進階搜尋幫助');
+                    }
+                });
+                
+                helpClose.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    helpTooltip.style.display = 'none';
+                    console.log('✅ 關閉進階搜尋幫助');
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (helpTooltip.style.display === 'block') {
+                        if (!helpTooltip.contains(e.target) && !helpBtn.contains(e.target)) {
+                            helpTooltip.style.display = 'none';
+                        }
+                    }
+                });
+                
+                const examples = helpTooltip.querySelectorAll('.search-help-example code');
+                examples.forEach(example => {
+                    example.style.cursor = 'pointer';
+                    example.title = '點擊試用此範例';
+                    
+                    example.addEventListener('click', () => {
+                        const searchInput = document.getElementById('globalSearch');
+                        if (searchInput) {
+                            const exampleText = example.textContent.trim();
+                            searchInput.value = exampleText;
+                            
+                            if (typeof window.searchManager !== 'undefined' && window.searchManager) {
+                                window.searchManager.performSearch(exampleText);
+                            }
+                            
+                            helpTooltip.style.display = 'none';
+                            searchInput.focus();
+                            
+                            console.log('✅ 使用範例:', exampleText);
+                        }
+                    });
+                });
+                
+                console.log('✅ 進階搜尋幫助功能初始化完成');
+            };
+
+            const ensureSearchInitialized = () => {
+                console.log('🔍 [獨立] 檢查搜尋功能初始化狀態...');
+                
+                const searchInput = document.getElementById('globalSearch');
+                const hasSearchManager = typeof window.SearchManager !== 'undefined';
+                const hasInstance = window.searchManager !== null && typeof window.searchManager !== 'undefined';
+                
+                console.log('🔍 [獨立] 搜尋功能狀態:', {
+                    '搜尋輸入框': searchInput ? '✅ 存在' : '❌ 不存在',
+                    'SearchManager類別': hasSearchManager ? '✅ 已載入' : '❌ 未載入',
+                    'searchManager實例': hasInstance ? '✅ 已創建' : '❌ 未創建'
+                });
+                
+                if (searchInput && hasSearchManager && !hasInstance) {
+                    console.log('🔍 [獨立] 條件滿足，立即初始化搜尋功能！');
+                    try {
+                        window.searchManager = new window.SearchManager();
+                        window.searchManager.init(window.performGlobalSearch, window.highlightSearchResult);
+                        console.log('✅ [獨立] 搜尋功能初始化成功！');
+                    } catch (error) {
+                        console.error('❌ [獨立] 搜尋功能初始化失敗:', error);
+                    }
+                } else if (!searchInput) {
+                    console.warn('⏳ [獨立] 搜尋輸入框尚未準備好，500ms 後重試...');
+                    setTimeout(ensureSearchInitialized, 500);
+                } else if (!hasSearchManager) {
+                    console.warn('⏳ [獨立] SearchManager 尚未載入，500ms 後重試...');
+                    setTimeout(ensureSearchInitialized, 500);
+                } else if (hasInstance) {
+                    console.log('✅ [獨立] 搜尋功能已經初始化，無需重複初始化');
+                }
+            };
+
+            window.addEventListener('load', () => {
+                console.error('🎉 頁面完全載入！');
+                
+                setTimeout(initSearchHelp, 100);
+                setTimeout(ensureSearchInitialized, 100);
+                
+                setTimeout(() => {
+                    if (!window.searchManager && typeof window.initializeSearch === 'function') {
+                        console.log('🔍 [備用] 觸發 initializeSearch()');
+                        window.initializeSearch();
+                    }
+                }, 1000);
+                
+                setTimeout(ensureSearchInitialized, 3000);
+            });
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    console.log('📄 DOM 載入完成，嘗試初始化搜尋...');
+                    setTimeout(ensureSearchInitialized, 500);
+                });
+            } else {
+                console.log('📄 DOM 已經載入，立即嘗試初始化搜尋...');
+                setTimeout(ensureSearchInitialized, 100);
+            }
+        })();
+    </script>
+</body>
+</html>

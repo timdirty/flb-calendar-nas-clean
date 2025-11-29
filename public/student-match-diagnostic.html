@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學生匹配診斷工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .course {
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 15px 0;
+            background: #f9f9f9;
+        }
+        .course.error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        .student {
+            padding: 10px;
+            margin: 8px 0;
+            background: #e3f2fd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .student.incorrect {
+            background: #ffcdd2;
+        }
+        .correct {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .incorrect {
+            color: #f44336;
+            font-weight: bold;
+        }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 18px;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .summary {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .summary-card {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .summary-card.total {
+            background: #e3f2fd;
+            color: #1976D2;
+        }
+        .summary-card.correct {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .summary-card.incorrect {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        .summary-card h3 {
+            margin: 0;
+            font-size: 32px;
+        }
+        .summary-card p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+        }
+        .detail {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 學生匹配診斷工具</h1>
+    
+    <div class="card">
+        <h2>測試參數</h2>
+        <p><strong>Event ID:</strong> 20251018T043723-ouqqshoc@cal.synology.com</p>
+        <p><strong>Date:</strong> 2025-10-19</p>
+        <p><strong>Instructor:</strong> TIM</p>
+        <button onclick="runDiagnostics()">🚀 重新診斷</button>
+        <button onclick="showRawData()" style="background: #607D8B;">📋 顯示原始資料</button>
+    </div>
+
+    <div id="results"></div>
+    <div id="rawData" style="display: none;"></div>
+
+    <script>
+        let apiData = null;
+        let studentData = null;
+
+        async function runDiagnostics() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="loading">🔄 載入中...</div>';
+
+            try {
+                // 1. 載入 API 資料
+                const apiResponse = await fetch('/api/learning-records/today-completed-courses?eventId=20251018T043723-ouqqshoc@cal.synology.com&date=2025-10-19&instructor=TIM');
+                apiData = await apiResponse.json();
+
+                // 2. 載入學生資料
+                const studentResponse = await fetch('/student_data.json');
+                studentData = await studentResponse.json();
+
+                // 3. 統計資料
+                let totalCourses = apiData.courses.length;
+                let coursesWithStudents = 0;
+                let coursesWithoutStudents = 0;
+                let totalStudents = 0;
+                let correctMatches = 0;
+                let incorrectMatches = 0;
+
+                // 4. 分析每個課程
+                let html = '<div class="card"><h2>📊 診斷結果</h2>';
+                
+                // 統計摘要
+                apiData.courses.forEach(course => {
+                    const hasStudents = course.students && course.students.length > 0;
+                    if (hasStudents) {
+                        coursesWithStudents++;
+                        totalStudents += course.students.length;
+                        
+                        // 檢查每個學生是否正確匹配
+                        course.students.forEach(student => {
+                            const studentInData = studentData.students.find(s => s.name === student.name);
+                            if (studentInData) {
+                                const courseMatch = studentInData.course.replace(/\s+/g, '').toLowerCase() === course.courseName.replace(/\s+/g, '').toLowerCase();
+                                if (courseMatch) {
+                                    correctMatches++;
+                                } else {
+                                    incorrectMatches++;
+                                }
+                            } else {
+                                incorrectMatches++;
+                            }
+                        });
+                    } else {
+                        coursesWithoutStudents++;
+                    }
+                });
+
+                // 顯示摘要
+                html += '<div class="summary">';
+                html += `
+                    <div class="summary-card total">
+                        <h3>${totalCourses}</h3>
+                        <p>總課程數</p>
+                    </div>
+                    <div class="summary-card total">
+                        <h3>${totalStudents}</h3>
+                        <p>總學生數</p>
+                    </div>
+                    <div class="summary-card correct">
+                        <h3>${correctMatches}</h3>
+                        <p>正確匹配</p>
+                    </div>
+                    <div class="summary-card incorrect">
+                        <h3>${incorrectMatches}</h3>
+                        <p>錯誤匹配</p>
+                    </div>
+                `;
+                html += '</div>';
+
+                // 顯示詳細資訊
+                apiData.courses.forEach(course => {
+                    const hasStudents = course.students && course.students.length > 0;
+                    const courseClass = hasStudents ? 'course' : 'course error';
+                    
+                    html += `<div class="${courseClass}">`;
+                    html += `<h4>${course.title}</h4>`;
+                    html += `<p><strong>課程名稱：</strong>${course.courseName}</p>`;
+                    html += `<p><strong>時段：</strong>${course.timeRange}</p>`;
+                    html += `<p><strong>學生數：</strong>${course.students ? course.students.length : 0}</p>`;
+                    
+                    if (hasStudents) {
+                        html += '<div><strong>學生列表：</strong></div>';
+                        course.students.forEach(student => {
+                            // 驗證學生是否真的屬於這個課程
+                            const studentInData = studentData.students.find(s => s.name === student.name);
+                            
+                            if (studentInData) {
+                                const courseMatch = studentInData.course.replace(/\s+/g, '').toLowerCase() === course.courseName.replace(/\s+/g, '').toLowerCase();
+                                const studentClass = courseMatch ? '' : 'incorrect';
+                                const statusIcon = courseMatch ? '✅' : '❌';
+                                
+                                html += `<div class="student ${studentClass}">`;
+                                html += `<strong>${statusIcon} ${student.name}</strong> (剩餘 ${student.remaining} 堂)`;
+                                if (!courseMatch) {
+                                    html += `<div class="detail incorrect">⚠️ <strong>錯誤匹配！</strong> 此學生實際課程：${studentInData.course}，實際時段：${studentInData.period || '無'}</div>`;
+                                } else {
+                                    html += `<div class="detail">✓ 課程：${studentInData.course}，時段：${studentInData.period || '無'}</div>`;
+                                }
+                                html += `</div>`;
+                            } else {
+                                html += `<div class="student incorrect"><strong>❌ ${student.name}</strong> - 在學生資料中找不到此學生</div>`;
+                            }
+                        });
+                    } else {
+                        html += '<p class="incorrect">❌ 沒有匹配到任何學生</p>';
+                        
+                        // 顯示應該匹配的學生
+                        const shouldMatch = studentData.students.filter(s => 
+                            s.course.replace(/\s+/g, '').toLowerCase() === course.courseName.replace(/\s+/g, '').toLowerCase()
+                        );
+                        
+                        if (shouldMatch.length > 0) {
+                            html += '<p><strong>應該匹配的學生：</strong></p>';
+                            shouldMatch.forEach(s => {
+                                html += `<div class="student">${s.name} - ${s.course} ${s.period || '(無時段)'} (剩餘 ${s.remaining} 堂)</div>`;
+                            });
+                        }
+                    }
+                    
+                    html += '</div>';
+                });
+
+                html += '</div>';
+
+                resultsDiv.innerHTML = html;
+
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="card">
+                        <h2 style="color: #f44336;">❌ 錯誤</h2>
+                        <p>${error.message}</p>
+                        <pre>${error.stack}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        function showRawData() {
+            const rawDataDiv = document.getElementById('rawData');
+            if (rawDataDiv.style.display === 'none') {
+                rawDataDiv.style.display = 'block';
+                rawDataDiv.innerHTML = `
+                    <div class="card">
+                        <h2>🔧 原始 API 資料</h2>
+                        <pre>${JSON.stringify(apiData, null, 2)}</pre>
+                    </div>
+                `;
+            } else {
+                rawDataDiv.style.display = 'none';
+            }
+        }
+
+        // 自動執行診斷
+        window.addEventListener('load', () => {
+            setTimeout(runDiagnostics, 500);
+        });
+    </script>
+</body>
+</html>
+

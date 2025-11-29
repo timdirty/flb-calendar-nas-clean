@@ -1,0 +1,134 @@
+🚨 緊急診斷和修復 - 請在 NAS 上執行
+═══════════════════════════════════════════════════════════════
+
+問題：API 仍然返回 404
+可能原因：Docker 容器沒有正確載入新的 server.js
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+立即在 NAS SSH 執行以下診斷
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas
+
+echo "=== 診斷 1: 檢查宿主機的 server.js ==="
+grep -c "app.get('/api/line-config'" server.js
+
+echo ""
+echo "=== 診斷 2: 檢查容器內的 server.js ==="
+sudo docker exec flb-calendar-nas grep -c "app.get('/api/line-config'" /app/server.js
+
+echo ""
+echo "=== 診斷 3: 比較文件大小 ==="
+echo "宿主機:"
+ls -lh server.js | awk '{print $5}'
+echo "容器內:"
+sudo docker exec flb-calendar-nas ls -lh /app/server.js | awk '{print $5}'
+
+echo ""
+echo "=== 診斷 4: 檢查容器日誌 ==="
+sudo docker-compose logs --tail=20 | grep -i "api\|error\|listening"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+如果診斷 2 返回 0，表示容器內的 server.js 是舊版本
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+解決方案：完全重建容器
+
+sudo docker-compose down
+sudo docker-compose build --no-cache
+sudo docker-compose up -d
+sleep 15
+sudo docker-compose logs --tail=50
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+快速一鍵完整修復（推薦）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas && \
+echo "🔍 檢查 API..." && \
+HOST_API=$(grep -c "app.get('/api/line-config'" server.js) && \
+CONTAINER_API=$(sudo docker exec flb-calendar-nas grep -c "app.get('/api/line-config'" /app/server.js 2>/dev/null || echo "0") && \
+echo "宿主機 API 數: $HOST_API" && \
+echo "容器內 API 數: $CONTAINER_API" && \
+if [ "$HOST_API" != "$CONTAINER_API" ]; then \
+  echo "⚠️ 版本不一致！需要重建容器..." && \
+  sudo docker-compose down && \
+  sudo docker-compose build --no-cache && \
+  sudo docker-compose up -d && \
+  sleep 15 && \
+  echo "✅ 容器已重建" && \
+  sudo docker-compose ps && \
+  echo "" && \
+  echo "🧪 測試 API:" && \
+  curl -s https://calendar.funlearnbar.synology.me/api/line-config | head -20; \
+else \
+  echo "✅ 版本一致，只需重啟..." && \
+  sudo docker-compose restart && \
+  sleep 10 && \
+  sudo docker-compose ps; \
+fi
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+方案 B：檢查 docker-compose.yml 的 volume 掛載
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cat docker-compose.yml | grep -A 5 volumes
+
+確認是否有這一行：
+  - ./server.js:/app/server.js
+
+如果沒有，容器會使用 build 時的舊版本！
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+方案 C：手動複製到容器（臨時方案）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+sudo docker cp server.js flb-calendar-nas:/app/server.js
+sudo docker-compose restart
+sleep 10
+sudo docker-compose logs --tail=30
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+驗證修復
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+curl -s https://calendar.funlearnbar.synology.me/api/line-config
+# 應該返回 JSON，不是 HTML
+
+curl -s https://calendar.funlearnbar.synology.me/api/students
+# 應該返回 JSON，不是 HTML
+
+curl -s https://calendar.funlearnbar.synology.me/api/admin/info
+# 應該返回 JSON，不是 HTML
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+預期正確的回應
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 正確:
+{
+  "success": true,
+  "data": {
+    "hasToken": false,
+    ...
+  }
+}
+
+❌ 錯誤 (404):
+<!DOCTYPE html>
+<html>
+...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+請立即執行「快速一鍵完整修復」！
+這會自動診斷並選擇正確的修復方法。
+
+

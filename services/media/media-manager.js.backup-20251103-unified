@@ -1,0 +1,274 @@
+/**
+ * 整合媒體管理服務
+ */
+
+const path = require('path');
+const fs = require('fs');
+const fsPromises = fs.promises;
+const crypto = require('crypto');
+
+const safeFile = require('../../utils/safe-file-operations');
+const MediaSessionRegistry = require('./media-session-registry');
+const mediaStorage = require('./media-storage');
+const mediaIndex = require('./media-index');
+const mediaTranscoder = require('./media-transcoder');
+
+const SESSION_ROOT = path.join(mediaStorage.MEDIA_ROOT, '_sessions');
+const registry = new MediaSessionRegistry(SESSION_ROOT);
+registry.startCleanup();
+
+function generateId() {
+    return crypto.randomUUID();
+}
+
+function toRelative(filePath) {
+    if (!filePath) return null;
+    const relative = path.relative(mediaStorage.MEDIA_ROOT, filePath);
+    return relative.split(path.sep).join('/');
+}
+
+function normalizeFilename(originalName, fallbackExt = '.mp4') {
+    const ext = String(path.extname(originalName || '') || fallbackExt || '.mp4').toLowerCase();
+    const base = mediaStorage.safeSlug(path.basename(originalName || '', ext) || 'video', 'video');
+    const stamp = Date.now();
+    return `${base}-${stamp}${ext}`;
+}
+
+async function initialize() {
+    await fsPromises.mkdir(mediaStorage.MEDIA_ROOT, { recursive: true });
+    await fsPromises.mkdir(SESSION_ROOT, { recursive: true });
+    console.log(`✅ 媒體儲存根目錄: ${mediaStorage.MEDIA_ROOT}`);
+}
+
+async function createUploadSession(payload) {
+    const session = await registry.createSession(payload);
+    return {
+        uploadId: session.uploadId,
+        totalChunks: session.totalChunks,
+        chunkSize: session.chunkSize,
+        expiresAt: session.expiresAt
+    };
+}
+
+async function receiveChunk(uploadId, chunkIndex, tempFilePath) {
+    const session = registry.getSession(uploadId);
+    if (!session) {
+        throw new Error('上傳會話不存在或已過期');
+    }
+
+    const chunkDir = session.tempDir;
+    await fsPromises.mkdir(chunkDir, { recursive: true });
+
+    const finalChunkPath = path.join(chunkDir, `chunk_${chunkIndex}`);
+    await fsPromises.rename(tempFilePath, finalChunkPath);
+    session.receivedChunks.add(Number(chunkIndex));
+
+    return {
+        receivedChunks: session.receivedChunks.size,
+        totalChunks: session.totalChunks
+    };
+}
+
+async function mergeChunks(session, bucket, metadata) {
+    const originFileName = metadata.safeFilename || normalizeFilename(session.filename);
+    const finalOriginPath = path.join(bucket.originDir, originFileName);
+
+    const writeStream = fs.createWriteStream(finalOriginPath);
+    for (let i = 0; i < session.totalChunks; i++) {
+        const chunkPath = path.join(session.tempDir, `chunk_${i}`);
+        const data = await fsPromises.readFile(chunkPath);
+        writeStream.write(data);
+    }
+
+    await new Promise((resolve, reject) => {
+        writeStream.end();
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+    });
+
+    return {
+        originPath: finalOriginPath,
+        originName: originFileName
+    };
+}
+
+async function completeUpload(uploadId, metadata = {}) {
+    const session = registry.getSession(uploadId);
+    if (!session) {
+        throw new Error('上傳會話不存在或已過期');
+    }
+    if (session.totalChunks > 0 && session.receivedChunks.size !== session.totalChunks) {
+        throw new Error(`分片不完整: 已接收 ${session.receivedChunks.size}/${session.totalChunks}`);
+    }
+
+    const bucket = await mediaStorage.ensureBucket({
+        ...metadata,
+        date: metadata.date || metadata.dateKey || metadata.courseDate || Date.now(),
+        mode: metadata.mode || (metadata.isOverview ? 'overview' : 'student')
+    });
+
+    const safeFilename = normalizeFilename(metadata.safeFilename || session.filename);
+    const merged = await mergeChunks(session, bucket, { ...metadata, safeFilename });
+
+    await registry.removeSession(uploadId);
+
+    const recordId = generateId();
+    const record = {
+        id: recordId,
+        bucketId: bucket.bucketId,
+        relativeBase: bucket.relativeBase,
+        courseName: metadata.courseName || metadata.courseTitle || metadata.course || '',
+        courseId: metadata.courseId || '',
+        instructorName: metadata.instructorName || metadata.teacherName || '',
+        studentName: metadata.mode === 'overview' ? null : (metadata.studentName || ''),
+        isOverview: metadata.mode === 'overview',
+        dateKey: metadata.dateKey || metadata.date || '',
+        filename: merged.originName,
+        originalName: session.filename,
+        originPath: merged.originPath,
+        originRelative: toRelative(merged.originPath),
+        fileSize: session.fileSize,
+        fileType: session.fileType,
+        uploadedAt: Date.now(),
+        status: 'queued',
+        transcoded: null,
+        transcodedRelative: null,
+        thumbnail: null
+    };
+
+    await mediaIndex.appendRecord(record);
+
+    mediaStorage.writeBucketMeta(bucket, async (meta) => {
+        const fileEntry = {
+            id: recordId,
+            filename: merged.originName,
+            type: session.fileType,
+            fileSize: session.fileSize,
+            uploadedAt: Date.now(),
+            status: 'queued'
+        };
+
+        const files = Array.isArray(meta.files) ? meta.files.slice() : [];
+        files.push(fileEntry);
+
+        return {
+            ...meta,
+            courseTitle: record.courseName,
+            instructorName: record.instructorName,
+            studentName: record.studentName,
+            mode: record.isOverview ? 'overview' : 'student',
+            files
+        };
+    }).catch((err) => {
+        console.error('⚠️ 寫入桶資訊失敗:', err.message);
+    });
+
+            mediaTranscoder.enqueueTranscode(bucket, merged.originPath)
+        .then((result) => {
+            const transcoded = {
+                path: result.transcoded.outputPath,
+                filename: result.transcoded.outputName,
+                reused: result.transcoded.reused
+            };
+            const thumbnail = {
+                path: result.poster.outputPath,
+                filename: result.poster.outputName
+            };
+            const transcodedRelative = toRelative(result.transcoded.outputPath);
+            const thumbnailRelative = toRelative(result.poster.outputPath);
+
+            mediaIndex.updateRecord(
+                (entry) => entry.id === recordId,
+                () => ({
+                    status: 'ready',
+                    transcoded,
+                    transcodedRelative,
+                    thumbnail,
+                    thumbnailRelative,
+                    processedAt: Date.now()
+                })
+            ).catch((err) => {
+                console.error('⚠️ 更新索引失敗:', err.message);
+            });
+
+            mediaStorage.writeBucketMeta(bucket, async (meta) => {
+                const files = Array.isArray(meta.files) ? meta.files.map((entry) => {
+                    if (entry.id === recordId) {
+                        return {
+                            ...entry,
+                            status: 'ready',
+                            transcoded,
+                            transcodedRelative,
+                            thumbnail,
+                            thumbnailRelative
+                        };
+                    }
+                    return entry;
+                }) : [];
+
+                return {
+                    ...meta,
+                    files
+                };
+            }).catch((err) => {
+                console.error('⚠️ 更新桶 meta 失敗:', err.message);
+            });
+        })
+        .catch((err) => {
+            console.error('❌ 媒體處理失敗，更新索引狀態為 failed:', err.message);
+            mediaIndex.updateRecord(
+                (entry) => entry.id === recordId,
+                () => ({ status: 'failed', error: err.message, failedAt: Date.now() })
+            );
+        });
+
+    return {
+        success: true,
+        record
+    };
+}
+
+async function cancelUpload(uploadId) {
+    await registry.removeSession(uploadId);
+    return { success: true };
+}
+
+async function getUploadStatus(uploadId) {
+    const session = registry.getSession(uploadId);
+    if (!session) {
+        return null;
+    }
+    const progress = session.totalChunks > 0
+        ? Math.round((session.receivedChunks.size / session.totalChunks) * 100)
+        : 0;
+    return {
+        uploadId: session.uploadId,
+        filename: session.filename,
+        receivedChunks: session.receivedChunks.size,
+        totalChunks: session.totalChunks,
+        fileSize: session.fileSize,
+        fileType: session.fileType,
+        progress,
+        createdAt: session.createdAt,
+        expiresAt: session.expiresAt
+    };
+}
+
+async function listMedia(filters) {
+    return mediaIndex.listRecords(filters);
+}
+
+async function getMedia(recordId) {
+    return mediaIndex.findRecordById(recordId);
+}
+
+module.exports = {
+    initialize,
+    createUploadSession,
+    receiveChunk,
+    completeUpload,
+    cancelUpload,
+    getUploadStatus,
+    listMedia,
+    getMedia
+};

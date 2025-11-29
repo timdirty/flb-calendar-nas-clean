@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>測試清理功能</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 清理功能測試</h1>
+    
+    <div>
+        <button onclick="testAPI()">測試 API 連線</button>
+        <button onclick="testCleanup()">測試清理功能</button>
+        <button onclick="clearCache()">清除前端緩存</button>
+    </div>
+    
+    <div id="result"></div>
+    
+    <script>
+        async function testAPI() {
+            const resultEl = document.getElementById('result');
+            resultEl.textContent = '正在測試 API 連線...';
+            resultEl.className = '';
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                resultEl.className = 'success';
+                resultEl.textContent = `✅ API 連線正常\n\n回應:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultEl.className = 'error';
+                resultEl.textContent = `❌ API 連線失敗\n\n錯誤:\n${error.message}\n${error.stack}`;
+            }
+        }
+        
+        async function testCleanup() {
+            const resultEl = document.getElementById('result');
+            resultEl.textContent = '正在執行清理...';
+            resultEl.className = '';
+            
+            try {
+                console.log('📡 發送請求到: /api/clean-all-metadata');
+                
+                const response = await fetch('/api/clean-all-metadata', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('📥 收到回應:', response.status, response.statusText);
+                console.log('📋 Content-Type:', response.headers.get('content-type'));
+                
+                // 先讀取原始文字
+                const text = await response.text();
+                console.log('📄 原始回應:', text.substring(0, 500));
+                
+                // 嘗試解析為 JSON
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (parseError) {
+                    throw new Error(`JSON 解析失敗:\n${text.substring(0, 200)}\n\n解析錯誤: ${parseError.message}`);
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+                }
+                
+                resultEl.className = 'success';
+                resultEl.textContent = `✅ 清理成功\n\n結果:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultEl.className = 'error';
+                resultEl.textContent = `❌ 清理失敗\n\n錯誤: ${error.message}\n\n堆疊:\n${error.stack}`;
+                console.error('❌ 完整錯誤:', error);
+            }
+        }
+        
+        function clearCache() {
+            const resultEl = document.getElementById('result');
+            
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                document.cookie.split(";").forEach(c => { 
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                });
+                
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        names.forEach(name => caches.delete(name));
+                    });
+                }
+                
+                resultEl.className = 'success';
+                resultEl.textContent = '✅ 前端緩存已清除\n\n2秒後重新載入...';
+                
+                setTimeout(() => location.reload(true), 2000);
+            } catch (error) {
+                resultEl.className = 'error';
+                resultEl.textContent = `❌ 清除失敗\n\n${error.message}`;
+            }
+        }
+        
+        console.log('🧪 測試頁面已載入');
+        console.log('📍 當前 URL:', window.location.href);
+        console.log('🌐 API 基礎路徑:', window.location.origin);
+    </script>
+</body>
+</html>
+

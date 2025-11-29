@@ -1,0 +1,68 @@
+/* 🔧 修復上傳佇列 hover 跑版問題 */
+
+/* 確保 overlay 正確顯示，不影響其他內容 */
+.file-preview .file-uploading-overlay {
+    /* 保持原有的層級和定位 */
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 2 !important;
+    /* 確保不會溢出 */
+    overflow: hidden !important;
+    /* 🔥 [簡化 2025-11-23] 上傳時應該顯示，不隱藏 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+/* 🔥 [修復 2025-11-18] 進度條使用絕對定位，不需要 margin */
+/* .file-preview .file-upload-progress 的樣式已由 progress-bar-override.css 完整處理 */
+
+/* 修復可能的文字溢出 */
+.file-preview .file-uploading-overlay .progress-text {
+    /* 限制文字寬度避免溢出 */
+    max-width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 確保上傳佇列項目不會被進度條影響 */
+.upload-queue-item {
+    position: relative;
+    overflow: hidden;
+}
+
+/* 修復檔案名稱顯示 */
+.upload-queue-item .file-name,
+.file-preview .file-info {
+    position: relative;
+    z-index: 1;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 確保刪除按鈕和其他控制項在正確層級 */
+.file-preview .remove-btn,
+.upload-queue-item .remove-btn {
+    position: relative;
+    z-index: 3;
+}
+
+/* 防止進度條影響到縮圖 */
+.file-preview .file-thumb,
+.file-preview img,
+.file-preview video {
+    position: relative;
+    z-index: 1;
+}
+
+/* 確保 hover 效果正常工作 */
+.file-preview:hover .file-uploading-overlay {
+    /* hover 時顯示 overlay 的原有邏輯不被破壞 */
+    pointer-events: auto;
+}
+
+/* 🔥 [修復 2025-11-18] 不覆蓋進度條的 position，由 progress-bar-override.css 處理 */
+/* .file-preview.uploading .file-upload-progress 的 position 和 z-index 已由 progress-bar-override.css 設定 */

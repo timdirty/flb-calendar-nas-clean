@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="樂程坊講師行事曆檢視系統 - 優化版本">
+    <meta name="theme-color" content="#FFD700">
+    <title>講師行事曆檢視 - 樂程坊</title>
+    
+    <!-- 預載入關鍵資源 -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    
+    <!-- 關鍵CSS -->
+    <link rel="stylesheet" href="/css/calendar-styles.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="app-container">
+        <!-- 標題區域 -->
+        <header class="header">
+            <h1>📅 講師行事曆檢視</h1>
+            <p>樂程坊課程管理系統</p>
+        </header>
+
+        <!-- 篩選區域 -->
+        <section class="filters-container">
+            <!-- 視圖切換按鈕 -->
+            <div class="filter-group">
+                <label>檢視模式</label>
+                <div class="view-buttons">
+                    <button class="btn-primary active" data-view="today">
+                        <i class="fas fa-calendar-day"></i> 今日
+                    </button>
+                    <button class="btn-primary" data-view="week">
+                        <i class="fas fa-calendar-week"></i> 本週
+                    </button>
+                    <button class="btn-primary" data-view="month">
+                        <i class="fas fa-calendar"></i> 本月
+                    </button>
+                    <button class="btn-primary" data-view="all">
+                        <i class="fas fa-list"></i> 全部
+                    </button>
+                </div>
+            </div>
+
+            <!-- 講師篩選 -->
+            <div class="filter-group">
+                <label for="instructorSelect">
+                    <i class="fas fa-user-tie"></i> 講師篩選
+                </label>
+                <select id="instructorSelect">
+                    <option value="">全部講師</option>
+                    <!-- 動態載入講師選項 -->
+                </select>
+            </div>
+
+            <!-- 時段篩選 -->
+            <div class="filter-group">
+                <label for="timeFilter">
+                    <i class="fas fa-clock"></i> 時段篩選
+                </label>
+                <select id="timeFilter">
+                    <option value="">全部時段</option>
+                    <option value="morning">上午 (06:00-12:00)</option>
+                    <option value="afternoon">下午 (12:00-18:00)</option>
+                    <option value="evening">晚上 (18:00-24:00)</option>
+                </select>
+            </div>
+
+            <!-- 日期篩選 -->
+            <div class="filter-group">
+                <label for="dateFilter">
+                    <i class="fas fa-calendar-alt"></i> 指定日期
+                </label>
+                <input type="date" id="dateFilter">
+            </div>
+        </section>
+
+        <!-- 統計資訊 -->
+        <section class="stats-container" id="statsContainer">
+            <!-- 動態載入統計資訊 -->
+        </section>
+
+        <!-- 課程列表 -->
+        <section class="events-section">
+            <div class="events-container" id="eventsContainer">
+                <!-- 動態載入課程卡片 -->
+            </div>
+        </section>
+    </div>
+
+    <!-- 核心JavaScript模塊 -->
+    <script src="/js/calendar-core.js"></script>
+    
+    <!-- 額外功能模塊（按需載入） -->
+    <script>
+        // LIFF 整合（如果需要）
+        window.initLIFF = async function() {
+            if (typeof liff === 'undefined') {
+                console.log('⏭️ 跳過 LIFF 初始化（未載入 SDK）');
+                return;
+            }
+            
+            try {
+                const liffId = '2006585863-p6xEd0WV'; // 您的 LIFF ID
+                await liff.init({ liffId });
+                
+                if (liff.isLoggedIn()) {
+                    const profile = await liff.getProfile();
+                    AppState.updateState({ 
+                        liffInitialized: true,
+                        userProfile: profile 
+                    });
+                    console.log('✅ LIFF 初始化成功');
+                } else {
+                    liff.login();
+                }
+            } catch (error) {
+                console.error('❌ LIFF 初始化失敗:', error);
+            }
+        };
+        
+        // 性能監控
+        window.addEventListener('load', () => {
+            if (window.performance && window.performance.timing) {
+                const perfData = window.performance.timing;
+                const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+                const domReadyTime = perfData.domContentLoadedEventEnd - perfData.navigationStart;
+                
+                console.log('📊 性能指標:');
+                console.log(`  - 頁面載入時間: ${pageLoadTime}ms`);
+                console.log(`  - DOM 就緒時間: ${domReadyTime}ms`);
+                
+                // 如果性能太差，顯示警告
+                if (pageLoadTime > 3000) {
+                    console.warn('⚠️ 頁面載入較慢，請檢查網路連線');
+                }
+            }
+        });
+        
+        // 錯誤處理
+        window.addEventListener('error', (event) => {
+            console.error('❌ 全局錯誤:', event.error);
+            if (typeof UIManager !== 'undefined') {
+                UIManager.showToast('系統發生錯誤，部分功能可能無法使用', 'error', 5000);
+            }
+        });
+        
+        // 未處理的 Promise 拒絕
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('❌ 未處理的 Promise 拒絕:', event.reason);
+            event.preventDefault();
+        });
+        
+        // Service Worker（PWA 支援）
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // 如果需要 PWA 功能，可以在這裡註冊 Service Worker
+                // navigator.serviceWorker.register('/sw.js');
+            });
+        }
+    </script>
+
+    <!-- 分析與追蹤（可選） -->
+    <script>
+        // 如果需要 Google Analytics 或其他分析工具，可以在這裡添加
+    </script>
+</body>
+</html>
+

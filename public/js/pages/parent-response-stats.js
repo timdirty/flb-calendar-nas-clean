@@ -1,0 +1,841 @@
+'use strict';
+
+(function (window, document) {
+    const STATUS_META = {
+        attend: { label: '已確認出席', className: 'success', icon: 'fa-user-check' },
+        leave: { label: '請假', className: 'warning', icon: 'fa-hospital-user' },
+        pending: { label: '待確認', className: 'info', icon: 'fa-hourglass-half' },
+        noResponse: { label: '未回應', className: 'danger', icon: 'fa-question-circle' }
+    };
+
+    const DEFAULT_FILTERS = {
+        range: 'today',
+        startDate: '',
+        endDate: '',
+        status: 'all',
+        teacher: 'all',
+        course: 'all',
+        student: 'all',
+        groupBy: 'none'
+    };
+
+    const TAIPEI_TIMEZONE = 'Asia/Taipei';
+    const EVENING_CUTOFF_HOUR = 19; // 19:00 後預設查看「明天」
+
+    function getTaiwanNow() {
+        // 使用 Intl 確保以台北時區計算，不受本機時區影響
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: TAIPEI_TIMEZONE,
+            hour12: false,
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+        const parts = formatter.formatToParts(new Date());
+        const map = Object.fromEntries(parts.map(p => [p.type, p.value]));
+        // ISO-like string方便 new Date 解析（使用 local 時區，但數值已按台北時區）
+        return new Date(`${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}:${map.second}`);
+    }
+
+    const state = {
+        initialized: false,
+        isActive: false,
+        isLoading: false,
+        filters: { ...DEFAULT_FILTERS },
+        summary: null,
+        timeline: [],
+        records: [],
+        reportPreviews: [],
+        meta: null,
+        preparedFilters: false
+    };
+
+    const elements = {};
+
+    function init() {
+        if (state.initialized) return;
+        cacheElements();
+        if (!elements.section) {
+            console.warn('ParentResponseStats: section not found.');
+            return;
+        }
+        ensureTomorrowQuickButton();
+        bindEvents();
+        applyDefaultRange();
+        state.initialized = true;
+    }
+
+    function cacheElements() {
+        elements.section = document.getElementById('response-stats');
+        if (!elements.section) return;
+
+        elements.quickRangeContainer = document.getElementById('responseQuickRange');
+        elements.startDate = document.getElementById('responseStartDate');
+        elements.endDate = document.getElementById('responseEndDate');
+        elements.statusSelect = document.getElementById('responseStatusSelect');
+        elements.teacherSelect = document.getElementById('responseTeacherSelect');
+        elements.courseSelect = document.getElementById('responseCourseSelect');
+        elements.studentSelect = document.getElementById('responseStudentSelect');
+        elements.resetBtn = document.getElementById('responseResetFiltersBtn');
+        elements.applyBtn = document.getElementById('responseApplyBtn');
+        elements.exportBtn = document.getElementById('responseExportBtn');
+        elements.exportExcelBtn = document.getElementById('responseExportExcelBtn');
+        elements.groupSelect = document.getElementById('responseGroupSelect');
+        elements.summaryGrid = document.getElementById('responseSummaryGrid');
+        elements.reportList = document.getElementById('responseReportList');
+        elements.reportMeta = document.getElementById('responseReportMeta');
+        elements.timeline = document.getElementById('responseTimeline');
+        elements.timelineUpdated = document.getElementById('responseTimelineUpdated');
+        elements.tableBody = document.getElementById('responseTableBody');
+    }
+
+    function bindEvents() {
+        if (!elements.section) return;
+        if (elements.quickRangeContainer) {
+            Array.from(elements.quickRangeContainer.querySelectorAll('button')).forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const range = btn.getAttribute('data-range');
+                    setQuickRange(range);
+                    collectFilters();
+                    load();
+                });
+            });
+        }
+        ['startDate', 'endDate'].forEach(key => {
+            if (elements[key]) {
+                elements[key].addEventListener('change', () => {
+                    state.filters.range = 'custom';
+                    updateQuickRangeActive();
+                });
+            }
+        });
+
+        if (elements.resetBtn) {
+            elements.resetBtn.addEventListener('click', () => {
+                resetFilters();
+                load();
+            });
+        }
+
+        if (elements.applyBtn) {
+            elements.applyBtn.addEventListener('click', () => {
+                collectFilters();
+                load();
+            });
+        }
+
+        if (elements.exportBtn) {
+            elements.exportBtn.addEventListener('click', exportCsv);
+        }
+        if (elements.exportExcelBtn) {
+            elements.exportExcelBtn.addEventListener('click', exportXlsx);
+        }
+        if (elements.groupSelect) {
+            elements.groupSelect.addEventListener('change', () => {
+                state.filters.groupBy = elements.groupSelect.value || 'none';
+                renderTable();
+                renderSummary();
+            });
+        }
+    }
+
+    function onEnter() {
+        if (!state.initialized) {
+            init();
+        }
+        if (!elements.section) return;
+        state.isActive = true;
+        prepareFilterOptions().then(() => {
+            collectFilters();
+            load();
+        });
+    }
+
+    function onLeave() {
+        state.isActive = false;
+    }
+
+    function setQuickRange(range, silent = false) {
+        // 使用台北時區作為基準，避免晚間查詢跨日誤差
+        const today = getTaiwanNow();
+        const end = new Date(today);
+        const start = new Date(today);
+
+        switch (range) {
+            case 'today':
+                break;
+            case 'tomorrow':
+                start.setDate(start.getDate() + 1);
+                end.setDate(end.getDate() + 1);
+                break;
+            case 'yesterday':
+                start.setDate(start.getDate() - 1);
+                end.setDate(end.getDate() - 1);
+                break;
+            case 'last7':
+                start.setDate(start.getDate() - 6);
+                break;
+            case 'last30':
+                start.setDate(start.getDate() - 29);
+                break;
+            default:
+                return;
+        }
+
+        state.filters.range = range;
+        state.filters.startDate = toDateInput(start);
+        state.filters.endDate = toDateInput(end);
+
+        if (elements.startDate) elements.startDate.value = state.filters.startDate;
+        if (elements.endDate) elements.endDate.value = state.filters.endDate;
+        updateQuickRangeActive();
+
+        if (!silent) collectFilters();
+    }
+
+    function updateQuickRangeActive() {
+        if (!elements.quickRangeContainer) return;
+        const buttons = Array.from(elements.quickRangeContainer.querySelectorAll('button'));
+        buttons.forEach(btn => {
+            const isActive = btn.getAttribute('data-range') === state.filters.range;
+            btn.classList.toggle('active', isActive);
+        });
+    }
+
+    function applyDefaultRange() {
+        // 19:00(含) 之後預設切換到「明天」，讓晚上收到的家長回覆立即可見
+        const nowTW = getTaiwanNow();
+        const isEvening = nowTW.getHours() >= EVENING_CUTOFF_HOUR;
+        const preferredRange = isEvening ? 'tomorrow' : 'today';
+        setQuickRange(preferredRange, true);
+    }
+
+    function ensureTomorrowQuickButton() {
+        if (!elements.quickRangeContainer) return;
+        const exists = elements.quickRangeContainer.querySelector('[data-range="tomorrow"]');
+        if (exists) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-sm btn-outline-primary';
+        btn.setAttribute('data-range', 'tomorrow');
+        btn.textContent = '明天';
+        elements.quickRangeContainer.appendChild(btn);
+    }
+
+    function resetFilters() {
+        state.filters = { ...DEFAULT_FILTERS };
+        if (elements.statusSelect) elements.statusSelect.value = 'all';
+        if (elements.teacherSelect) elements.teacherSelect.value = 'all';
+        if (elements.courseSelect) elements.courseSelect.value = 'all';
+        if (elements.studentSelect) elements.studentSelect.value = 'all';
+        setQuickRange('today', true);
+    }
+
+    function collectFilters() {
+        if (elements.startDate && elements.startDate.value) {
+            state.filters.startDate = elements.startDate.value;
+        }
+        if (elements.endDate && elements.endDate.value) {
+            state.filters.endDate = elements.endDate.value;
+        }
+        if (elements.statusSelect) {
+            if (elements.statusSelect.multiple) {
+                const sel = Array.from(elements.statusSelect.selectedOptions).map(o => o.value).filter(Boolean);
+                state.filters.status = sel.length ? sel : 'all';
+            } else {
+                state.filters.status = elements.statusSelect.value || 'all';
+            }
+        }
+        const readMulti = (el) => el && el.multiple ? Array.from(el.selectedOptions).map(o=>o.value).filter(Boolean) : (el ? el.value || 'all' : 'all');
+        if (elements.teacherSelect) state.filters.teacher = readMulti(elements.teacherSelect);
+        if (elements.courseSelect) state.filters.course = readMulti(elements.courseSelect);
+        if (elements.studentSelect) state.filters.student = readMulti(elements.studentSelect);
+        if (elements.groupSelect) state.filters.groupBy = elements.groupSelect.value || 'none';
+    }
+
+    function updateFilterOptionsFromSummary(filters) {
+        if (!filters) return;
+        if (elements.teacherSelect && Array.isArray(filters.teachers)) {
+            const teacherOptions = filters.teachers
+                .map(name => ({ value: name, label: name }))
+                .sort((a, b) => sortLocale(a.label, b.label));
+            populateSelect(elements.teacherSelect, teacherOptions, elements.teacherSelect && elements.teacherSelect.multiple ? null : '全部講師');
+        }
+        if (elements.courseSelect && Array.isArray(filters.courses)) {
+            const courseOptions = filters.courses
+                .map(name => ({ value: name, label: name }))
+                .sort((a, b) => sortLocale(a.label, b.label));
+            populateSelect(elements.courseSelect, courseOptions, elements.courseSelect && elements.courseSelect.multiple ? null : '全部課程');
+        }
+        if (elements.studentSelect && Array.isArray(filters.students)) {
+            const studentOptions = filters.students
+                .map(name => ({ value: name, label: name }))
+                .sort((a, b) => sortLocale(a.label, b.label));
+            populateSelect(elements.studentSelect, studentOptions, elements.studentSelect && elements.studentSelect.multiple ? null : '全部學生');
+        }
+    }
+
+    function prepareFilterOptions() {
+        if (state.preparedFilters) return Promise.resolve();
+        state.preparedFilters = true;
+        return Promise.resolve();
+    }
+
+    function load() {
+        if (!state.isActive || !elements.section) return;
+        if (state.isLoading) return;
+        state.isLoading = true;
+        setLoading(true);
+
+        collectFilters();
+        fetchData(state.filters)
+            .then(data => {
+                state.summary = data.summary;
+                state.timeline = data.timeline;
+                state.records = data.records;
+                state.reportPreviews = data.reportPreviews || [];
+                state.generatedAt = data.generatedAt || null;
+                state.meta = data.meta || null;
+                if (data.filters) {
+                    updateFilterOptionsFromSummary(data.filters);
+                }
+                renderSummary();
+                renderReportPreviews();
+                renderTimeline();
+                renderTable();
+            })
+            .catch(error => {
+                console.warn('ParentResponseStats: unable to load data.', error);
+                showAlert(`⚠️ 無法載入家長回應統計：${error.message || error}`, 'warning');
+                const fallback = buildMockData(state.filters);
+                state.summary = fallback.summary;
+                state.timeline = fallback.timeline;
+                state.records = fallback.records;
+                state.reportPreviews = [];
+                state.generatedAt = new Date();
+                state.meta = null;
+                renderSummary();
+                renderReportPreviews();
+                renderTimeline();
+                renderTable();
+            })
+            .finally(() => {
+                state.isLoading = false;
+                setLoading(false);
+            });
+    }
+
+    function setLoading(isLoading) {
+        if (elements.applyBtn) {
+            elements.applyBtn.disabled = isLoading;
+            elements.applyBtn.innerHTML = isLoading ? '<i class="fas fa-spinner fa-spin"></i> 讀取中...' : '<i class="fas fa-search"></i> 套用篩選';
+        }
+        if (elements.resetBtn) {
+            elements.resetBtn.disabled = isLoading;
+        }
+        if (elements.exportBtn) {
+            elements.exportBtn.disabled = isLoading || !state.records.length;
+        }
+        if (elements.exportExcelBtn) {
+            elements.exportExcelBtn.disabled = isLoading || !state.records.length;
+        }
+    }
+
+    async function fetchData(filters) {
+        const params = new URLSearchParams();
+        params.append('start', filters.startDate);
+        params.append('end', filters.endDate);
+        const norm = (v) => Array.isArray(v) ? v : (v ? [v] : []);
+        const toCsv = (arr) => arr.join(',');
+        const statuses = norm(filters.status).filter(s => s && s !== 'all');
+        if (statuses.length) {
+            if (statuses.includes('replied')) {
+                params.append('status', 'attend,leave,pending');
+            } else {
+                params.append('status', toCsv(statuses));
+            }
+        }
+        const teachers = norm(filters.teacher).filter(v => v && v !== 'all');
+        const courses = norm(filters.course).filter(v => v && v !== 'all');
+        const students = norm(filters.student).filter(v => v && v !== 'all');
+        if (teachers.length) params.append('teacher', toCsv(teachers));
+        if (courses.length) params.append('course', toCsv(courses));
+        if (students.length) params.append('student', toCsv(students));
+
+        const response = await fetch(`/api/student-responses/summary?${params.toString()}`, { cache: 'no-cache' });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        const payload = await response.json();
+        if (!payload.success) {
+            throw new Error(payload.message || '資料載入失敗');
+        }
+        return normalizeApiResponse(payload.data || {});
+    }
+
+    function normalizeApiResponse(raw) {
+        const totals = raw.totals || {};
+        const summary = {
+            total: totals.totalReminders ?? totals.total ?? 0,
+            responded: totals.responded || 0,
+            attend: totals.attend || 0,
+            leave: totals.leave || 0,
+            pending: totals.pending || 0,
+            noResponse: totals.noResponse ?? totals['no-response'] ?? 0,
+            responseRate: totals.responseRate || 0
+        };
+
+        const timeline = (raw.daily || []).map(item => ({
+            date: item.date,
+            total: item.total ?? item.totalReminders ?? 0,
+            attend: item.attend || 0,
+            leave: item.leave || 0,
+            pending: item.pending || 0,
+            noResponse: item.noResponse ?? item['no-response'] ?? 0,
+            responseRate: item.responseRate || 0
+        }));
+
+        const records = (raw.details || []).map(detail => {
+            const status = detail.status || 'noResponse';
+            const targetType = detail.notificationTargetType || detail.targetType || (detail.notificationGroupId || detail.groupId ? 'group' : 'individual');
+            const parent = detail.parentName || detail.parent || detail.parentContact || detail.parentUserId || '--';
+            const targetLabel = targetType === 'group'
+                ? (detail.notificationGroupName || detail.groupName || detail.notificationGroupId || detail.groupId || '--')
+                : (detail.parentContact || detail.parentName || detail.parentUserId || '--');
+            const notes = detail.leaveReason || detail.notes || detail.note || detail.lastMessage || '';
+            return {
+                date: detail.courseDate,
+                weekday: detail.weekday || '',
+                student: detail.studentName || detail.student || '--',
+                course: detail.courseName || detail.course || '--',
+                teacher: detail.teacherName || detail.teacher || '--',
+                courseTime: detail.courseTime || '',
+                status,
+                parent,
+                targetType,
+                targetLabel,
+                notes
+            };
+        });
+
+        const reportPreviews = (raw.reportPreviews || []).map(report => ({
+            date: report.date,
+            total: report.total ?? report.totalReminders ?? 0,
+            attend: report.attend || 0,
+            leave: report.leave || 0,
+            pending: report.pending || 0,
+            noResponse: report.noResponse ?? report['no-response'] ?? 0,
+            responded: report.responded || 0,
+            responseRate: report.responseRate || 0,
+            summaryText: report.summaryText || '',
+            hasAttention: !!report.hasAttention,
+            generatedAt: report.generatedAt || null,
+            source: report.source || ''
+        }));
+
+        return {
+            summary,
+            timeline,
+            records,
+            reportPreviews,
+            filters: raw.filters || null,
+            generatedAt: raw.generatedAt || null,
+            meta: raw.meta || null
+        };
+    }
+
+    function renderSummary() {
+        if (!elements.summaryGrid) return;
+        const summary = state.summary || {};
+        const cards = [
+            {
+                title: '總通知',
+                value: summary.total || 0,
+                meta: summary.total ? `回覆率 ${formatPercent(summary.responseRate)}` : '尚無資料',
+                icon: 'fa-paper-plane',
+                className: ''
+            },
+            {
+                title: '已回覆',
+                value: summary.responded || 0,
+                meta: summary.total ? `佔比 ${formatPercent(summary.responded / summary.total)}` : '-',
+                icon: 'fa-reply',
+                className: 'success'
+            },
+            {
+                title: '已確認出席',
+                value: summary.attend || 0,
+                meta: summary.total ? `佔比 ${formatPercent(summary.attend / summary.total)}` : '-',
+                icon: 'fa-user-check',
+                className: ''
+            },
+            {
+                title: '請假',
+                value: summary.leave || 0,
+                meta: summary.total ? `佔比 ${formatPercent(summary.leave / summary.total)}` : '-',
+                icon: 'fa-hospital-user',
+                className: 'warning'
+            },
+            {
+                title: '待確認',
+                value: summary.pending || 0,
+                meta: summary.total ? `佔比 ${formatPercent(summary.pending / summary.total)}` : '-',
+                icon: 'fa-hourglass-half',
+                className: ''
+            },
+            {
+                title: '未回應',
+                value: summary.noResponse || 0,
+                meta: summary.total ? `佔比 ${formatPercent(summary.noResponse / summary.total)}` : '-',
+                icon: 'fa-question-circle',
+                className: 'danger'
+            }
+        ];
+
+        elements.summaryGrid.innerHTML = cards.map(card => `
+            <div class="response-summary-card ${card.className || ''}">
+                <h4><i class="fas ${card.icon}"></i> ${card.title}</h4>
+                <div class="response-summary-value">${formatNumber(card.value)}</div>
+                <div class="response-summary-meta">${card.meta}</div>
+            </div>
+        `).join('');
+    }
+
+    function renderReportPreviews() {
+        if (!elements.reportList) return;
+        const reports = [...(state.reportPreviews || [])].sort((a, b) => (b?.date || '').localeCompare(a?.date || ''));
+        if (!reports.length) {
+            elements.reportList.innerHTML = '<div class="response-empty-state">尚未載入每日報告資料。</div>';
+            if (elements.reportMeta) elements.reportMeta.textContent = '';
+            return;
+        }
+
+        elements.reportList.innerHTML = reports.map(report => {
+            const attentionClass = report.hasAttention ? ' attention' : '';
+            const summaryRaw = report.summaryText || (report.total === 0 ? '今日沒有排程課程' : '所有學生皆已確認出席');
+            const summaryPrefix = report.total === 0 ? '📭' : (report.hasAttention ? '⚠️' : '🎉');
+            const summaryText = escapeHtml(`${summaryPrefix} ${summaryRaw}`);
+            return `
+                <div class="response-report-item${attentionClass}">
+                    <h4><i class="fas fa-calendar-day"></i> ${escapeHtml(report.date || '--')}</h4>
+                    <div class="response-report-meta">
+                        <span>${formatPercent(report.responseRate || 0)}</span>
+                        <span>${report.generatedAt ? formatDateTime(report.generatedAt) : ''}</span>
+                    </div>
+                    <div class="response-report-stats">
+                        <span>✅ ${formatNumber(report.attend || 0)}</span>
+                        <span>🏥 ${formatNumber(report.leave || 0)}</span>
+                        <span>⏳ ${formatNumber(report.pending || 0)}</span>
+                        <span>❔ ${formatNumber(report.noResponse || 0)}</span>
+                    </div>
+                    <div class="response-report-summary">${summaryText}</div>
+                </div>
+            `;
+        }).join('');
+
+        if (elements.reportMeta) {
+            const available = Array.isArray(state.meta?.availableDates) ? state.meta.availableDates.length : reports.length;
+            const missing = Array.isArray(state.meta?.missingDates) ? state.meta.missingDates.length : 0;
+            elements.reportMeta.textContent = missing > 0
+                ? `涵蓋 ${available} 天（缺少 ${missing} 天資料）`
+                : `涵蓋 ${available} 天`;
+        }
+    }
+
+    function renderTimeline() {
+        if (!elements.timeline) return;
+        const data = state.timeline || [];
+
+        if (!data.length) {
+            elements.timeline.innerHTML = '<div class="response-empty-state">目前沒有趨勢資料，請調整篩選條件。</div>';
+            if (elements.timelineUpdated) elements.timelineUpdated.textContent = '';
+            return;
+        }
+
+        elements.timeline.innerHTML = data.map(item => {
+            return `
+                <div class="response-timeline-item">
+                    <h4><i class="fas fa-calendar-day"></i> ${item.date}</h4>
+                    <span>回覆率 ${formatPercent(item.responseRate)}</span>
+                    <div class="response-summary-meta" style="margin-top:8px;">
+                        ✅ ${formatNumber(item.attend || 0)} ｜ 🏥 ${formatNumber(item.leave || 0)} ｜ ⏳ ${formatNumber(item.pending || 0)} ｜ ❔ ${formatNumber(item.noResponse || 0)}
+                    </div>
+                    <div class="response-summary-meta">共 ${formatNumber(item.total || 0)} 位學生</div>
+                </div>
+            `;
+        }).join('');
+
+        if (elements.timelineUpdated) {
+            const timeSource = state.meta?.generatedAt || state.generatedAt || new Date();
+            elements.timelineUpdated.textContent = `更新時間：${formatDateTime(timeSource)}`;
+        }
+        // 更新 Sparkline
+        try { renderSparkline(); } catch(e) {}
+    }
+
+    function renderTable() {
+        if (!elements.tableBody) return;
+        const records = state.records || [];
+        const groupBy = (state.filters && state.filters.groupBy) || 'none';
+        if (!records.length) {
+            elements.tableBody.innerHTML = '<tr><td colspan="8" class="response-empty-state">尚無符合條件的回應紀錄。</td></tr>';
+            return;
+        }
+
+        const renderRow = (record) => {
+            const meta = STATUS_META[record.status] || STATUS_META.noResponse;
+            const chip = `<span class=\"response-status-chip ${meta.className}\"><i class=\"fas ${meta.icon}\"></i> ${meta.label}</span>`;
+            const dateParts = [record.date || '--'];
+            if (record.courseTime) { dateParts.push(record.courseTime); }
+            const baseDate = dateParts.join(' ');
+            const dateLabel = record.weekday ? `${baseDate} ${record.weekday}` : baseDate;
+            const parentLabel = escapeHtml(record.parent || '--');
+            const targetLabel = record.targetType === 'group'
+                ? `<span class=\"tag tag-purple\"><i class=\"fas fa-people-group\"></i> 群組</span><div class=\"table-subtext\">${escapeHtml(record.targetLabel || '--')}</div>`
+                : `<span class=\"tag tag-green\"><i class=\"fas fa-user\"></i> 個別</span><div class=\"table-subtext\">${escapeHtml(record.targetLabel || parentLabel)}</div>`;
+            const notes = record.notes ? escapeHtml(record.notes).replace(/\\n/g, '<br>') : '-';
+            return `
+                <tr>
+                    <td>${dateLabel}</td>
+                    <td>${escapeHtml(record.student)}</td>
+                    <td>${escapeHtml(record.course)}</td>
+                    <td>${escapeHtml(record.teacher)}</td>
+                    <td>${chip}</td>
+                    <td>${parentLabel}</td>
+                    <td>${targetLabel}</td>
+                    <td>${notes}</td>
+                </tr>
+            `;
+        };
+
+        if (groupBy === 'none') {
+            elements.tableBody.innerHTML = records.map(renderRow).join('');
+            return;
+        }
+
+        const map = new Map();
+        const keyOf = (r) => groupBy === 'teacher' ? (r.teacher || '未指定') : (r.course || '未指定');
+        for (const r of records) {
+            const k = keyOf(r);
+            const cur = map.get(k) || { total:0, attend:0, leave:0, pending:0, noResponse:0, rows: [] };
+            cur.total += 1; cur[r.status] = (cur[r.status]||0)+1; cur.rows.push(r); map.set(k, cur);
+        }
+        const sections = Array.from(map.entries()).sort((a,b)=>a[0].localeCompare(b[0],'zh-TW')).map(([k,v])=>{
+            const responded = v.total - (v.noResponse||0); const rate = v.total? Math.round((responded/v.total)*100):0;
+            const header = `<tr style=\"background:#f9fafb;font-weight:600;border-top:2px solid #e5e7eb;\"><td colspan=\"8\">${groupBy==='teacher'?'講師':'課程'}：${escapeHtml(k)} ｜ 總數 ${v.total} ｜ 出席 ${v.attend||0} ｜ 請假 ${v.leave||0} ｜ 待確認 ${v.pending||0} ｜ 未回應 ${v.noResponse||0} ｜ 回覆率 ${rate}%</td></tr>`;
+            const rows = v.rows.map(renderRow).join('');
+            return header + rows;
+        }).join('');
+        elements.tableBody.innerHTML = sections;
+    }
+
+    function exportCsv() {
+        if (!state.records.length) {
+            showAlert('⚠️ 尚無可匯出的資料', 'warning');
+            return;
+        }
+        const header = ['日期', '學生', '課程', '講師', '回應狀態', '家長', '通知對象', '備註'];
+        const rows = state.records.map(record => [
+            record.weekday ? `${record.date} ${record.weekday}` : record.date,
+            record.student,
+            record.course,
+            record.teacher,
+            (STATUS_META[record.status] || STATUS_META.noResponse).label,
+            record.parent,
+            record.targetType === 'group' ? `群組：${record.targetLabel}` : `個別：${record.targetLabel || record.parent || ''}`,
+            record.notes || ''
+        ]);
+        const csv = [header, ...rows].map(cols => cols.map(value => `"${String(value || '').replace(/"/g, '""')}"`).join(',')).join('\\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        // 🔥 使用 BlobURLManager
+        const url = window.BlobURLManager ? 
+            window.BlobURLManager.createObjectURL(blob, { source: 'csv-export' }) : 
+            URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `parent-response-${state.filters.startDate || 'start'}-${state.filters.endDate || 'end'}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        // 🔥 使用 BlobURLManager
+        if (window.BlobURLManager) {
+            window.BlobURLManager.revokeObjectURL(url);
+        } else {
+            URL.revokeObjectURL(url);
+        }
+    }
+
+    async function exportXlsx() {
+        try {
+            const params = new URLSearchParams();
+            params.append('start', state.filters.startDate);
+            params.append('end', state.filters.endDate);
+            if (state.filters.status && state.filters.status !== 'all') {
+                if (state.filters.status === 'replied') params.append('status', 'attend,leave,pending');
+                else params.append('status', state.filters.status);
+            }
+            if (state.filters.teacher !== 'all') params.append('teacher', state.filters.teacher);
+            if (state.filters.course !== 'all') params.append('course', state.filters.course);
+            if (state.filters.student !== 'all') params.append('student', state.filters.student);
+            if (state.filters.groupBy && state.filters.groupBy !== 'none') params.append('groupBy', state.filters.groupBy);
+
+            const res = await fetch(`/api/student-responses/export.xlsx?${params.toString()}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const blob = await res.blob();
+            // 🔥 使用 BlobURLManager
+            const url = window.BlobURLManager ? 
+                window.BlobURLManager.createObjectURL(blob, { source: 'xlsx-export' }) : 
+                URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `parent-responses-${state.filters.startDate}-${state.filters.endDate}${state.filters.groupBy!=='none'?`-${state.filters.groupBy}`:''}.xlsx`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            // 🔥 使用 BlobURLManager
+            if (window.BlobURLManager) {
+                window.BlobURLManager.revokeObjectURL(url);
+            } else {
+                URL.revokeObjectURL(url);
+            }
+        } catch (err) {
+            showAlert('匯出 Excel 失敗：' + (err.message || err), 'warning');
+        }
+    }
+
+    function buildMockData(filters) {
+        const today = new Date();
+        const total = 20;
+        const responded = 14;
+        const attend = 9;
+        const leave = 3;
+        const pending = 2;
+        const noResponse = total - responded;
+        const timeline = Array.from({ length: 5 }).map((_, index) => {
+            const date = new Date(today);
+            date.setDate(today.getDate() - (4 - index));
+            return {
+                date: toDateInput(date),
+                total,
+                attend: Math.max(0, attend - (4 - index)),
+                leave: Math.max(0, leave - (index % 2)),
+                pending: Math.max(0, pending - (index % 3)),
+                noResponse: Math.max(0, noResponse - index),
+                responseRate: responded / total
+            };
+        });
+
+        const records = Array.from({ length: 12 }).map((_, idx) => ({
+            date: filters.endDate,
+            weekday: ['週一', '週二', '週三', '週四', '週五'][idx % 5],
+            student: `示例學生 ${idx + 1}`,
+            course: ['SPM 常態', 'Scratch 補課', 'Minecraft 正課'][idx % 3],
+            teacher: ['Teacher A', 'Teacher B', 'Teacher C'][idx % 3],
+            status: ['attend', 'leave', 'pending', 'noResponse'][idx % 4],
+            parent: `家長 ${idx + 1}`,
+            targetType: idx % 3 === 0 ? 'group' : 'individual',
+            targetLabel: idx % 3 === 0 ? `示例群組 ${Math.ceil(idx / 3)}` : `Uxxxxxxxxx${idx}`,
+            notes: idx % 2 === 0 ? '系統自動提醒' : ''
+        }));
+
+        return {
+            summary: {
+                total,
+                responded,
+                attend,
+                leave,
+                pending,
+                noResponse,
+                responseRate: responded / total
+            },
+            timeline,
+            records
+        };
+    }
+
+    function populateSelect(select, options, placeholder) {
+        if (!select) return;
+        const current = select.value || 'all';
+        // 修復 ReferenceError: currentValues 未定義
+        const currentValues = new Set(
+            select.multiple
+                ? Array.from(select.selectedOptions || []).map(o => o.value)
+                : []
+        );
+        const items = Array.isArray(options) ? options : [];
+        const html = [
+            ...(placeholder ? [`<option value="all">${placeholder || '全部'}</option>`] : []),
+            ...items.map(opt => {
+                const value = typeof opt === 'string' ? opt : opt.value;
+                const label = typeof opt === 'string' ? opt : opt.label;
+                const selected = (select.multiple ? currentValues.has(value) : current === value) ? 'selected' : '';
+                return `<option value="${escapeHtml(value)}" ${selected}>${escapeHtml(label)}</option>`;
+            })
+        ].join('');
+        select.innerHTML = html;
+        if (!select.multiple && items.length === 0) {
+            select.value = 'all';
+        }
+    }
+
+    function toDateInput(date) {
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function formatDateTime(date) {
+        const d = new Date(date);
+        if (Number.isNaN(d.getTime())) return '--';
+        return `${toDateInput(d)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function formatNumber(value) {
+        return new Intl.NumberFormat('zh-TW').format(value || 0);
+    }
+
+    function formatPercent(value) {
+        const num = Number.isFinite(value) ? value : 0;
+        return `${(num * 100).toFixed(1)}%`;
+    }
+
+    function renderSparkline() {
+        const host = document.getElementById('responseTrendSparklineCanvas');
+        if (!host) return;
+        const values = (state.timeline || []).map(d => Number(d.responseRate || 0));
+        const w = host.clientWidth || 300; const h = host.clientHeight || 42; const pad = 2;
+        if (!values.length) { host.innerHTML = '<div class="response-empty-state">尚無趨勢資料</div>'; return; }
+        const max = Math.max(0.01, Math.max(...values));
+        const step = (w - pad*2) / Math.max(1, values.length - 1);
+        const pts = values.map((v,i)=>({x: pad + i*step, y: h - pad - (v/max)*(h - pad*2)}));
+        const d = pts.map((p,i)=> (i===0?`M ${p.x},${p.y}`:`L ${p.x},${p.y}`)).join(' ');
+        const circles = pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="1.6" fill="#2563eb"/>`).join('');
+        host.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 ${w} ${h}"><path d="${d}" fill="none" stroke="#2563eb" stroke-width="1.5"/>${circles}</svg>`;
+    }
+
+    function escapeHtml(content) {
+        return String(content || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function sortLocale(a, b) {
+        return String(a).localeCompare(String(b), 'zh-Hant');
+    }
+
+    function showAlert(message, type) {
+        if (typeof window.showAlert === 'function') {
+            window.showAlert(message, type);
+        } else {
+            console[type === 'error' ? 'error' : 'log'](message);
+        }
+    }
+
+    window.ParentResponseStats = {
+        init,
+        onEnter,
+        onLeave
+    };
+})(window, document);

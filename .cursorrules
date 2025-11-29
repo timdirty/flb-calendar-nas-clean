@@ -1,0 +1,990 @@
+# FLB 行事曆系統 - Cursor Rules
+
+## 專案概述
+
+這是一個完整的課程管理系統,整合 LINE LIFF、Synology Calendar、Google Sheets,提供講師行事曆檢視、學生簽到、課程提醒等功能。
+
+**專案類型**: LINE LIFF Web 應用 + Node.js Backend  
+**部署環境**: Synology NAS + Docker  
+**主要用戶**: 樂程坊計畫的講師、管理員和學生
+
+---
+
+## 技術棧
+
+### 前端
+- **核心**: 原生 JavaScript (ES6+)、HTML5、CSS3
+- **UI 框架**: FullCalendar 6.1.15
+- **LINE 整合**: LINE LIFF SDK 2.x
+- **圖標**: Font Awesome 6.4.0
+- **特點**: 無前端框架,追求輕量化和快速載入
+
+### 後端
+- **運行環境**: Node.js 18+
+- **框架**: Express.js 4.x
+- **排程**: node-schedule 2.1.1
+- **HTTP 客戶端**: axios 1.6.0
+- **檔案上傳**: multer 1.4.5
+- **安全**: helmet 7.1.0, cors 2.8.5, compression 1.7.4
+- **日曆解析**: ical.js 1.5.0
+
+### 整合 API
+- **Synology Calendar API**: CalDAV 協議
+- **Google Sheets API**: 學生資料同步
+- **LINE Messaging API**: 通知推送與 LIFF
+
+### 部署
+- **容器**: Docker + Docker Compose
+- **Web 伺服器**: Express (生產環境)
+- **反向代理**: Nginx (NAS 層級)
+
+---
+
+## 專案結構
+
+```
+flb-calendar-nas/
+├── 📁 docs/                             # 所有文檔（已整理）
+│   ├── api/                             # API 文檔
+│   ├── guides/                          # 使用指南
+│   ├── reports/                         # 修復報告、優化報告
+│   └── synology-drive/                  # Synology Drive 整合文檔
+├── 📁 backups/                          # 所有備份（已整理）
+│   ├── server/                          # server.js 備份
+│   ├── configs/                         # 配置檔案備份
+│   └── project-snapshots/               # 完整專案快照
+├── 📁 tests/                            # 測試檔案（已整理）
+│   ├── manual/                          # 手動測試腳本
+│   ├── integration/                     # 整合測試
+│   └── unit/                            # 單元測試
+├── 📁 scripts/                          # 工具腳本（已整理）
+│   ├── deployment/                      # 部署腳本
+│   └── maintenance/                     # 維護工具
+├── 📁 public/                           # 前端資源
+│   ├── perfect-calendar-modular.html    # 核心行事曆頁面
+│   ├── learning-record-upload.html      # 學習歷程上傳頁面
+│   ├── admin-dashboard.html             # 管理控制台
+│   ├── js/                              # JavaScript
+│   │   ├── core/                        # 核心模組
+│   │   ├── modules/                     # 功能模組
+│   │   ├── pages/                       # 頁面腳本
+│   │   └── workers/                     # Web Workers
+│   ├── css/                             # 樣式表
+│   ├── student_data.json                # 學生資料
+│   └── temporary_students.json          # 臨時學生
+├── 📁 data/                             # 資料目錄
+│   ├── attendance/                      # 簽到記錄
+│   ├── learning-portfolio/              # 學習歷程檔案（本地）
+│   ├── leave-requests/                  # 請假記錄
+│   └── daily-attendance-reports.json    # 每日統計報告
+├── 📁 services/                         # 業務邏輯服務
+│   └── media/                           # 媒體處理服務
+├── 📁 utils/                            # 工具模組
+│   ├── safe-file-operations.js          # 安全檔案操作
+│   ├── smart-cache-manager.js           # 智能快取管理
+│   ├── logger.js                        # 日誌工具
+│   └── media-processor.js               # 媒體處理
+├── 📁 logs/                             # 日誌檔案
+├── 📁 archived_scripts/                 # 歷史腳本（勿刪）
+├── 📁 archived_docs/                    # 歷史文檔（勿刪）
+├── 📄 server.js                         # Express 主伺服器（19000+ 行）
+├── 📄 package.json                      # Node.js 專案配置
+├── 📄 .env.nas                          # 環境變數（不提交）
+├── 📄 synology-calendar-client.js       # Synology Calendar API 客戶端
+├── 📄 synology-drive-client.js          # Synology Drive API 客戶端 🆕
+├── 📄 drive-path-manager.js             # Drive 路徑管理器 🆕
+├── 📄 learning-upload-helper.js         # 學習歷程上傳輔助 🆕
+├── 📄 notification-manager.js           # LINE 通知管理器
+├── 📄 reminder-scheduler.js             # 課程提醒排程器
+├── 📄 attendance-queue-manager.js       # 簽到佇列管理
+├── 📄 fast-attendance.js                # 快速簽到 API
+├── 📄 google-sheets-students.js         # Google Sheets 學生資料同步
+├── 📄 holiday-sync-manager.js           # 假期同步管理器
+├── 📄 teacher-registry.js               # 講師註冊與管理
+├── 📄 notification-config.json          # 通知配置
+├── 📄 student-reminder-settings.json    # 學生提醒設定
+├── 📄 system-settings.json              # 系統設定
+├── 📄 teacher_data.json                 # 講師資料與顏色
+├── 📄 flex-message-templates.json       # LINE Flex Message 模板
+├── 📄 pending-leave-requests.json       # 待處理請假申請
+├── 📄 Dockerfile                        # Docker 映像檔配置
+├── 📄 docker-compose.yml                # Docker Compose 配置
+├── 📄 README.md                         # 專案說明
+├── 📄 AGENTS.md                         # AI 代理指引
+├── 📄 PROJECT-STRUCTURE.md              # 專案結構文檔 🆕
+└── 📄 .cursorrules                      # 本檔案
+```
+
+**📝 注意**: 專案已於 2025-11-08 重新整理，所有文檔、備份、測試腳本已分門別類。詳見 `PROJECT-STRUCTURE.md`。
+
+---
+
+## 編碼規範
+
+### 通用原則
+
+1. **語言**: 所有註釋、變數名、函數名使用**繁體中文或英文**
+2. **註釋風格**: 使用 emoji 增強可讀性 (🔥、✅、⚠️、❌、💡)
+3. **縮排**: 使用 4 空格 (不使用 Tab)
+4. **語法**: 使用 ES6+ (const/let、箭頭函數、async/await)
+5. **分號**: 統一添加分號
+
+### JavaScript 規範
+
+#### 變數命名
+```javascript
+// ✅ 好的命名
+let allEvents = [];                    // 清晰的集合名稱
+let currentUser = null;                // 當前狀態
+const COURSE_TYPE_COLORS = {};        // 常量使用大寫
+window.dataLoadingComplete = false;   // 全域狀態使用 window
+
+// ❌ 避免
+let data = [];                        // 過於籠統
+let x = null;                         // 無意義
+```
+
+#### 函數命名
+```javascript
+// ✅ 動詞開頭,清晰表達意圖
+async function loadTeacherColors() { }
+function handleCourseTypeCheckboxChange() { }
+function renderEvents() { }
+async function sendBatchNotifications() { }
+```
+
+#### 錯誤處理
+```javascript
+// ✅ 完整的錯誤處理
+try {
+    const result = await operation();
+    console.log('✅ 操作成功');
+    return { success: true, data: result };
+} catch (error) {
+    console.error('❌ 操作失敗:', error);
+    return { success: false, error: error.message };
+}
+```
+
+#### 註釋規範
+```javascript
+// ============================================
+// 區塊標題 (主要功能區域)
+// ============================================
+
+// ==================== 子功能區域 ====================
+
+// 🔥 重要功能或新增功能
+// ✅ 成功/正確的做法
+// ⚠️ 警告或注意事項
+// ❌ 錯誤或避免的做法
+// 💡 提示或建議
+```
+
+### 後端 API 規範
+
+#### 路由命名
+```javascript
+// ✅ RESTful 路由
+app.get('/api/events', getEvents);
+app.post('/api/events', createEvent);
+app.put('/api/events/:id', updateEvent);
+app.delete('/api/events/:id', deleteEvent);
+```
+
+#### API 回應格式
+```javascript
+// 成功回應
+res.json({
+    success: true,
+    data: result,
+    message: '操作成功'
+});
+
+// 錯誤回應
+res.status(400).json({
+    success: false,
+    error: '錯誤訊息'
+});
+```
+
+---
+
+## 資料管理模式
+
+### 學生資料
+- **來源**: Google Sheets → student_data.json
+- **更新**: 管理員手動上傳或自動同步
+- **臨時學生**: temporary_students.json
+
+### 講師資料
+- **來源**: teacher_data.json
+- **包含**: 姓名、顏色、userId (LINE ID)
+- **用途**: 講師篩選、自動綁定、顏色標記
+
+### 課程事件
+- **來源**: Synology Calendar (CalDAV)
+- **快取**: localStorage + 後端記憶體
+- **同步**: 定期輪詢或手動重新整理
+
+### 配置檔案
+- **notification-config.json**: LINE 通知設定
+- **student-reminder-settings.json**: 學生提醒規則
+- **system-settings.json**: 系統參數 (自動同步、假期設定等)
+- **flex-message-templates.json**: LINE Flex Message 樣板
+- **pending-leave-requests.json**: 待處理的請假申請
+- **teacher_data.json**: 講師基本資料、顏色、LINE userId
+
+---
+
+## 核心模組說明
+
+### 簽到系統模組
+1. **attendance-queue-manager.js**: 
+   - 功能: 佇列式簽到管理,防止並發寫入衝突
+   - 使用場景: 多人同時簽到時確保資料一致性
+   - 關鍵類別: `AttendanceQueueManager`
+
+2. **fast-attendance.js**:
+   - 功能: 快速簽到 API,優化簽到速度
+   - 端點: `/api/fast-attendance`
+   - 特點: 記憶體快取 + 批次寫入
+
+### 通知系統模組
+1. **notification-manager.js**:
+   - 功能: LINE 訊息推送管理
+   - 支援: 文字訊息、Flex Message、圖片訊息
+   - 防洗版機制: 批次發送、間隔控制
+
+2. **reminder-scheduler.js**:
+   - 功能: 課程提醒排程器
+   - 排程: 使用 node-schedule
+   - 提醒類型: 上課前提醒、課後問候
+
+### 資料同步模組
+1. **google-sheets-students.js**:
+   - 功能: Google Sheets 學生資料同步
+   - API: Google Sheets API v4
+   - 認證: Service Account
+
+2. **holiday-sync-manager.js**:
+   - 功能: 假期資料同步與管理
+   - 來源: 政府行政院人事行政總處開放資料
+   - 用途: 自動標記國定假日
+
+### 日曆整合模組
+1. **synology-calendar-client.js**:
+   - 功能: Synology Calendar API 客戶端（官方 API v5）
+   - API: SYNO.Cal.Event、SYNO.Cal.Cal
+   - 操作: 讀取、建立、更新、刪除事件、日曆列表
+   - 特點: 嚴格遵循官方 API 文檔，使用 POST 方法、application/x-www-form-urlencoded
+
+2. **teacher-registry.js**:
+   - 功能: 講師註冊與管理
+   - 包含: 講師資料驗證、顏色分配
+
+### Synology Drive 整合模組 🆕
+1. **synology-drive-client.js**:
+   - 功能: Synology Drive API 客戶端（FileStation API）
+   - 操作: 登入認證、上傳檔案、列出檔案、刪除檔案、獲取檔案串流
+   - 特點: 自動 SID 管理、重試機制、支援批次操作
+
+2. **drive-path-manager.js**:
+   - 功能: Drive 路徑管理器
+   - 操作: 路徑構建、路徑解析、本地↔Drive 路徑轉換
+   - 特點: 標準化檔案命名、路徑驗證、元資料管理
+
+3. **learning-upload-helper.js**:
+   - 功能: 學習歷程上傳輔助模組
+   - 操作: 學生記錄上傳、課程總覽上傳、門檻驗證
+   - 特點: 自動檔案命名、元資料生成、完整錯誤處理
+
+---
+
+## 前端開發模式
+
+### 狀態管理
+```javascript
+// 使用全域變數管理核心狀態
+let allEvents = [];
+let currentView = '今日';
+let currentUser = null;
+
+// localStorage 持久化
+localStorage.setItem('selectedInstructor', name);
+```
+
+### DOM 操作
+```javascript
+// ✅ 批量渲染 (性能優化)
+const html = events.map(event => `
+    <div class="event-card">${event.title}</div>
+`).join('');
+container.innerHTML = html;
+```
+
+### API 呼叫
+```javascript
+// ✅ async/await
+async function loadEvents() {
+    try {
+        const response = await fetch('/api/events');
+        const data = await response.json();
+        if (data.success) {
+            allEvents = data.data;
+            renderEvents();
+        }
+    } catch (error) {
+        console.error('❌ 載入失敗:', error);
+    }
+}
+```
+
+---
+
+## 後端開發模式
+
+### 模組化設計
+```javascript
+// 每個功能獨立模組
+class NotificationManager {
+    constructor(config) {
+        this.config = config;
+    }
+    async sendLineMessage(userId, message) { }
+}
+module.exports = NotificationManager;
+```
+
+### 排程任務
+```javascript
+// 使用 node-schedule
+const schedule = require('node-schedule');
+const job = schedule.scheduleJob('*/5 * * * *', async () => {
+    console.log('⏰ 執行提醒檢查...');
+    await checkReminders();
+});
+```
+
+### 檔案操作
+```javascript
+// ✅ 安全的檔案操作
+function loadConfig(filename) {
+    try {
+        const filePath = path.join(__dirname, filename);
+        if (fs.existsSync(filePath)) {
+            const data = fs.readFileSync(filePath, 'utf8');
+            return JSON.parse(data);
+        }
+        return getDefaultConfig();
+    } catch (error) {
+        console.error('❌ 載入配置失敗:', error);
+        return getDefaultConfig();
+    }
+}
+```
+
+---
+
+## LIFF 整合規範
+
+### 初始化
+```javascript
+async function initializeLIFF() {
+    try {
+        await liff.init({ liffId: LIFF_ID });
+        
+        if (!liff.isLoggedIn()) {
+            liff.login();
+            return;
+        }
+        
+        const profile = await liff.getProfile();
+        currentUser = {
+            userId: profile.userId,
+            displayName: profile.displayName,
+            pictureUrl: profile.pictureUrl
+        };
+        
+        console.log('✅ LIFF 初始化成功:', currentUser.displayName);
+        await autoBindInstructor();
+        
+    } catch (error) {
+        console.error('❌ LIFF 初始化失敗:', error);
+    }
+}
+```
+
+### 自動綁定講師
+```javascript
+async function autoBindInstructor() {
+    if (!currentUser?.userId) return;
+    
+    const teacher = window.teacherDataCache?.find(
+        t => t.userId === currentUser.userId
+    );
+    
+    if (teacher) {
+        console.log('✅ 自動綁定講師:', teacher.name);
+        selectInstructor(teacher.name);
+    }
+}
+```
+
+---
+
+## 部署流程
+
+### Docker 部署
+```bash
+# 構建並啟動
+docker-compose build --no-cache
+docker-compose up -d
+
+# 查看日誌
+docker-compose logs -f --tail=50
+
+# 重啟
+docker-compose restart
+```
+
+### 環境變數 (.env.nas)
+```bash
+# Node.js 環境
+NODE_ENV=production
+PORT=8080
+TZ=Asia/Taipei
+
+# Synology Calendar
+SYNOLOGY_HOST=your-host
+
+# Synology Drive（2025-11-08 新增）🆕
+SYNOLOGY_PORT=5001
+SYNOLOGY_PROTOCOL=https
+SYNOLOGY_USERNAME=your-username
+SYNOLOGY_PASSWORD=your-password
+SYNOLOGY_DRIVE_ROOT=/FLB-Learning-Portfolio
+
+# LINE 整合
+LINE_CHANNEL_ACCESS_TOKEN=your-token
+LIFF_ID=your-liff-id
+
+# Google Sheets
+GOOGLE_SERVICE_ACCOUNT_PATH=./service-account.json
+
+# 開發模式控制
+DISABLE_AUTO_REMINDERS=false
+ENABLE_DAILY_REPORT=false
+```
+
+---
+
+## 測試與除錯
+
+### 日誌規範
+```javascript
+console.log('📝 一般資訊');
+console.log('✅ 成功操作');
+console.log('⚠️ 警告');
+console.error('❌ 錯誤');
+console.log('🔍 除錯資訊');
+console.log('🚀 啟動/初始化');
+console.log('⏰ 排程任務');
+```
+
+### 前端除錯
+```javascript
+// 清除快取
+localStorage.clear();
+sessionStorage.clear();
+location.reload(true);
+
+// 查看狀態
+console.log('Events:', allEvents);
+console.log('User:', currentUser);
+```
+
+### 後端除錯
+```bash
+# 查看日誌
+docker-compose logs -f --tail=100
+
+# 測試 API（生產環境）
+curl https://calendar.funlearnbar.synology.me/health
+curl https://calendar.funlearnbar.synology.me/api/events
+
+# 測試 API（本地開發）
+curl http://localhost:8080/health
+curl http://localhost:8080/api/events
+```
+
+### 測試域名
+
+- **生產環境**: https://calendar.funlearnbar.synology.me/
+- **本地開發**: http://localhost:3002/ (預設開發端口)
+
+⚠️ **重要**: 測試時統一使用生產環境域名 `https://calendar.funlearnbar.synology.me/`
+
+### 開發環境設定
+
+- **一般開發**: `npm run dev` - 自動禁用排程任務，避免 Synology Drive 頻繁同步
+- **完整功能測試**: `npm run dev:full` - 啟用所有排程任務
+- **生產環境**: `npm start` - 完整功能運行
+- **環境變數控制**:
+  - `DISABLE_AUTO_REMINDERS=true` - 禁用提醒排程器（開發模式預設）
+  - `ENABLE_DAILY_REPORT=true` - 強制啟用每日統計報告（測試用）
+  - `NODE_ENV=production` - 生產環境（啟用所有排程任務）
+
+---
+
+## Git 提交規範
+
+```bash
+feat:     新功能
+fix:      修復 Bug
+docs:     文檔更新
+style:    代碼格式調整
+refactor: 代碼重構
+perf:     性能優化
+test:     測試相關
+chore:    其他更改
+
+# 範例
+feat: 新增學生簽到記錄匯出功能
+fix: 修復講師顏色無法正確顯示的問題
+```
+
+---
+
+## 效能優化
+
+### 前端
+1. 使用 innerHTML 批量渲染
+2. 事件委派減少監聽器
+3. localStorage 快取資料
+4. 防抖與節流處理高頻事件
+
+### 後端
+1. 啟用 compression 中介軟體
+2. 記憶體快取減少檔案讀取
+3. 批次處理通知避免洗版
+4. 合理的排程間隔
+
+---
+
+## 安全性規範
+
+### API 安全
+```javascript
+// ✅ 輸入驗證
+app.post('/api/attendance', (req, res) => {
+    const { studentId, eventId } = req.body;
+    
+    if (!studentId || !eventId) {
+        return res.status(400).json({
+            success: false,
+            error: '缺少必要參數'
+        });
+    }
+    
+    // 處理請求...
+});
+```
+
+### 敏感資訊
+```javascript
+// ✅ 使用環境變數
+const TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+
+// ✅ 不在日誌中輸出完整敏感資訊
+console.log('User ID:', userId.substring(0, 4) + '****');
+```
+
+---
+
+## 重要提醒
+
+### 必須遵守
+1. **永遠不要刪除** archived_scripts/ 和 archived_docs/
+2. **修改配置前先備份** (使用 .backup 後綴)
+3. **部署前測試** (本地測試通過後再部署)
+4. **保持日誌清晰** (使用 emoji 和完整訊息)
+5. **文檔同步更新** (修改功能時同步更新文檔)
+
+### 開發順序
+1. 📖 閱讀相關文檔和現有代碼
+2. 🔍 搜尋類似功能的實作
+3. 💡 設計解決方案
+4. 🔨 實作功能
+5. 🧪 本地測試
+6. 📝 添加/更新註釋
+7. 📚 更新文檔
+8. 🚀 提交並部署
+
+---
+
+## 常見問題與解決方案
+
+### 課程顏色不正確
+**原因**: 講師顏色配置錯誤或講師名稱匹配失敗  
+**解決**: 
+1. 檢查 `teacher_data.json` 中講師顏色配置
+2. 確認事件標題中的講師名稱與 `teacher_data.json` 一致
+3. 清除瀏覽器 localStorage 重新載入
+
+### 自動綁定失敗
+**原因**: LINE userId 未正確配置  
+**解決**: 
+1. 確認 `teacher_data.json` 中 userId 欄位正確
+2. 檢查 LIFF 初始化是否成功
+3. 查看控制台 `currentUser` 物件
+
+### 通知未發送
+**原因**: LINE API 配置錯誤或權限不足  
+**解決**: 
+1. 檢查 `LINE_CHANNEL_ACCESS_TOKEN` 環境變數
+2. 確認群組 ID 正確
+3. 測試 API: `curl -X POST /api/test-notification`
+4. 檢查 `notification-config.json` 設定
+
+### 簽到資料未保存
+**原因**: 並發寫入衝突或權限問題  
+**解決**: 
+1. 檢查 `data/attendance/` 目錄權限 (Docker 內需為 777)
+2. 查看 AttendanceQueueManager 日誌
+3. 確認 `fast-attendance.js` 正常運作
+4. 測試: `curl -X POST /api/fast-attendance -d '{...}'`
+
+### Docker 無法啟動
+**原因**: 端口衝突或容器配置錯誤  
+**解決**: 
+1. 檢查端口佔用: `lsof -i :8080`
+2. 清理並重建容器: `docker-compose down && docker-compose up --build -d`
+3. 查看日誌: `docker-compose logs -f --tail=100`
+
+### Google Sheets 同步失敗
+**原因**: Service Account 權限不足或 API 配置錯誤  
+**解決**: 
+1. 確認 `service-account.json` 存在且有效
+2. 檢查 Google Sheet 已共享給 Service Account email
+3. 啟用 Google Sheets API
+4. 測試: `curl /api/sync-students`
+
+### 假期顯示錯誤
+**原因**: 假期資料未同步或時區問題  
+**解決**: 
+1. 手動觸發同步: `curl /api/sync-holidays`
+2. 檢查 `system-settings.json` 中假期設定
+3. 確認時區設定為 `Asia/Taipei`
+
+---
+
+## 最佳實踐
+
+### 簽到系統開發
+```javascript
+// ✅ 使用佇列管理器處理簽到
+const queueManager = require('./attendance-queue-manager');
+await queueManager.addToQueue({
+    eventId: event.id,
+    studentId: student.id,
+    timestamp: new Date()
+});
+
+// ❌ 避免直接寫入檔案 (可能衝突)
+fs.writeFileSync('attendance.json', JSON.stringify(data));
+```
+
+### LINE 訊息發送
+```javascript
+// ✅ 使用 NotificationManager
+const notificationManager = new NotificationManager(config);
+await notificationManager.sendFlexMessage(
+    groupId, 
+    flexTemplate, 
+    altText
+);
+
+// ⚠️ 注意防洗版機制
+await notificationManager.sendBatchMessages(messages, {
+    batchSize: 5,
+    delayMs: 1000
+});
+```
+
+### 事件資料處理
+```javascript
+// ✅ 統一時區處理
+const moment = require('moment-timezone');
+const taipeiTime = moment(event.start).tz('Asia/Taipei');
+
+// ✅ 正確提取講師名稱
+const teacherName = extractTeacherName(event.title);
+const teacher = teacherData.find(t => t.name === teacherName);
+
+// ✅ 快取優化
+if (!window.teacherDataCache) {
+    window.teacherDataCache = await loadTeacherData();
+}
+```
+
+### 錯誤處理與日誌
+```javascript
+// ✅ 完整的錯誤追蹤
+try {
+    await saveAttendance(data);
+    console.log('✅ 簽到成功:', data.studentName);
+} catch (error) {
+    console.error('❌ 簽到失敗:', {
+        student: data.studentName,
+        event: data.eventId,
+        error: error.message,
+        stack: error.stack
+    });
+    // 重要: 回傳明確的錯誤給前端
+    return { success: false, error: '簽到失敗,請重試' };
+}
+```
+
+### 效能優化範例
+```javascript
+// ✅ 批次載入事件
+async function loadAllEvents() {
+    const [events, teachers, students] = await Promise.all([
+        fetchEvents(),
+        loadTeacherData(),
+        loadStudentData()
+    ]);
+    return processEvents(events, teachers, students);
+}
+
+// ✅ 防抖處理搜尋
+let searchTimeout;
+function handleSearch(query) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        performSearch(query);
+    }, 300);
+}
+```
+
+---
+
+---
+
+## API 端點清單
+
+### 事件相關
+- `GET /api/events` - 獲取所有事件
+- `GET /api/events/:id` - 獲取單一事件
+- `POST /api/events` - 建立事件
+- `PUT /api/events/:id` - 更新事件
+- `DELETE /api/events/:id` - 刪除事件
+
+### 簽到相關
+- `POST /api/attendance` - 一般簽到
+- `POST /api/fast-attendance` - 快速簽到 (推薦)
+- `GET /api/attendance/:eventId` - 獲取課程簽到記錄
+- `POST /api/attendance/batch` - 批次簽到 (全班出席)
+
+### 學生資料
+- `GET /api/students` - 獲取學生列表
+- `POST /api/sync-students` - 同步 Google Sheets 學生資料
+- `GET /api/students/:id` - 獲取單一學生資料
+
+### 通知系統
+- `POST /api/notifications` - 發送通知
+- `POST /api/test-notification` - 測試通知
+- `GET /api/notification-config` - 獲取通知配置
+- `PUT /api/notification-config` - 更新通知配置
+
+### 系統管理
+- `GET /health` - 健康檢查
+- `GET /api/system-settings` - 獲取系統設定
+- `PUT /api/system-settings` - 更新系統設定
+- `POST /api/sync-holidays` - 同步假期資料
+- `GET /api/daily-attendance-reports` - 獲取每日統計報告歷史記錄
+- `POST /api/daily-attendance-report/trigger` - 手動觸發每日統計報告
+
+### 學習歷程
+- `POST /api/learning-portfolio` - 上傳學習歷程（舊版，本地檔案）
+- `POST /api/learning-records/upload-drive` - 上傳學習歷程（新版，Synology Drive）🆕
+- `GET /api/learning-portfolio/:eventId` - 獲取課程學習歷程
+
+### Synology Drive 🆕
+- `GET /api/drive-media/*` - 安全的 Drive 媒體代理（不暴露 SID）
+- `POST /api/drive-media/url` - Drive 路徑轉代理 URL
+
+### 請假系統
+- `POST /api/leave-request` - 提交請假申請
+- `GET /api/leave-requests` - 獲取請假申請列表
+- `PUT /api/leave-request/:id` - 更新請假狀態
+
+### 特殊事件標記
+- `POST /api/events/mark-special` - 標記特殊事件（停課、體驗、改時間、代課）
+- `POST /api/events/remove-special` - 移除特殊事件標記
+- **特殊事件類型**:
+  - **停課**: 僅更新標題為 `[停課] 原標題`
+  - **體驗**: 僅更新標題為 `[體驗] 原標題`
+  - **改時間**: 更新標題為 `[改時間] 原標題` 並調整事件時間
+  - **代課**: 更新標題為 `[代課] 原標題` 並移動事件到代課講師的日曆（刪除+重建）
+
+---
+
+## 資料格式規範
+
+### 事件物件
+```javascript
+{
+    id: "event-uuid",
+    title: "課程名稱 - 講師名稱",
+    start: "2025-10-29T10:00:00+08:00",
+    end: "2025-10-29T12:00:00+08:00",
+    location: "教室地點",
+    description: "課程描述",
+    color: "#FF6B6B",
+    teacher: "講師名稱",
+    courseType: "課程類型"
+}
+```
+
+### 簽到記錄
+```javascript
+{
+    eventId: "event-uuid",
+    studentId: "student-id",
+    studentName: "學生姓名",
+    timestamp: "2025-10-29T10:05:00+08:00",
+    status: "present", // present, late, absent, leave
+    note: "備註"
+}
+```
+
+### 學生物件
+```javascript
+{
+    id: "student-id",
+    name: "學生姓名",
+    lineUserId: "LINE-USER-ID",
+    courses: ["課程1", "課程2"],
+    active: true
+}
+```
+
+### 講師物件
+```javascript
+{
+    name: "講師姓名",
+    color: "#FF6B6B",
+    userId: "LINE-USER-ID",
+    courses: ["課程類型1", "課程類型2"]
+}
+```
+
+---
+
+## 部署檢查清單
+
+### 部署前確認
+- [ ] 本地測試通過
+- [ ] 日誌輸出正常
+- [ ] 無 console.error 或 console.warn
+- [ ] 已備份配置檔案
+- [ ] 更新版本號和更新日期
+- [ ] 文檔已同步更新
+
+### 部署步驟
+```bash
+# 1. 停止現有容器
+docker-compose down
+
+# 2. 備份重要資料
+cp notification-config.json notification-config.json.backup
+cp system-settings.json system-settings.json.backup
+
+# 3. 拉取最新代碼 (如果使用 git)
+git pull origin main
+
+# 4. 重新構建並啟動
+docker-compose build --no-cache
+docker-compose up -d
+
+# 5. 檢查日誌
+docker-compose logs -f --tail=50
+
+# 6. 測試 API
+curl http://localhost:8080/health
+```
+
+### 部署後驗證
+- [ ] 健康檢查端點正常 (`/health`)
+- [ ] 前端頁面載入正常
+- [ ] 事件資料正確顯示
+- [ ] 簽到功能正常
+- [ ] LINE 通知正常發送
+- [ ] 無異常錯誤日誌
+
+---
+
+## 緊急修復流程
+
+### 快速回滾
+```bash
+# 停止當前容器
+docker-compose down
+
+# 回復備份配置
+cp notification-config.json.backup notification-config.json
+cp system-settings.json.backup system-settings.json
+
+# 使用上一個版本的映像
+docker-compose up -d
+
+# 檢查狀態
+docker-compose ps
+docker-compose logs -f
+```
+
+### 除錯模式
+```bash
+# 進入容器
+docker-compose exec web /bin/sh
+
+# 查看檔案
+ls -la /app/data/
+cat /app/logs/server.log
+
+# 測試內部 API
+wget -O- http://localhost:8080/health
+```
+
+---
+
+**專案**: FLB 行事曆系統  
+**團隊**: FLB Team  
+**版本**: 2.4（Synology Drive 整合）  
+**最後更新**: 2025-11-08  
+
+---
+
+## 重要提醒 ⚠️
+
+1. **永遠不要刪除** `archived_scripts/`, `archived_docs/`, `archive/` 目錄
+2. **修改前先備份** - 所有配置檔案修改前都要備份（使用時間戳命名）
+3. **測試後再部署** - 本地測試通過才能部署到生產環境
+4. **保持日誌清晰** - 使用 emoji 和完整的訊息
+5. **文檔同步更新** - 修改功能時必須更新相關文檔
+6. **時區一致性** - 所有時間處理統一使用 `Asia/Taipei`
+7. **錯誤處理完整** - 所有 API 都要有適當的錯誤處理
+8. **安全性優先** - 敏感資訊使用環境變數,不要硬編碼
+9. **開發環境最佳化** - 使用 `npm run dev` 禁用自動排程，避免 Synology Drive 頻繁同步
+10. **Synology Calendar API** - 嚴格遵循官方文檔，所有 API 調用使用 POST 方法和正確的參數格式
+11. **每日統計報告** - 僅在生產環境自動執行（08:00），包含防重複發送機制，資料持久化於 `data/daily-attendance-reports.json`
+12. **Synology Drive 整合** 🆕 - 新舊 API 並存，舊版使用本地檔案，新版使用 Drive，漸進式遷移
+13. **專案結構** 🆕 - 所有文檔、備份、測試已整理到對應目錄，詳見 `PROJECT-STRUCTURE.md`
+14. **Drive 測試** 🆕 - 測試前先執行 `node tests/manual/test-drive-connection.js` 確認連線
+
+---
+
+**記住**: 代碼是寫給人看的,清晰度永遠優先於簡潔度! 🚀  
+**座右銘**: 先讓它運作,再讓它正確,最後讓它快速! 💪

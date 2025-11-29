@@ -1,0 +1,212 @@
+🚨 完整修復：講師列表 + LINE 通知
+═══════════════════════════════════════════════════════════════
+
+當前問題總覽
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ 問題 1: 講師列表顯示 [object Object]
+   原因: server.js 錯誤地將資料轉換成陣列
+   狀態: ✅ 已修復，待部署
+
+❌ 問題 2: LINE 通知測試返回 400
+   原因: Docker 容器環境變數未載入 .env.nas
+   狀態: ⏳ 需要完全重啟容器
+
+✅ 問題 3: 學生資料確實有 userId 欄位
+   原因: 前端可能沒正確使用
+   狀態: ⏳ 待驗證
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+修復內容
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. 講師 API 修復（server.js Line 1866）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+修復前：
+```javascript
+const teachers = Object.entries(teacherData.teachers || {}).map(([name, userId]) => ({
+  name: name,
+  userId: userId
+}));
+// 返回陣列: [{ name: "TIM", userId: "..." }, ...]
+```
+
+修復後：
+```javascript
+const teachers = teacherData.teachers || {};
+// 返回物件: { "TIM": "Udb5...", "YOKI": "Ucf9..." }
+```
+
+預期返回格式：
+```json
+{
+  "success": true,
+  "data": {
+    "teachers": {
+      "TIM": "Udb51363eb6fdc605a6a9816379a38103",
+      "YOKI": "Ucf9b239b708001ed44f0710704282655",
+      "TED": "U213b36e8024ab1d2b895b24082c21270",
+      ...
+    },
+    "count": 13
+  }
+}
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2. 環境變數問題
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+問題：
+- .env.nas 檔案已更新
+- 但 Docker 容器啟動時載入的是舊的環境變數
+- 使用 `docker-compose restart` 不會重新載入 .env.nas
+- 必須使用 `docker-compose down` + `docker-compose up -d`
+
+解決方案：
+1. docker-compose down（完全停止容器）
+2. docker-compose up -d（重新啟動，載入新的 .env.nas）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 一鍵修復（在 NAS 執行）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas && \
+echo "🔍 檢查配置..." && \
+cat .env.nas | grep -E "LINE_CHANNEL_ACCESS_TOKEN|ADMIN_USER_ID" && \
+echo "" && \
+echo "📦 更新 server.js..." && \
+sudo docker cp server.js flb-calendar-nas:/app/server.js && \
+echo "✅ server.js 已複製" && \
+echo "" && \
+echo "🔄 完全重啟容器（重要！載入環境變數）..." && \
+sudo docker-compose down && \
+sudo docker-compose up -d && \
+echo "⏳ 等待 20 秒..." && \
+sleep 20 && \
+echo "" && \
+echo "✅ 驗證環境變數..." && \
+sudo docker exec flb-calendar-nas printenv | grep -E "LINE_CHANNEL_ACCESS_TOKEN|ADMIN_USER_ID" && \
+echo "" && \
+echo "🧪 測試 API..." && \
+curl -s https://calendar.funlearnbar.synology.me/api/line-config | jq '.' && \
+curl -s https://calendar.funlearnbar.synology.me/api/admin/info | jq '.' && \
+curl -s -X POST https://calendar.funlearnbar.synology.me/api/test-line-notification -H "Content-Type: application/json" -d '{"message":"測試"}' | jq '.' && \
+curl -s https://calendar.funlearnbar.synology.me/api/teachers | jq '.data.teachers | keys[0:5]' && \
+echo "" && \
+echo "✅ 完成！刷新瀏覽器測試"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+修復後驗證清單
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+在 NAS 執行完畢後：
+
+1. ✅ 環境變數驗證
+   - printenv 應該顯示 LINE_CHANNEL_ACCESS_TOKEN 和 ADMIN_USER_ID
+
+2. ✅ API 測試
+   - /api/line-config 應該返回 hasToken: true
+   - /api/admin/info 應該返回 adminUserId
+   - /api/test-line-notification 應該返回 200 OK
+   - /api/teachers 應該返回物件格式的講師資料
+
+3. ✅ 瀏覽器測試
+   - admin-dashboard.html 刷新（Ctrl+Shift+R）
+   - 講師列表應該顯示完整的講師名稱和 User ID
+   - LINE 通知測試應該成功（不再 400 錯誤）
+   - 學生列表應該顯示 User ID
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+預期結果
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+講師列表顯示：
+┌─────────────────────────────────────────────────────────────┐
+│ 姓名      LINE User ID                          顏色  操作  │
+├─────────────────────────────────────────────────────────────┤
+│ TIM       Udb51363eb6fdc605a6a9816379a38103     🔵  ✏️  🗑️  │
+│ YOKI      Ucf9b239b708001ed44f0710704282655     🔵  ✏️  🗑️  │
+│ TED       U213b36e8024ab1d2b895b24082c21270     🔵  ✏️  🗑️  │
+│ AGNES     U8427f9e5cc1fd485a7fba84152776f2c     🔵  ✏️  🗑️  │
+│ HANSEN    U73d377e2bcaedb439eaa8c757f623666     🔵  ✏️  🗑️  │
+│ ...                                                         │
+└─────────────────────────────────────────────────────────────┘
+
+LINE 通知測試：
+✅ 測試訊息已發送
+✅ 返回碼: 200 OK
+
+學生列表顯示：
+┌──────────────────────────────────────────────────────────────┐
+│ 姓名      LINE User ID                          課程  剩餘  │
+├──────────────────────────────────────────────────────────────┤
+│ 李霽 JI   U7cbb3424ed146adeb53e6e2403966509    Minecraft 16 │
+│ 陳杰睿    Udd5a9cd3a87b4a57c52f25b55956fb30    SPIKE    14  │
+│ 吳昀衡    Ua9fb0ab50b6e4cb07c64fac5854a5d80    SPIKE    13  │
+│ ...                                                          │
+└──────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+如果還有問題
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. 講師列表還是顯示 [object Object]
+   → 檢查 server.js 是否正確複製到容器
+   → 執行: sudo docker exec flb-calendar-nas cat /app/server.js | grep -A 5 "直接返回原始物件格式"
+
+2. LINE 通知還是 400
+   → 檢查容器內環境變數
+   → 執行: sudo docker exec flb-calendar-nas printenv | grep LINE
+
+3. 學生列表沒顯示 User ID
+   → 檢查 API 返回的資料
+   → 在瀏覽器執行: fetch('/api/students').then(r => r.json()).then(console.log)
+   → 確認欄位名稱是否為 userId
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+技術細節
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+為什麼需要 docker-compose down？
+
+docker-compose restart:
+- 只是重啟容器內的進程
+- 不會重新載入環境變數
+- .env.nas 的更新不會生效
+
+docker-compose down + up:
+- 完全停止並移除容器
+- 重新建立容器
+- 從 .env.nas 載入最新的環境變數
+- 確保所有配置都是最新的
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+修復摘要
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+檔案修改：
+✅ server.js Line 1866 - 講師 API 返回格式修正
+
+需要執行：
+1. docker cp server.js（更新代碼）
+2. docker-compose down（停止容器）
+3. docker-compose up -d（重啟並載入環境變數）
+
+預期修復：
+✅ 講師列表正確顯示
+✅ LINE 通知測試成功
+✅ 學生列表顯示 User ID
+
+立即執行上面的一鍵修復指令！
+
+

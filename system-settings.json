@@ -1,0 +1,132 @@
+{
+  "scheduler": {
+    "checkInterval": 5,
+    "timeout": 60000,
+    "retryDelay": 1000
+  },
+  "timezone": {
+    "offset": 8,
+    "name": "Asia/Taipei"
+  },
+  "reminders": {
+    "todayReminderHour": 8,
+    "todayReminderMinute": 0,
+    "todayReminderDuration": 240,
+    "tomorrowReminderHour": 19,
+    "tomorrowReminderMinute": 30,
+    "tomorrowReminderDuration": 15,
+    "beforeClassMinutes": 30,
+    "sendDelay": 3000,
+    "maxSendPerMinute": 10,
+    "retryMaxAttempts": 3,
+    "retryBaseDelay": 5000
+  },
+  "studentReminders": {
+    "defaultHour": 19,
+    "defaultMinute": 30,
+    "defaultDuration": 5,
+    "defaultEnabled": true
+  },
+  "matching": {
+    "durationTolerance": 30,
+    "timeTolerance": 30
+  },
+  "skipKeywords": {
+    "enabled": true,
+    "keywords": [
+      "停課",
+      "請假",
+      "取消",
+      "暫停"
+    ]
+  },
+  "api": {
+    "baseUrl": "https://calendar.funlearnbar.synology.me",
+    "timeout": 60000
+  },
+  "studentDataSync": {
+    "enabled": true,
+    "autoUpdateEnabled": true,
+    "updateTime": "02:00",
+    "intervalMinutes": 0,
+    "retryMaxAttempts": 3,
+    "retryDelaySeconds": 60,
+    "logUpdates": true
+  },
+  "dateRange": {
+    "futureDays": 30,
+    "pastDays": 7
+  },
+  "courseColors": {
+    "ESM": "#FFB3D9",
+    "SPM": "#FFA726",
+    "SPIKE": "#FFD54F",
+    "BOOST": "#4FC3F7",
+    "EV3": "#66BB6A",
+    "MINECRAFT": "#8BC34A",
+    "SCRATCH": "#FF6B6B",
+    "PYTHON": "#8B5CF6",
+    "OTHER": "#9E9E9E"
+  },
+  "courseCategories": [
+    {
+      "id": "esm",
+      "name": "ESM",
+      "keyword": "ESM教案",
+      "color": "#FFB3D9",
+      "enabled": true
+    },
+    {
+      "id": "spm",
+      "name": "SPM",
+      "keyword": "SPM教案",
+      "color": "#FFA726",
+      "enabled": true
+    },
+    {
+      "id": "spike",
+      "name": "SPIKE",
+      "keyword": "SPIKE教案",
+      "color": "#FFD54F",
+      "enabled": true
+    },
+    {
+      "id": "boost",
+      "name": "BOOST",
+      "keyword": "BOOST教案",
+      "color": "#4FC3F7",
+      "enabled": true
+    },
+    {
+      "id": "ev3",
+      "name": "EV3",
+      "keyword": "EV3教案",
+      "color": "#66BB6A",
+      "enabled": true
+    },
+    {
+      "id": "minecraft",
+      "name": "MINECRAFT",
+      "keyword": "MINECRAFT教案",
+      "color": "#8BC34A",
+      "enabled": true
+    },
+    {
+      "id": "scratch",
+      "name": "SCRATCH",
+      "keyword": "Scratch教案",
+      "color": "#FF6B6B",
+      "enabled": true
+    },
+    {
+      "id": "python",
+      "name": "PYTHON",
+      "keyword": "PYTHON教案",
+      "color": "#8B5CF6",
+      "enabled": true
+    }
+  ],
+  "upload": {
+    "semesterLabel": null
+  }
+}

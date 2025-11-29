@@ -1,0 +1,6 @@
+data/
+backups/
+logs/
+temp/
+*.log
+service-account.json

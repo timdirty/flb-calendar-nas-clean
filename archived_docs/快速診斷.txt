@@ -1,0 +1,70 @@
+=== 🔍 快速診斷時間問題 ===
+
+問題：重新生成後時間仍然差 8 小時
+
+可能原因：
+1. Synology Calendar API 返回的 timestamp 已經是本地時間，不是 UTC
+2. toLocaleString 再次轉換導致重複轉換
+
+=== 在 NAS 上執行以下指令 ===
+
+cd /volume1/homes/ctctim14/樂程坊計畫/課程資料/Cursor/講師行事曆檢視/flb-calendar-nas
+
+# 查看容器日誌中的事件時間
+sudo docker logs flb-calendar-nas 2>&1 | grep -A 3 "創建.*提醒.*ESM\|event.start\|課程時間" | tail -30
+
+# 檢查實際存儲的數據
+sudo docker exec flb-calendar-nas node -e "
+const fs = require('fs');
+const data = JSON.parse(fs.readFileSync('./data/reminders.json', 'utf8'));
+const r = data.reminders.find(r => r.courseName.includes('ESM'));
+if (r) {
+  console.log('ESM 課程數據：');
+  console.log('  courseName:', r.courseName);
+  console.log('  courseDate:', r.courseDate);
+  console.log('  courseTime:', r.courseTime);
+  console.log('  scheduledTime:', r.scheduledTime);
+  console.log('  createdAt:', r.createdAt);
+}
+"
+
+# 測試時間轉換
+sudo docker exec flb-calendar-nas node -e "
+// 假設 Synology 返回的 timestamp 是 UTC 時間
+const utcTimestamp = 1728619200; // 2025-10-11 02:00:00 UTC
+const utcDate = new Date(utcTimestamp * 1000);
+console.log('UTC timestamp:', utcTimestamp);
+console.log('UTC Date:', utcDate.toISOString());
+console.log('getHours():', utcDate.getHours());
+console.log('getUTCHours():', utcDate.getUTCHours());
+
+// 使用 toLocaleString 轉換
+const taiwanStr = utcDate.toLocaleString('sv-SE', {
+  timeZone: 'Asia/Taipei',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
+});
+console.log('台灣時間 (toLocaleString):', taiwanStr);
+
+// 如果 timestamp 已經是台灣本地時間
+const localDate = new Date(utcTimestamp * 1000);
+const localStr = localDate.toLocaleString('sv-SE', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
+});
+console.log('本地時間 (不指定時區):', localStr);
+"
+
+=== 如果日誌顯示 event.start 是正確的 ===
+
+說明問題出在 reminder-scheduler.js 解析時間的部分。
+
+=== 如果日誌顯示 event.start 就是錯的 ===
+
+說明問題出在 synology-calendar-client.js 的時區轉換。
+
+需要修改：不使用 timeZone 參數，因為 Synology 可能已經返回本地時間。
+
+

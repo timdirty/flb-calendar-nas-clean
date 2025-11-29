@@ -1,0 +1,45 @@
+services:
+  flb-calendar:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flb-calendar-nas
+    restart: unless-stopped
+    # 🔥 设置容器资源限制
+    mem_limit: 3g
+    mem_reservation: 512m
+    ports:
+      - "3001:3000"
+    env_file:
+      - .env.nas
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # 🔥 增加 Node.js 内存限制，防止崩溃
+      - NODE_OPTIONS=--max-old-space-size=2048
+    volumes:
+      - ./public:/app/public
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./student-reminder-settings.json:/app/student-reminder-settings.json
+      - ./system-settings.json:/app/system-settings.json
+      - ./notification-config.json:/app/notification-config.json
+      # 🔥 學習歷程目錄映射（必須！否則無法上傳）
+      - /volume1/Fun Learn Bar/學習歷程 automatic:/volume1/Fun Learn Bar/學習歷程 automatic
+      # service-account.json 已在 Docker 鏡像內，不需要掛載
+    networks:
+      - flb-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+networks:
+  flb-network:
+    driver: bridge
+
+volumes:
+  logs:
+  data:

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>學習歷程影片管理 - FLB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/learning-record-upload-v2.css?v=20251103-1">
+    <script>
+        // 📱 低階手機偵測：根據硬體與連線條件，加上 body.low-end 降噪樣式
+        (function () {
+            try {
+                var forceLite = (function () { try { var p = new URLSearchParams(location.search); return p.get('lite') === '1'; } catch (e) { return false; } })();
+                if (forceLite) {
+                    window.__LOW_END = true;
+                    document.addEventListener('DOMContentLoaded', function () { try { document.body.classList.add('low-end'); } catch (e) { } });
+                    return;
+                }
+                var hc = (navigator.hardwareConcurrency || 0);
+                var dm = (navigator.deviceMemory || 0);
+                var et = (navigator.connection && navigator.connection.effectiveType) || '';
+                var isWeakCpu = hc && hc <= 4;
+                var isLowMem = dm && dm <= 2;
+                var isSlowNet = /(^|\b)(2g|slow-2g)\b/i.test(String(et));
+                var isSmallScreen = Math.min(screen.width, screen.height) <= 420;
+                if (isWeakCpu || isLowMem || isSlowNet || isSmallScreen) {
+                    document.addEventListener('DOMContentLoaded', function () { try { document.body.classList.add('low-end'); } catch (e) { } });
+                }
+            } catch (e) { }
+        })();
+    </script>
+    <script defer src="/js/modules/chunked-uploader.js?v=20251103-1"></script>
+    <script defer src="/js/pages/learning-record-upload.js?v=20251103-1"></script>
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-main">
+            <h1>學習歷程影片管理</h1>
+            <p class="subtitle">集中管理影片上傳、轉碼與下載，支援分片續傳與縮圖檢視。</p>
+        </div>
+        <div class="header-meta">
+            <span class="server-root" id="mediaRootHint">儲存路徑：載入中...</span>
+            <span class="queue-indicator" id="queueIndicator"><i class="fa-solid fa-circle-notch fa-spin"></i> 準備中...</span>
+        </div>
+    </header>
+
+    <main class="layout">
+        <section class="panel upload-panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-cloud-arrow-up"></i> 新增影片</h2>
+                <span class="panel-hint">請先填寫課程與學生資訊，再選擇影片檔案。</span>
+            </div>
+            <form id="uploadForm" class="upload-form">
+                <div class="form-row">
+                    <label>
+                        <span>課程名稱</span>
+                        <input type="text" id="courseNameInput" placeholder="例：STEAM 科學探究班" required>
+                    </label>
+                    <label>
+                        <span>授課講師</span>
+                        <input type="text" id="instructorInput" placeholder="例：王小明老師" required>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <label>
+                        <span>授課日期</span>
+                        <input type="date" id="dateInput" required>
+                    </label>
+                    <label>
+                        <span>課程時段 / 編號</span>
+                        <input type="text" id="courseCodeInput" placeholder="例：周五晚班 A1">
+                    </label>
+                </div>
+                <div class="form-row mode-row">
+                    <div class="mode-toggle">
+                        <label class="radio-chip">
+                            <input type="radio" name="uploadMode" value="student" checked>
+                            <span>個人學習紀錄</span>
+                        </label>
+                        <label class="radio-chip">
+                            <input type="radio" name="uploadMode" value="overview">
+                            <span>課程總覽</span>
+                        </label>
+                    </div>
+                    <label class="student-field" id="studentField">
+                        <span>學生姓名</span>
+                        <input type="text" id="studentInput" placeholder="例：林同學">
+                    </label>
+                </div>
+                <div class="form-row">
+                    <label class="notes-field">
+                        <span>備註（選填）</span>
+                        <textarea id="notesInput" placeholder="可輸入練習內容、關鍵片段等說明"></textarea>
+                    </label>
+                </div>
+
+                <div class="dropzone" id="dropzone">
+                    <input type="file" id="fileInput" accept="video/*" multiple>
+                    <div class="dropzone-inner">
+                        <i class="fa-solid fa-video"></i>
+                        <p>拖放影片或點擊選擇檔案</p>
+                        <small>支援 MP4 / MOV / M4V / WEBM，單檔上限 2GB</small>
+                    </div>
+                </div>
+
+                <div class="selected-files-panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-list-ul"></i> 待上傳清單</h3>
+                        <button type="button" class="link-btn" id="clearQueueBtn"><i class="fa-solid fa-trash"></i> 清除全部</button>
+                    </div>
+                    <ul class="file-queue" id="fileQueue"></ul>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="primary-btn" id="startUploadBtn">
+                        <i class="fa-solid fa-cloud-upload-alt"></i> 開始上傳
+                    </button>
+                    <button type="button" class="secondary-btn" id="refreshListBtn">
+                        <i class="fa-solid fa-arrows-rotate"></i> 重新整理列表
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel status-panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-signal"></i> 任務狀態</h2>
+            </div>
+            <ul class="task-list" id="taskList">
+                <li class="empty">尚未開始上傳</li>
+            </ul>
+        </section>
+
+        <section class="panel library-panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-photo-film"></i> 已上傳影片</h2>
+                <div class="filters">
+                    <label>
+                        <span>狀態</span>
+                        <select id="statusFilter">
+                            <option value="">全部</option>
+                            <option value="queued">處理中</option>
+                            <option value="ready">已完成</option>
+                            <option value="failed">失敗</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>講師</span>
+                        <input type="text" id="filterInstructor" placeholder="輸入講師名稱">
+                    </label>
+                    <label>
+                        <span>學生</span>
+                        <input type="text" id="filterStudent" placeholder="輸入學生姓名">
+                    </label>
+                    <label>
+                        <span>日期</span>
+                        <input type="date" id="filterDate">
+                    </label>
+                </div>
+            </div>
+
+            <div class="library-table-wrapper">
+                <table class="library-table">
+                    <thead>
+                        <tr>
+                            <th>縮圖</th>
+                            <th>課程 / 學生</th>
+                            <th>上傳資訊</th>
+                            <th>狀態</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="libraryBody">
+                        <tr class="empty-row">
+                            <td colspan="5">尚無資料，請先上傳影片或調整篩選條件。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+</body>
+</html>

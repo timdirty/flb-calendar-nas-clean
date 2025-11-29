@@ -1,0 +1,301 @@
+/* =====================================================
+   🔥 學習歷程上傳 UI 修復整合檔案
+   合併原本的：
+   - progress-bar-override.css
+   - hover-fix.css  
+   - delete-button-fix.css
+   版本：v1.0.0 (2025-11-23)
+   ===================================================== */
+
+/* =====================================================
+   Section 1: 進度條樣式
+   ===================================================== */
+
+/* 進度條容器 - 絕對定位在預覽圖底部中央 */
+.file-preview .file-upload-progress {
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    height: 8px !important;
+    position: absolute !important;
+    bottom: 8px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    border-radius: 999px !important;
+    overflow: hidden !important;
+    z-index: 10 !important;
+}
+
+/* 進度條填充 - 鮮豔漸變 + 發光效果 */
+.file-preview .file-upload-progress-fill {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, #10b981, #06b6d4) !important;
+    border-radius: 999px !important;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.6) !important;
+    /* 移除 transition 和動畫，寬度必須立即更新 */
+    transition: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+    transform-origin: left center !important;
+}
+
+/* 上傳中狀態顯示進度條 */
+.file-preview.uploading .file-upload-progress,
+.file-preview.pending .file-upload-progress {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.file-preview.uploading .file-upload-progress-fill,
+.file-preview.pending .file-upload-progress-fill {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* 修復特定狀態組合 */
+.file-preview.new-upload.uploading .file-upload-progress-fill,
+.file-preview.existing.synced-preview.uploading .file-upload-progress-fill {
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+/* =====================================================
+   Section 2: Overlay 與遮罩
+   ===================================================== */
+
+/* Overlay 基礎樣式 */
+.file-preview .file-uploading-overlay {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 2 !important;
+    overflow: hidden !important;
+}
+
+/* 🔥 [簡化 2025-11-23] 上傳時應該顯示 overlay 進度 */
+.file-preview.uploading .file-uploading-overlay,
+.file-preview.pending .file-uploading-overlay {
+    display: flex !important;
+    opacity: 0.95 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* 上傳成功後隱藏 Overlay */
+.file-preview.upload-success:hover .file-uploading-overlay,
+.file-preview.synced:hover .file-uploading-overlay,
+.file-preview.synced-preview:hover .file-uploading-overlay,
+.file-preview.existing:hover .file-uploading-overlay {
+    display: none !important;
+    opacity: 0 !important;
+}
+
+/* Overlay 文字樣式 */
+.file-preview .file-uploading-overlay .progress-text {
+    max-width: 90% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* =====================================================
+   Section 3: 刪除按鈕
+   ===================================================== */
+
+/* 確保容器有相對定位 */
+.file-preview {
+    position: relative !important;
+}
+
+/* 刪除按鈕 - 移到外側右上角 */
+body .file-preview .remove-btn,
+#studentsSection .file-preview .remove-btn,
+.student-card .file-preview .remove-btn,
+.media-preview-container .file-preview .remove-btn {
+    position: absolute !important;
+    top: -10px !important;
+    right: -10px !important;
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    border-radius: 50% !important;
+    background: #dc2626 !important;
+    border: 2px solid #fff !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 12px !important;
+    color: #fff !important;
+    cursor: pointer !important;
+    z-index: 100 !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transition: transform 0.2s ease, background 0.2s ease !important;
+}
+
+/* 刪除按鈕圖標 */
+.file-preview .remove-btn i {
+    font-size: 10px !important;
+    line-height: 1 !important;
+}
+
+/* Hover 效果 - 僅限尚未上傳的檔案 */
+.file-preview.new-upload .remove-btn:hover,
+.file-preview.pending .remove-btn:hover,
+.file-preview.uploading .remove-btn:hover {
+    transform: scale(1.1) !important;
+    background: #ef4444 !important;
+}
+
+/* 上傳完成的檔案 - 禁用 hover 縮放但保留功能 */
+.file-preview.upload-success .remove-btn:hover,
+.file-preview.synced-preview .remove-btn:hover,
+.file-preview.synced .remove-btn:hover,
+.file-preview.existing .remove-btn:hover,
+.file-preview.loaded:not(.new-upload) .remove-btn:hover {
+    transform: none !important;
+    background: #dc2626 !important;
+    cursor: pointer !important;
+}
+
+/* 點擊效果 */
+.file-preview .remove-btn:active {
+    transform: scale(0.95) !important;
+}
+
+/* 載入中狀態不顯示刪除按鈕 */
+.file-preview.loading .remove-btn {
+    display: none !important;
+}
+
+/* 錯誤狀態的刪除按鈕 */
+.file-preview.upload-error .remove-btn {
+    background: #991b1b !important;
+    border-color: #fca5a5 !important;
+}
+
+/* 課程總覽的特殊處理 */
+#overviewExistingPreviews .file-preview .remove-btn,
+#overviewPhotosPreviews .file-preview .remove-btn {
+    top: -8px !important;
+    right: -8px !important;
+}
+
+/* =====================================================
+   Section 4: 容器與佈局
+   ===================================================== */
+
+/* 確保父容器不會裁剪按鈕 */
+.media-preview-container,
+.file-preview-container,
+.upload-preview-container,
+#photosPreview,
+#videosPreview,
+.photosPreview,
+.videosPreview,
+.student-photos,
+.student-videos,
+.file-previews,
+.student-card .file-previews,
+#studentsSection .file-previews {
+    overflow: visible !important;
+    padding: 12px !important;
+    margin: 5px !important;
+}
+
+/* 學生卡片的預覽區域 */
+.student-card .student-photos,
+.student-card .student-videos {
+    overflow: visible !important;
+    padding-top: 12px !important;
+    padding-right: 12px !important;
+}
+
+/* 調整容器間距 */
+.file-preview {
+    margin: 0 !important;
+}
+
+/* 防止按鈕被其他元素遮擋 */
+.file-uploading-overlay {
+    z-index: 2 !important;
+}
+
+/* =====================================================
+   Section 5: 其他 UI 元素
+   ===================================================== */
+
+/* 確保上傳佇列項目不會被進度條影響 */
+.upload-queue-item {
+    position: relative;
+    overflow: hidden;
+}
+
+/* 檔案名稱顯示 */
+.upload-queue-item .file-name,
+.file-preview .file-info {
+    position: relative;
+    z-index: 1;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 確保刪除按鈕和其他控制項在正確層級 */
+.file-preview .remove-btn,
+.upload-queue-item .remove-btn {
+    position: relative;
+    z-index: 3;
+}
+
+/* 防止進度條影響到縮圖 */
+.file-preview .file-thumb,
+.file-preview img,
+.file-preview video {
+    position: relative;
+    z-index: 1;
+}
+
+/* =====================================================
+   Section 6: 響應式設計
+   ===================================================== */
+
+/* 手機端刪除按鈕稍微大一點 */
+@media (max-width: 768px) {
+    .file-preview .remove-btn {
+        top: -12px !important;
+        right: -12px !important;
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        min-height: 28px !important;
+        font-size: 14px !important;
+    }
+
+    .file-preview .remove-btn i {
+        font-size: 12px !important;
+    }
+}
+
+/* =====================================================
+   Section 7: 調試工具（開發環境）
+   ===================================================== */
+
+/* 調試用 - 可視化容器邊界 */
+.debug-progress-bar .file-upload-progress {
+    border: 1px solid red !important;
+}
+
+.debug-progress-bar .file-upload-progress-fill {
+    opacity: 0.8 !important;
+}

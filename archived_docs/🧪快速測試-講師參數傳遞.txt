@@ -1,0 +1,144 @@
+🧪 快速測試：講師參數傳遞修復
+==========================================
+
+✅ 已修復的問題：
+1. ❌ ReferenceError: urlInstructor is not defined
+2. ❌ GET .../\${url} 404 (應該已解決)
+
+🔧 修復內容：
+- 將 urlInstructor 從局部變數改為全域變數
+- 確保在 loadCompletedCourses 中可以訪問
+
+📋 測試步驟：
+
+步驟 1: 刷新主行事曆
+------------------------
+1. 打開主行事曆頁面
+2. 強制刷新（Cmd+Shift+R 或 Ctrl+Shift+R）
+3. 確認頁面正常載入
+
+步驟 2: 檢查課程卡片
+------------------------
+1. 滾動到「今日課程」或「課程列表」
+2. 找到已結束的課程
+3. 確認顯示「上傳學習歷程」按鈕
+4. 打開 Console（F12）
+
+步驟 3: 點擊上傳按鈕
+------------------------
+1. 點擊任一課程的「上傳學習歷程」按鈕
+2. 觀察 Console 輸出
+
+期望結果 ✅：
+```
+🔍 準備生成上傳按鈕: { 
+  eventId: "...", 
+  instructor: "TIM",  // 🔥 應該有講師名稱
+  dateStr: "2025-10-13", 
+  timeStr: "13:00" 
+}
+
+跳轉到學習歷程上傳: { 
+  eventId: "...", 
+  date: "2025-10-13", 
+  time: "13:00", 
+  instructor: "TIM"  // 🔥 應該有講師名稱
+}
+```
+
+步驟 4: 檢查學習歷程頁面
+------------------------
+1. 頁面應該自動跳轉
+2. 檢查 URL 是否包含 instructor 參數：
+   `/learning-record-upload.html?eventId=...&date=...&time=...&instructor=TIM`
+3. 查看 Console
+
+期望結果 ✅：
+```
+🎯 接收到跳轉參數: {
+  targetEventId: "...",
+  targetDate: "2025-10-13",
+  targetTime: "13:00",
+  urlInstructor: "TIM"  // 🔥 應該不是 null
+}
+
+✅ 從 URL 設定講師篩選: TIM
+
+✅ 講師篩選完成: {
+  filterSource: "URL參數",  // 🔥 應該是 URL參數，不是 localStorage
+  currentTeacher: "TIM",
+  originalCount: 12,
+  filteredCount: 3  // 只顯示該講師的課程
+}
+
+🎯 開始自動選擇課程: { eventId: "...", coursesCount: 3 }
+✅ 通過 ID 找到課程: { ... }
+🎯 選擇課程: { 
+  courseId: "...",
+  courseTitle: "...",
+  studentsCount: 20  // 該課程的學生數
+}
+```
+
+步驟 5: 驗證功能
+------------------------
+1. 確認只顯示該講師的課程（不是所有講師的）
+2. 確認目標課程已自動選中（有藍色邊框）
+3. 確認學生區塊已展開
+4. 確認只顯示該課程的學生（不是所有學生）
+
+❌ 不應該看到的錯誤：
+```
+❌ ReferenceError: urlInstructor is not defined
+❌ GET .../\${url} 404
+❌ ⚠️ 未找到當前用戶資訊（如果 URL 有 instructor）
+❌ ⚠️ 未設定講師篩選（如果 URL 有 instructor）
+```
+
+🔍 調試檢查點：
+
+如果還有問題，檢查以下幾點：
+
+1. URL 沒有 instructor 參數
+   → 檢查主行事曆的 data-instructor 屬性
+   → 檢查 goToLearningRecordUpload 函數
+
+2. urlInstructor is not defined
+   → 檢查是否已刷新頁面載入新代碼
+   → 檢查瀏覽器快取
+
+3. 仍然顯示所有講師的課程
+   → 檢查 Console 的篩選日誌
+   → 檢查講師名稱是否匹配（大小寫）
+
+4. 圖片預覽錯誤
+   → 應該已修復，檢查 CSP 設定
+   → 檢查是否有 blob: 在 img-src
+
+💡 快速驗證腳本：
+
+打開 Console，執行以下代碼檢查全域變數：
+```javascript
+console.log('urlInstructor:', urlInstructor);
+console.log('currentTeacher:', currentTeacher);
+console.log('currentUser:', currentUser);
+```
+
+應該看到：
+```
+urlInstructor: "TIM"  // 如果從 URL 傳入
+currentTeacher: { name: "TIM", ... }
+currentUser: { userId: "...", displayName: "TIM", ... }
+```
+
+🎉 測試成功的標誌：
+
+✅ URL 包含 instructor=TIM
+✅ Console 顯示「從 URL 設定講師篩選」
+✅ 只顯示該講師的課程
+✅ 自動選中目標課程
+✅ 只顯示該課程的學生
+✅ 沒有任何 JavaScript 錯誤
+
+如果所有檢查點都通過，代表修復成功！🎊
+

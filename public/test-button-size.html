@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>刪除按鈕尺寸測試</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/learning-records.css?v=20251114-uploadcenter">
+    <link rel="stylesheet" href="/css/mobile-touch-optimized.css?v=20251116-ux-fix3">
+    <style>
+        body {
+            padding: 20px;
+            font-family: sans-serif;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-item {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 30px;
+        }
+        .file-preview {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            display: inline-block;
+            margin: 10px;
+        }
+        .size-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 刪除按鈕尺寸測試</h1>
+        
+        <div class="test-item">
+            <h2>測試 1: .remove-btn 類別</h2>
+            <div class="file-preview">
+                <button class="remove-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="size-info" id="size-btn"></div>
+        </div>
+
+        <div class="test-item">
+            <h2>測試 2: .remove-preview 類別</h2>
+            <div class="file-preview">
+                <button class="remove-preview">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="size-info" id="size-preview"></div>
+        </div>
+
+        <div class="test-item">
+            <h2>測試 3: 模擬實際照片預覽</h2>
+            <div class="file-preview">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect fill='%23ddd' width='150' height='150'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='20'%3E照片%3C/text%3E%3C/svg%3E" style="width:100%;height:100%;object-fit:cover;">
+                <button class="remove-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="size-info" id="size-actual"></div>
+        </div>
+
+        <div class="test-item">
+            <h2>✅ 預期結果</h2>
+            <ul>
+                <li>桌面端：28×28px，字體 12px</li>
+                <li>手機端 (≤768px)：32×32px，字體 13px</li>
+                <li>位置：top/right 4px（桌面）或 6px（手機）</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 測量按鈕尺寸
+        window.addEventListener('load', function() {
+            function measureButton(selector, outputId) {
+                const btn = document.querySelector(selector);
+                if (btn) {
+                    const computed = window.getComputedStyle(btn);
+                    const rect = btn.getBoundingClientRect();
+                    document.getElementById(outputId).innerHTML = `
+                        實際尺寸: ${rect.width.toFixed(1)}×${rect.height.toFixed(1)}px<br>
+                        CSS width: ${computed.width}<br>
+                        CSS height: ${computed.height}<br>
+                        CSS font-size: ${computed.fontSize}<br>
+                        CSS top: ${computed.top}<br>
+                        CSS right: ${computed.right}<br>
+                        視窗寬度: ${window.innerWidth}px
+                    `;
+                    
+                    // 檢查是否符合預期
+                    const expectedSize = window.innerWidth <= 768 ? 32 : 28;
+                    const actualSize = Math.round(rect.width);
+                    if (actualSize === expectedSize) {
+                        document.getElementById(outputId).style.background = '#d4edda';
+                        document.getElementById(outputId).innerHTML += '<br><strong style="color:#155724">✅ 尺寸正確！</strong>';
+                    } else {
+                        document.getElementById(outputId).style.background = '#f8d7da';
+                        document.getElementById(outputId).innerHTML += `<br><strong style="color:#721c24">❌ 尺寸錯誤！預期 ${expectedSize}px，實際 ${actualSize}px</strong>`;
+                    }
+                }
+            }
+
+            measureButton('.test-item:nth-child(2) .remove-btn', 'size-btn');
+            measureButton('.test-item:nth-child(3) .remove-preview', 'size-preview');
+            measureButton('.test-item:nth-child(4) .remove-btn', 'size-actual');
+        });
+
+        // 視窗調整時重新測量
+        window.addEventListener('resize', function() {
+            location.reload();
+        });
+    </script>
+</body>
+</html>

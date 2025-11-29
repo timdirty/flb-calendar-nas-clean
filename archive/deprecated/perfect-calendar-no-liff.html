@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講師行事曆 - 無 LIFF 測試版</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 講師行事曆 - 無 LIFF 測試版</h1>
+        
+        <div class="warning">
+            <strong>⚠️ 注意：</strong> 這是測試版本，跳過了 LIFF 登入流程。
+        </div>
+        
+        <div class="info">
+            <strong>💡 使用說明：</strong><br>
+            1. 這個版本不需要 LINE 登入，可以直接測試基本功能<br>
+            2. 講師綁定功能將被停用<br>
+            3. 可以查看課程資料和使用篩選功能
+        </div>
+        
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button onclick="loadCalendar()">📅 載入行事曆</button>
+            <button onclick="openOriginal()">🔗 打開完整版</button>
+            <button onclick="openDebug()">🔍 打開 LIFF 調試工具</button>
+            <button onclick="location.reload()">🔄 重新載入</button>
+        </div>
+        
+        <div id="content"></div>
+    </div>
+    
+    <script>
+        function loadCalendar() {
+            const content = document.getElementById('content');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>載入中...</p></div>';
+            
+            // 創建 iframe 來載入行事曆，但修改 LIFF 初始化邏輯
+            const iframe = document.createElement('iframe');
+            iframe.src = 'about:blank';
+            content.innerHTML = '';
+            content.appendChild(iframe);
+            
+            // 從原始文件載入內容
+            fetch('/perfect-calendar-complete-optimized.html')
+                .then(response => response.text())
+                .then(html => {
+                    // 修改 LIFF 初始化邏輯
+                    html = html.replace(
+                        /await liff\.init\([^)]+\);/g,
+                        'console.log("⏭️ 跳過 LIFF 初始化 (測試模式)");'
+                    );
+                    html = html.replace(
+                        /liff\.login\(\);/g,
+                        'console.log("⏭️ 跳過 LIFF 登入 (測試模式)");'
+                    );
+                    html = html.replace(
+                        'if (typeof LIFFManager !== \'undefined\') {',
+                        'if (false) { // LIFF 已停用'
+                    );
+                    
+                    // 寫入到 iframe
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    iframeDoc.open();
+                    iframeDoc.write(html);
+                    iframeDoc.close();
+                    
+                    console.log('✅ 行事曆已載入（無 LIFF 模式）');
+                })
+                .catch(error => {
+                    content.innerHTML = `
+                        <div class="warning">
+                            <strong>❌ 載入失敗：</strong> ${error.message}
+                        </div>
+                    `;
+                });
+        }
+        
+        function openOriginal() {
+            window.open('/perfect-calendar-complete-optimized.html', '_blank');
+        }
+        
+        function openDebug() {
+            window.open('/liff-debug.html', '_blank');
+        }
+        
+        // 自動載入
+        window.onload = () => {
+            console.log('📋 無 LIFF 測試版本已載入');
+            console.log('💡 點擊「載入行事曆」按鈕開始測試');
+        };
+    </script>
+</body>
+</html>
+

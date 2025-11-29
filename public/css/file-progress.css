@@ -1,0 +1,223 @@
+/**
+ * 🎯 檔案上傳進度條統一樣式
+ * 
+ * 設計原則：
+ * 1. 平時完全隱藏，不影響預覽顯示
+ * 2. Hover 時才顯示進度資訊（半透明遮罩）
+ * 3. 上傳中狀態自動顯示（不需 hover）
+ * 4. 使用固定像素寬度（70px），避免百分比計算問題
+ * 5. 上傳成功後自動淡出並隱藏
+ * 
+ * @version 1.0.0
+ * @date 2025-11-18
+ */
+
+/* ============================================
+   基礎結構
+   ============================================ */
+
+/* Overlay 容器：覆蓋整個預覽 */
+.file-uploading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none; /* 預設隱藏 */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: inherit;
+    pointer-events: none; /* 不阻擋點擊事件 */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 5;
+}
+
+/* 進度文字 */
+.file-uploading-overlay .progress-text {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    max-width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 🔥 [修復 2025-11-18] 進度條容器：絕對定位在預覽圖上方 */
+.file-preview .file-upload-progress {
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    height: 8px;
+    position: absolute !important;
+    bottom: 8px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    border-radius: 999px !important;
+    overflow: hidden !important;
+    z-index: 10 !important;
+}
+
+/* 🔥 [修復 2025-11-18] 進度條填充：鮮豔漸變 + 發光效果 */
+.file-preview .file-upload-progress-fill {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100% !important;
+    width: 0 !important; /* 由 JS 設置像素值 */
+    background: linear-gradient(90deg, #10b981, #06b6d4) !important;
+    border-radius: 999px !important;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.6) !important;
+    /* 🔥 [修復 2025-11-18] 移除 transition，寬度必須立即更新，避免 hover 時看到過渡中間值 */
+    transition: none !important;
+    opacity: 1 !important;
+}
+
+/* ============================================
+   狀態顯示邏輯
+   ============================================ */
+
+/* 🔥 [簡化 2025-11-23] 上傳時應該一直顯示進度 overlay，不隱藏 */
+.file-preview.uploading .file-uploading-overlay,
+.file-preview.pending .file-uploading-overlay {
+    display: flex !important;
+    opacity: 0.95 !important;
+    visibility: visible !important;
+}
+
+/* 上傳成功：不顯示 overlay（即使 hover） */
+.file-preview.upload-success .file-uploading-overlay,
+.file-preview.synced .file-uploading-overlay,
+.file-preview.synced-preview .file-uploading-overlay,
+.file-preview.existing .file-uploading-overlay {
+    display: none !important;
+    opacity: 0 !important;
+}
+
+/* ============================================
+   特殊狀態樣式
+   ============================================ */
+
+/* 上傳失敗：紅色主題 */
+.file-preview.upload-error .file-uploading-overlay {
+    background: rgba(239, 68, 68, 0.85);
+    display: flex !important;
+    opacity: 1 !important;
+}
+
+.file-preview.upload-error .file-upload-progress-fill {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* 🔥 [修復 2025-11-18] 確保上傳中和等待狀態顯示進度條 */
+.file-preview.uploading .file-upload-progress,
+.file-preview.pending .file-upload-progress {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* 等待上傳：灰色主題 */
+.file-preview.pending .file-uploading-overlay {
+    background: rgba(71, 85, 105, 0.75);
+}
+
+.file-preview.pending .file-upload-progress-fill {
+    background: linear-gradient(90deg, #64748b, #475569) !important;
+}
+
+/* ============================================
+   動畫效果
+   ============================================ */
+
+/* 🔥 [修復 2025-11-18] 移除閃爍動畫，確保進度條增長清晰可見 */
+@keyframes progress-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* 不再使用閃爍動畫，避免干擾視覺 */
+/* .file-preview.uploading .file-upload-progress-fill {
+    animation: progress-pulse 1.5s ease-in-out infinite;
+} */
+
+/* Overlay 淡入淡出 */
+.file-uploading-overlay[data-progress-complete="1"] {
+    animation: fade-out 0.4s ease-out forwards;
+}
+
+@keyframes fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+/* ============================================
+   響應式調整
+   ============================================ */
+
+/* 小螢幕：縮小進度條 */
+@media (max-width: 640px) {
+    .file-uploading-overlay .file-upload-progress {
+        width: 60px !important;
+        min-width: 60px !important;
+        max-width: 60px !important;
+        height: 5px;
+    }
+    
+    .file-uploading-overlay .progress-text {
+        font-size: 12px;
+    }
+}
+
+/* ============================================
+   除錯輔助
+   ============================================ */
+
+/* 除錯模式：顯示邊框 */
+body.debug-progress .file-uploading-overlay {
+    outline: 2px dashed #f59e0b;
+}
+
+body.debug-progress .file-upload-progress {
+    outline: 1px solid #10b981;
+}
+
+body.debug-progress .file-upload-progress-fill {
+    outline: 1px solid #3b82f6;
+}
+
+/* ============================================
+   向後兼容（移除舊樣式的衝突）
+   ============================================ */
+
+/* 覆蓋舊的 flex 設定 */
+.file-upload-progress {
+    flex: none !important;
+}
+
+/* 確保不被其他規則影響 */
+.file-preview .file-uploading-overlay .file-upload-progress {
+    display: block !important;
+    position: relative !important;
+}
+
+.file-preview .file-uploading-overlay .file-upload-progress-fill {
+    display: block !important;
+    position: absolute !important;
+}

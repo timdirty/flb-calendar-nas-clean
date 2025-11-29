@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 特殊事件管理中心</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" href="assets/logo.jpg">
+    <style>
+        :root {
+            --primary: #f59e0b;
+            --primary-dark: #d97706;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --bg-gradient: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --radius: 20px;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* 頂部導覽 */
+        .top-nav {
+            background: var(--card-bg);
+            backdrop-filter: blur(18px);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px 30px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.85rem;
+            color: #1e293b;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* 時間範圍篩選 */
+        .time-range-selector {
+            background: var(--card-bg);
+            backdrop-filter: blur(18px);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .time-range-label {
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-range-buttons {
+            display: flex;
+            gap: 8px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 12px;
+        }
+
+        .time-range-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .time-range-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .time-range-btn:hover:not(.active) {
+            color: #1e293b;
+        }
+
+        /* 今日課程精簡版 */
+        .today-events-compact {
+            background: var(--card-bg);
+            backdrop-filter: blur(18px);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px 24px;
+            margin-bottom: 24px;
+        }
+
+        .today-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .today-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .today-count {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .today-events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .today-event-card {
+            padding: 14px 18px;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .today-event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .today-event-time {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            min-width: 80px;
+        }
+
+        .today-event-info {
+            flex: 1;
+        }
+
+        .today-event-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+
+        .today-event-meta {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .no-events-today {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+        }
+
+        /* 日曆視圖 */
+        .calendar-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(18px);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .calendar-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar-nav button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-nav button:hover {
+            background: var(--primary-dark);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            padding: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: rgba(148, 163, 184, 0.15);
+            border-radius: 10px;
+        }
+
+        .calendar-day {
+            min-height: 120px;
+            border-radius: 12px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            background: rgba(255, 255, 255, 0.8);
+            position: relative;
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.35;
+        }
+
+        .calendar-day.today {
+            border: 2px solid var(--info);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            background: rgba(226, 243, 255, 0.85);
+        }
+
+        .day-number {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 1rem;
+        }
+
+        .event-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .event-chip {
+            padding: 6px 10px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .event-chip:hover {
+            transform: scale(1.05);
+        }
+
+        .event-chip .time {
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        .event-chip .title {
+            font-weight: 600;
+        }
+
+        /* Modal 樣式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .modal-header h3 {
+            font-size: 1.5rem;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f1f5f9;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #e2e8f0;
+            transform: rotate(90deg);
+        }
+
+        .event-detail {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .event-detail-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .event-detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .event-detail-label {
+            font-weight: 600;
+            color: var(--text-muted);
+            min-width: 80px;
+        }
+
+        .event-detail-value {
+            color: #1e293b;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .mark-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .mark-type-btn {
+            padding: 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mark-type-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .mark-type-btn.selected {
+            border-color: var(--primary);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .mark-type-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .mark-type-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        /* 學生管理面板 */
+        .students-panel {
+            margin-bottom: 24px;
+        }
+
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .student-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+            border: 2px solid var(--border-color);
+        }
+
+        .student-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .student-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1e293b;
+        }
+
+        .student-classes {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .attendance-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .attendance-btn {
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .attendance-btn.present {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .attendance-btn.present.active {
+            background: var(--success);
+            color: white;
+        }
+
+        .attendance-btn.absent {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .attendance-btn.absent.active {
+            background: var(--danger);
+            color: white;
+        }
+
+        .attendance-btn.leave {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .attendance-btn.leave.active {
+            background: var(--warning);
+            color: white;
+        }
+
+        .attendance-records {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .attendance-records-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .attendance-record {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .quick-mark-section {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #fef3c7;
+            border-radius: 12px;
+        }
+
+        .quick-mark-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1e293b;
+        }
+
+        .quick-mark-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .loading-state,
+        .empty-state,
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .loading-state .material-icons {
+            font-size: 48px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .calendar-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 6px;
+            }
+
+            .calendar-day {
+                min-height: 80px;
+                padding: 4px;
+            }
+
+            .event-chip {
+                font-size: 0.7rem;
+                padding: 4px 6px;
+            }
+
+            .today-events-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 頂部導覽 -->
+        <div class="top-nav">
+            <div class="page-title">
+                <span class="material-icons">event_note</span>
+                特殊事件管理中心
+            </div>
+            <div class="nav-actions">
+                <button class="btn btn-primary" onclick="openSpecialEventModal()">
+                    <span class="material-icons">edit_note</span>
+                    特殊事件標記
+                </button>
+                <button class="btn btn-outline" onclick="openStudentAttendanceModal()">
+                    <span class="material-icons">people</span>
+                    學生出勤管理
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='index.html'">
+                    <span class="material-icons">home</span>
+                    返回首頁
+                </button>
+                <button class="btn btn-secondary" onclick="loadEvents()">
+                    <span class="material-icons">refresh</span>
+                    重新載入
+                </button>
+            </div>
+        </div>
+
+        <!-- 時間範圍篩選 -->
+        <div class="time-range-selector">
+            <div class="time-range-label">
+                <span class="material-icons">date_range</span>
+                視圖範圍
+            </div>
+            <div class="time-range-buttons">
+                <button class="time-range-btn active" data-range="today" onclick="changeTimeRange('today')">
+                    今日
+                </button>
+                <button class="time-range-btn" data-range="week" onclick="changeTimeRange('week')">
+                    本週
+                </button>
+                <button class="time-range-btn" data-range="month" onclick="changeTimeRange('month')">
+                    本月
+                </button>
+            </div>
+            </div>
+
+        <!-- 今日課程（精簡版） -->
+        <div class="today-events-compact" id="todayEventsSection">
+            <div class="today-header">
+                <div class="today-title">
+                    <span class="material-icons">today</span>
+                    今日課程
+                    <span class="today-count" id="todayCount">0</span>
+            </div>
+        </div>
+            <div class="today-events-grid" id="todayEventsGrid">
+                <div class="no-events-today">今日沒有課程</div>
+            </div>
+        </div>
+
+        <!-- 日曆視圖 -->
+        <div class="calendar-section">
+            <div class="calendar-header">
+                <div class="calendar-title" id="calendarTitle">
+                    <span class="material-icons">calendar_month</span>
+                    --
+                </div>
+                <div class="calendar-nav">
+                    <button onclick="previousPeriod()">
+                        <span class="material-icons">chevron_left</span>
+                        上一期
+                    </button>
+                    <button onclick="goToToday()">
+                        <span class="material-icons">today</span>
+                        今天
+                    </button>
+                    <button onclick="nextPeriod()">
+                        下一期
+                        <span class="material-icons">chevron_right</span>
+                    </button>
+                </div>
+        </div>
+
+            <div id="calendarView">
+                <div class="loading-state">
+            <span class="material-icons">autorenew</span>
+            <p>載入課程資料中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 特殊事件標記 Modal -->
+    <div class="modal" id="specialEventModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <span class="material-icons">event_note</span>
+                    課程詳情與特殊標記
+                </h3>
+                <button class="close-btn" onclick="closeSpecialEventModal()">×</button>
+            </div>
+
+            <div class="event-detail" id="eventDetail">
+                <div class="event-detail-row">
+                    <div class="event-detail-label">課程名稱</div>
+                    <div class="event-detail-value" id="detailCourseName">--</div>
+                </div>
+                <div class="event-detail-row">
+                    <div class="event-detail-label">時間</div>
+                    <div class="event-detail-value" id="detailTime">--</div>
+                </div>
+                <div class="event-detail-row">
+                    <div class="event-detail-label">講師</div>
+                    <div class="event-detail-value" id="detailInstructor">--</div>
+                </div>
+                <div class="event-detail-row">
+                    <div class="event-detail-label">地點</div>
+                    <div class="event-detail-value" id="detailLocation">--</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>選擇特殊標記類型</label>
+                <div class="mark-types">
+                    <div class="mark-type-btn" data-type="cancel" onclick="selectMarkType('cancel')">
+                        <div class="mark-type-icon">🚫</div>
+                        <div class="mark-type-name">停課</div>
+                    </div>
+                    <div class="mark-type-btn" data-type="substitute" onclick="selectMarkType('substitute')">
+                        <div class="mark-type-icon">🔄</div>
+                        <div class="mark-type-name">代課</div>
+                    </div>
+                    <div class="mark-type-btn" data-type="reschedule" onclick="selectMarkType('reschedule')">
+                        <div class="mark-type-icon">⏰</div>
+                        <div class="mark-type-name">改時間</div>
+                    </div>
+                    <div class="mark-type-btn" data-type="leave" onclick="selectMarkType('leave')">
+                        <div class="mark-type-icon">🏖️</div>
+                        <div class="mark-type-name">請假</div>
+                    </div>
+                    <div class="mark-type-btn" data-type="notice" onclick="selectMarkType('notice')">
+                        <div class="mark-type-icon">📢</div>
+                        <div class="mark-type-name">公告</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" id="substituteTeacherGroup" style="display: none;">
+                <label>代課講師</label>
+                <input type="text" id="substituteTeacher" placeholder="請輸入代課講師姓名">
+            </div>
+
+            <div class="form-group" id="newTimeGroup" style="display: none;">
+                <label>新時間</label>
+                <input type="datetime-local" id="newTime">
+            </div>
+
+            <div class="form-group">
+                <label>原因 / 說明</label>
+                <textarea id="markReason" rows="3" placeholder="請輸入原因或說明..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>通知對象</label>
+                <input type="text" id="notifyTo" placeholder="例如：家長、學生">
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeSpecialEventModal()">取消</button>
+                <button class="btn btn-danger" id="removeMarkBtn" onclick="removeMark()" style="display: none;">
+                    移除標記
+                </button>
+                <button class="btn btn-primary" onclick="saveMark()">
+                    <span class="material-icons">save</span>
+                    儲存標記
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 學生出勤管理 Modal -->
+    <div class="modal" id="studentAttendanceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <span class="material-icons">people</span>
+                    班級學生與出勤管理
+                </h3>
+                <button class="close-btn" onclick="closeStudentAttendanceModal()">×</button>
+            </div>
+
+            <div class="event-detail" style="margin-bottom: 20px;">
+                <div class="event-detail-row">
+                    <div class="event-detail-label">當前課程</div>
+                    <div class="event-detail-value" id="studentModalCourseName">未選擇課程</div>
+                </div>
+            </div>
+
+            <div class="quick-mark-section">
+                <div class="quick-mark-title">快速標記</div>
+                <div class="quick-mark-buttons">
+                    <button class="btn btn-danger" onclick="markAllAbsent()">
+                        <span class="material-icons">block</span>
+                        全班缺席
+                    </button>
+                    <button class="btn btn-primary" onclick="markAllLeave()">
+                        <span class="material-icons">beach_access</span>
+                        全班請假
+                    </button>
+                    <button class="btn btn-success" onclick="markAllPresent()">
+                        <span class="material-icons">check_circle</span>
+                        全班出席
+                    </button>
+                </div>
+            </div>
+
+            <div class="students-panel">
+                <h4 style="margin-bottom: 16px;">學生名單</h4>
+                <div class="students-grid" id="studentsGrid">
+                    <div class="empty-state">請先選擇一個課程</div>
+                </div>
+            </div>
+
+            <div style="padding: 16px; background: #f8fafc; border-radius: 12px; margin-top: 20px;">
+                <h4 style="margin-bottom: 8px; color: #1e293b;">標記說明</h4>
+                <ul style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.8; padding-left: 20px;">
+                    <li>學生紀錄會同步到行事曆備註（預設測試 API）。</li>
+                    <li>預設為預覽模式，實際寫入請接後端 <code>/api/attendance/mark</code>。</li>
+                    <li>可以在上方特殊事件 Modal 中儲存特殊事件標記。</li>
+                </ul>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeStudentAttendanceModal()">關閉</button>
+                <button class="btn btn-primary" onclick="saveAttendance()">
+                    <span class="material-icons">save</span>
+                    儲存出勤紀錄
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const EVENTS_API = '/api/calendar-events';
+        const SPECIAL_EVENTS_API = '/api/special-events';
+        const STUDENT_DATA_API = '/api/students';  // 🔥 改用統一的 API
+
+        const PRESET_COLORS = {
+            'ESM': '#FFB3D9',
+            'SPM': '#FFA726',
+            'SPIKE': '#FFD54F',
+            'BOOST': '#4FC3F7',
+            'EV3': '#66BB6A',
+            'SCRATCH': '#FF6B6B',
+            'MINECRAFT': '#8BC34A',
+            'PYTHON': '#8B5CF6'
+        };
+
+        const state = {
+            allEvents: [],
+            filteredEvents: [],
+            currentEvent: null,
+            currentViewDate: new Date(),
+            timeRange: 'today',
+            selectedMarkType: null,
+            allStudentsMap: new Map(),
+            studentAttendance: {}
+        };
+
+        // ==================== 工具函數 ====================
+        const parseCourseType = (summary) => {
+            if (!summary) return 'UNKNOWN';
+            const match = summary.match(/^([A-Z]+)/i);
+            return match ? match[1].toUpperCase() : 'UNKNOWN';
+        };
+
+        const getCourseColor = (courseName) => {
+            const type = parseCourseType(courseName);
+            return PRESET_COLORS[type] || '#94a3b8';
+        };
+
+        const formatDateTime = (timestamp) => {
+            const d = new Date(timestamp * 1000);
+            return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        };
+
+        const formatTime = (timestamp) => {
+            const d = new Date(timestamp * 1000);
+            return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        };
+
+        const isToday = (timestamp) => {
+            const d = new Date(timestamp * 1000);
+            const today = new Date();
+            return d.getDate() === today.getDate() && 
+                   d.getMonth() === today.getMonth() && 
+                   d.getFullYear() === today.getFullYear();
+        };
+
+        const isSameWeek = (timestamp) => {
+            const d = new Date(timestamp * 1000);
+            const today = new Date();
+            const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+            const endOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+            return d >= startOfWeek && d <= endOfWeek;
+        };
+
+        const isSameMonth = (timestamp, referenceDate) => {
+            const d = new Date(timestamp * 1000);
+            return d.getMonth() === referenceDate.getMonth() && 
+                   d.getFullYear() === referenceDate.getFullYear();
+        };
+
+        // ==================== 資料載入 ====================
+        async function loadEvents() {
+            try {
+                const [eventsResp, studentDataResp] = await Promise.all([
+                    fetch(EVENTS_API).then(r => r.json()),
+                    fetch(STUDENT_DATA_API).then(r => r.json()).catch(e => {
+                        console.error("Failed to load student data:", e);
+                        return { success: false, students: [] };
+                    })
+                ]);
+
+                if (!eventsResp.success) {
+                    throw new Error(eventsResp.error || '載入失敗');
+                }
+
+                state.allEvents = eventsResp.events || [];
+                
+                // 🔥 修復：使用正確的資料格式 studentDataResp.students
+                if (studentDataResp.success && studentDataResp.students) {
+                    state.allStudentsMap = buildStudentEventMap(studentDataResp.students || []);
+                }
+
+                applyTimeRangeFilter();
+                renderTodayEvents();
+                renderCalendar();
+            } catch (error) {
+                console.error('Load events failed', error);
+                document.getElementById('calendarView').innerHTML = `
+                    <div class="error-state">
+                        <span class="material-icons" style="font-size: 48px; color: var(--danger);">error</span>
+                        <p>載入失敗：${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        const buildStudentEventMap = (studentData) => {
+            const map = new Map();
+            studentData.forEach(student => {
+                const courseName = student.course;
+                const period = student.period;
+                const weekdayMatch = period.match(/^(一|二|三|四|五|六|日)/);
+                const weekday = weekdayMatch ? weekdayMatch[1] : '';
+                const timeRangeMatch = period.match(/(\d{4}-\d{4})/);
+                const timeRange = timeRangeMatch ? timeRangeMatch[1] : '';
+                
+                const courseKey = `${courseName}_${weekday}_${timeRange}`;
+                
+                if (!map.has(courseKey)) {
+                    map.set(courseKey, []);
+                }
+                map.get(courseKey).push(student);
+            });
+            return map;
+        };
+
+        // ==================== 時間範圍篩選 ====================
+        window.changeTimeRange = function(range) {
+            state.timeRange = range;
+            document.querySelectorAll('.time-range-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.range === range);
+            });
+            applyTimeRangeFilter();
+            renderCalendar();
+        };
+
+        function applyTimeRangeFilter() {
+            const now = Date.now() / 1000;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayStart = today.getTime() / 1000;
+            const todayEnd = todayStart + 86400;
+
+            if (state.timeRange === 'today') {
+                state.filteredEvents = state.allEvents.filter(e => 
+                    e.dtstart >= todayStart && e.dtstart < todayEnd
+                );
+            } else if (state.timeRange === 'week') {
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - today.getDay());
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 7);
+                
+                state.filteredEvents = state.allEvents.filter(e => 
+                    e.dtstart >= startOfWeek.getTime() / 1000 && 
+                    e.dtstart < endOfWeek.getTime() / 1000
+                );
+            } else {
+                state.filteredEvents = state.allEvents.filter(e => 
+                    isSameMonth(e.dtstart, state.currentViewDate)
+                );
+            }
+        }
+
+        // ==================== 今日課程渲染 ====================
+        function renderTodayEvents() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayStart = today.getTime() / 1000;
+            const todayEnd = todayStart + 86400;
+
+            const todayEvents = state.allEvents.filter(e => 
+                e.dtstart >= todayStart && e.dtstart < todayEnd
+            ).sort((a, b) => a.dtstart - b.dtstart);
+
+            document.getElementById('todayCount').textContent = todayEvents.length;
+
+            const grid = document.getElementById('todayEventsGrid');
+            if (todayEvents.length === 0) {
+                grid.innerHTML = '<div class="no-events-today">今日沒有課程</div>';
+                return;
+            }
+
+            grid.innerHTML = todayEvents.map(event => {
+                const color = getCourseColor(event.summary);
+                return `
+                    <div class="today-event-card" style="background: ${color};" onclick="selectEventForSpecialMark(${event.evt_id})">
+                        <div class="today-event-time">${formatTime(event.dtstart)}</div>
+                        <div class="today-event-info">
+                            <div class="today-event-title">${event.summary}</div>
+                            <div class="today-event-meta">${event.location || '未指定'}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==================== 日曆渲染 ====================
+        function renderCalendar() {
+            const view = document.getElementById('calendarView');
+            
+            if (state.timeRange === 'today') {
+                renderTodayView(view);
+            } else if (state.timeRange === 'week') {
+                renderWeekView(view);
+            } else {
+                renderMonthView(view);
+            }
+        }
+
+        function renderTodayView(container) {
+            document.getElementById('calendarTitle').innerHTML = `
+                <span class="material-icons">today</span>
+                ${formatDate(new Date())}
+            `;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayStart = today.getTime() / 1000;
+            const todayEnd = todayStart + 86400;
+
+            const events = state.filteredEvents.sort((a, b) => a.dtstart - b.dtstart);
+
+            container.innerHTML = events.length === 0 
+                ? '<div class="empty-state">今日沒有課程</div>'
+                : `
+                    <div style="display: grid; gap: 12px;">
+                        ${events.map(event => {
+                            const color = getCourseColor(event.summary);
+                            return `
+                                <div style="background: ${color}; color: white; padding: 20px; border-radius: 12px; cursor: pointer;" onclick="selectEventForSpecialMark(${event.evt_id})">
+                                    <div style="font-size: 1.2rem; font-weight: 700; margin-bottom: 8px;">${event.summary}</div>
+                                    <div style="opacity: 0.9;">⏰ ${formatTime(event.dtstart)} - ${formatTime(event.dtend)}</div>
+                                    <div style="opacity: 0.9;">📍 ${event.location || '未指定'}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+        }
+
+        function renderWeekView(container) {
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+
+            document.getElementById('calendarTitle').innerHTML = `
+                <span class="material-icons">view_week</span>
+                本週 (${formatDate(startOfWeek)})
+            `;
+
+            const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+            const days = [];
+
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(startOfWeek);
+                day.setDate(startOfWeek.getDate() + i);
+                days.push(day);
+            }
+
+            container.innerHTML = `
+                <div class="calendar-grid">
+                    ${weekDays.map(day => `<div class="calendar-day-header">${day}</div>`).join('')}
+                    ${days.map(day => {
+                        const dayStart = new Date(day);
+                        dayStart.setHours(0, 0, 0, 0);
+                        const dayEnd = new Date(day);
+                        dayEnd.setHours(23, 59, 59, 999);
+
+                        const dayEvents = state.filteredEvents.filter(e => {
+                            const eventDate = new Date(e.dtstart * 1000);
+                            return eventDate >= dayStart && eventDate <= dayEnd;
+                        });
+
+                        const isCurrentDay = isToday(day.getTime() / 1000);
+
+                        return `
+                            <div class="calendar-day ${isCurrentDay ? 'today' : ''}">
+                                <div class="day-number">${day.getDate()}</div>
+                                <div class="event-stack">
+                                    ${dayEvents.map(event => {
+                                        const color = getCourseColor(event.summary);
+                                        return `
+                                            <div class="event-chip" style="background: ${color};" onclick="selectEventForSpecialMark(${event.evt_id})">
+                                                <div class="time">${formatTime(event.dtstart)}</div>
+                                                <div class="title">${event.summary}</div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function renderMonthView(container) {
+            const year = state.currentViewDate.getFullYear();
+            const month = state.currentViewDate.getMonth();
+
+            document.getElementById('calendarTitle').innerHTML = `
+                <span class="material-icons">calendar_month</span>
+                ${year} 年 ${month + 1} 月
+            `;
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - startDate.getDay());
+
+            const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+            const days = [];
+
+            let currentDate = new Date(startDate);
+            while (currentDate <= lastDay || days.length % 7 !== 0) {
+                days.push(new Date(currentDate));
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            container.innerHTML = `
+                <div class="calendar-grid">
+                    ${weekDays.map(day => `<div class="calendar-day-header">${day}</div>`).join('')}
+                    ${days.map(day => {
+                        const dayStart = new Date(day);
+                        dayStart.setHours(0, 0, 0, 0);
+                        const dayEnd = new Date(day);
+                        dayEnd.setHours(23, 59, 59, 999);
+
+                        const dayEvents = state.allEvents.filter(e => {
+                            const eventDate = new Date(e.dtstart * 1000);
+                            return eventDate >= dayStart && eventDate <= dayEnd;
+                        });
+
+                        const isCurrentMonth = day.getMonth() === month;
+                        const isCurrentDay = isToday(day.getTime() / 1000);
+
+                        return `
+                            <div class="calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isCurrentDay ? 'today' : ''}">
+                                <div class="day-number">${day.getDate()}</div>
+                                <div class="event-stack">
+                                    ${dayEvents.slice(0, 3).map(event => {
+                                        const color = getCourseColor(event.summary);
+                                        return `
+                                            <div class="event-chip" style="background: ${color};" onclick="selectEventForSpecialMark(${event.evt_id})">
+                                                <div class="time">${formatTime(event.dtstart)}</div>
+                                                <div class="title">${event.summary}</div>
+                        </div>
+                                        `;
+                                    }).join('')}
+                                    ${dayEvents.length > 3 ? `<div style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">+${dayEvents.length - 3} 更多</div>` : ''}
+                    </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function formatDate(date) {
+            return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        // ==================== 導覽控制 ====================
+        window.previousPeriod = function() {
+            if (state.timeRange === 'month') {
+                state.currentViewDate.setMonth(state.currentViewDate.getMonth() - 1);
+            } else if (state.timeRange === 'week') {
+                state.currentViewDate.setDate(state.currentViewDate.getDate() - 7);
+            } else {
+                state.currentViewDate.setDate(state.currentViewDate.getDate() - 1);
+            }
+            applyTimeRangeFilter();
+            renderCalendar();
+        };
+
+        window.nextPeriod = function() {
+            if (state.timeRange === 'month') {
+                state.currentViewDate.setMonth(state.currentViewDate.getMonth() + 1);
+            } else if (state.timeRange === 'week') {
+                state.currentViewDate.setDate(state.currentViewDate.getDate() + 7);
+            } else {
+                state.currentViewDate.setDate(state.currentViewDate.getDate() + 1);
+            }
+            applyTimeRangeFilter();
+            renderCalendar();
+        };
+
+        window.goToToday = function() {
+            state.currentViewDate = new Date();
+            applyTimeRangeFilter();
+            renderCalendar();
+        };
+
+        // ==================== 特殊事件標記 Modal ====================
+        window.openSpecialEventModal = function() {
+            if (!state.currentEvent) {
+                alert('請先選擇一個課程');
+                return;
+            }
+            document.getElementById('specialEventModal').classList.add('active');
+        };
+
+        window.closeSpecialEventModal = function() {
+            document.getElementById('specialEventModal').classList.remove('active');
+            state.selectedMarkType = null;
+            document.querySelectorAll('.mark-type-btn').forEach(btn => btn.classList.remove('selected'));
+            document.getElementById('substituteTeacherGroup').style.display = 'none';
+            document.getElementById('newTimeGroup').style.display = 'none';
+        };
+
+        window.selectEventForSpecialMark = function(evtId) {
+            const event = state.allEvents.find(e => e.evt_id == evtId);
+            if (!event) return;
+
+            state.currentEvent = event;
+
+            document.getElementById('detailCourseName').textContent = event.summary;
+            document.getElementById('detailTime').textContent = formatDateTime(event.dtstart) + ' - ' + formatTime(event.dtend);
+            document.getElementById('detailInstructor').textContent = '未指定';
+            document.getElementById('detailLocation').textContent = event.location || '未指定';
+
+            if (event.special_mark) {
+                state.selectedMarkType = event.special_mark.type;
+                document.querySelector(`.mark-type-btn[data-type="${event.special_mark.type}"]`)?.classList.add('selected');
+                document.getElementById('markReason').value = event.special_mark.reason || '';
+                document.getElementById('notifyTo').value = event.special_mark.notify_to || '';
+
+                if (event.special_mark.type === 'substitute') {
+                    document.getElementById('substituteTeacherGroup').style.display = 'block';
+                    document.getElementById('substituteTeacher').value = event.special_mark.substitute_teacher || '';
+                } else if (event.special_mark.type === 'reschedule') {
+                    document.getElementById('newTimeGroup').style.display = 'block';
+                    document.getElementById('newTime').value = event.special_mark.new_time || '';
+                }
+
+                document.getElementById('removeMarkBtn').style.display = 'block';
+            } else {
+                document.getElementById('removeMarkBtn').style.display = 'none';
+            }
+
+            openSpecialEventModal();
+        };
+
+        window.selectMarkType = function(type) {
+            state.selectedMarkType = type;
+            
+            document.querySelectorAll('.mark-type-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.type === type);
+            });
+
+            document.getElementById('substituteTeacherGroup').style.display = type === 'substitute' ? 'block' : 'none';
+            document.getElementById('newTimeGroup').style.display = type === 'reschedule' ? 'block' : 'none';
+        };
+
+        window.saveMark = async function() {
+            if (!state.currentEvent || !state.selectedMarkType) {
+                alert('請選擇標記類型');
+                return;
+            }
+
+            const payload = {
+                evt_id: state.currentEvent.evt_id,
+                type: state.selectedMarkType,
+                reason: document.getElementById('markReason').value,
+                notify_to: document.getElementById('notifyTo').value
+            };
+
+            if (state.selectedMarkType === 'substitute') {
+                payload.substitute_teacher = document.getElementById('substituteTeacher').value;
+            } else if (state.selectedMarkType === 'reschedule') {
+                payload.new_time = document.getElementById('newTime').value;
+            }
+
+            try {
+                const resp = await fetch(SPECIAL_EVENTS_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await resp.json();
+                if (result.success) {
+                    alert('特殊標記已儲存');
+                    closeSpecialEventModal();
+                    loadEvents();
+                } else {
+                    alert('儲存失敗：' + (result.error || '未知錯誤'));
+                }
+            } catch (error) {
+                alert('儲存失敗：' + error.message);
+            }
+        };
+
+        window.removeMark = async function() {
+            if (!state.currentEvent) return;
+
+            if (!confirm('確定要移除此特殊標記嗎？')) return;
+
+            try {
+                const resp = await fetch(`${SPECIAL_EVENTS_API}/${state.currentEvent.evt_id}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await resp.json();
+                if (result.success) {
+                    alert('特殊標記已移除');
+                    closeSpecialEventModal();
+                    loadEvents();
+                } else {
+                    alert('移除失敗：' + (result.error || '未知錯誤'));
+                }
+            } catch (error) {
+                alert('移除失敗：' + error.message);
+            }
+        };
+
+        // ==================== 學生出勤管理 Modal ====================
+        window.openStudentAttendanceModal = function() {
+            if (!state.currentEvent) {
+                alert('請先選擇一個課程');
+                return;
+            }
+
+            document.getElementById('studentModalCourseName').textContent = 
+                `${state.currentEvent.summary} | ${formatDateTime(state.currentEvent.dtstart)}`;
+
+            loadStudentsForEvent(state.currentEvent);
+            document.getElementById('studentAttendanceModal').classList.add('active');
+        };
+
+        window.closeStudentAttendanceModal = function() {
+            document.getElementById('studentAttendanceModal').classList.remove('active');
+        };
+
+        function loadStudentsForEvent(event) {
+            const courseName = parseCourseType(event.summary);
+            const eventDate = new Date(event.dtstart * 1000);
+            const weekday = '日一二三四五六'.charAt(eventDate.getDay());
+            const timeRangeMatch = event.summary.match(/(\d{4}-\d{4})/);
+            const timeRange = timeRangeMatch ? timeRangeMatch[1] : '';
+            const courseKey = `${courseName}_${weekday}_${timeRange}`;
+
+            const students = state.allStudentsMap.get(courseKey) || [];
+            const grid = document.getElementById('studentsGrid');
+
+            if (students.length === 0) {
+                grid.innerHTML = '<div class="empty-state">此課程沒有學生資料</div>';
+                return;
+            }
+
+            grid.innerHTML = students.map(student => {
+                const studentId = `${event.evt_id}_${student.name}`;
+                const attendance = state.studentAttendance[studentId] || 'present';
+
+                return `
+                    <div class="student-card">
+                        <div class="student-header">
+                            <div class="student-name">${student.name}</div>
+                        </div>
+                        <div class="student-classes">剩餘 ${student.remaining_classes || 0} 堂</div>
+                        <div class="attendance-buttons">
+                            <button class="attendance-btn present ${attendance === 'present' ? 'active' : ''}" 
+                                    onclick="markStudentAttendance('${studentId}', 'present')">
+                                <span class="material-icons" style="font-size: 16px;">check_circle</span>
+                                出席
+                            </button>
+                            <button class="attendance-btn absent ${attendance === 'absent' ? 'active' : ''}" 
+                                    onclick="markStudentAttendance('${studentId}', 'absent')">
+                                <span class="material-icons" style="font-size: 16px;">block</span>
+                                缺席
+                            </button>
+                            <button class="attendance-btn leave ${attendance === 'leave' ? 'active' : ''}" 
+                                    onclick="markStudentAttendance('${studentId}', 'leave')">
+                                <span class="material-icons" style="font-size: 16px;">beach_access</span>
+                                請假
+                            </button>
+                        </div>
+                        <div class="attendance-records">
+                            <div class="attendance-records-title">最近出勤</div>
+                            ${student.recent_attendance ? student.recent_attendance.split(',').slice(0, 3).map(record => 
+                                `<div class="attendance-record">${record}</div>`
+                            ).join('') : '<div class="attendance-record">無紀錄</div>'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.markStudentAttendance = function(studentId, status) {
+            state.studentAttendance[studentId] = status;
+            loadStudentsForEvent(state.currentEvent);
+        };
+
+        window.markAllAbsent = function() {
+            if (!confirm('確定要將全班標記為缺席嗎？')) return;
+            
+            const courseName = parseCourseType(state.currentEvent.summary);
+            const eventDate = new Date(state.currentEvent.dtstart * 1000);
+            const weekday = '日一二三四五六'.charAt(eventDate.getDay());
+            const timeRangeMatch = state.currentEvent.summary.match(/(\d{4}-\d{4})/);
+            const timeRange = timeRangeMatch ? timeRangeMatch[1] : '';
+            const courseKey = `${courseName}_${weekday}_${timeRange}`;
+            const students = state.allStudentsMap.get(courseKey) || [];
+
+            students.forEach(student => {
+                const studentId = `${state.currentEvent.evt_id}_${student.name}`;
+                state.studentAttendance[studentId] = 'absent';
+            });
+
+            loadStudentsForEvent(state.currentEvent);
+        };
+
+        window.markAllLeave = function() {
+            if (!confirm('確定要將全班標記為請假嗎？')) return;
+            
+            const courseName = parseCourseType(state.currentEvent.summary);
+            const eventDate = new Date(state.currentEvent.dtstart * 1000);
+            const weekday = '日一二三四五六'.charAt(eventDate.getDay());
+            const timeRangeMatch = state.currentEvent.summary.match(/(\d{4}-\d{4})/);
+            const timeRange = timeRangeMatch ? timeRangeMatch[1] : '';
+            const courseKey = `${courseName}_${weekday}_${timeRange}`;
+            const students = state.allStudentsMap.get(courseKey) || [];
+
+            students.forEach(student => {
+                const studentId = `${state.currentEvent.evt_id}_${student.name}`;
+                state.studentAttendance[studentId] = 'leave';
+            });
+
+            loadStudentsForEvent(state.currentEvent);
+        };
+
+        window.markAllPresent = function() {
+            if (!confirm('確定要將全班標記為出席嗎？')) return;
+            
+            const courseName = parseCourseType(state.currentEvent.summary);
+            const eventDate = new Date(state.currentEvent.dtstart * 1000);
+            const weekday = '日一二三四五六'.charAt(eventDate.getDay());
+            const timeRangeMatch = state.currentEvent.summary.match(/(\d{4}-\d{4})/);
+            const timeRange = timeRangeMatch ? timeRangeMatch[1] : '';
+            const courseKey = `${courseName}_${weekday}_${timeRange}`;
+            const students = state.allStudentsMap.get(courseKey) || [];
+
+            students.forEach(student => {
+                const studentId = `${state.currentEvent.evt_id}_${student.name}`;
+                state.studentAttendance[studentId] = 'present';
+            });
+
+            loadStudentsForEvent(state.currentEvent);
+        };
+
+        window.saveAttendance = async function() {
+            console.log('儲存出勤紀錄（預覽模式）:', state.studentAttendance);
+            alert('出勤紀錄已儲存（預覽模式）\n實際寫入請串接後端 /api/attendance/mark');
+            closeStudentAttendanceModal();
+        };
+
+        // ==================== 初始化 ====================
+        loadEvents();
+    })();
+    </script>
+</body>
+</html>

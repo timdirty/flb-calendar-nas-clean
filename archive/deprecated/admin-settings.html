@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統管理後台</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 28px;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: #ecf0f1;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            background: #bdc3c7;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            min-height: 500px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table th,
+        table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .teacher-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .teacher-info {
+            flex: 1;
+        }
+
+        .teacher-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .teacher-id {
+            color: #7f8c8d;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #ecf0f1;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header i {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .login-header h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .help-text {
+            color: #7f8c8d;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 登入畫面 -->
+    <div id="loginContainer" class="login-container">
+        <div class="login-header">
+            <i class="fas fa-lock"></i>
+            <h2>系統管理後台</h2>
+            <p style="color: #7f8c8d;">請輸入管理員密碼</p>
+        </div>
+        <div class="form-group">
+            <label>密碼</label>
+            <input type="password" id="loginPassword" placeholder="請輸入管理員密碼" onkeypress="if(event.key==='Enter') login()">
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="login()">
+            <i class="fas fa-sign-in-alt"></i> 登入
+        </button>
+        <div id="loginAlert" class="alert alert-error" style="margin-top: 15px;"></div>
+    </div>
+
+    <!-- 主要內容（登入後顯示） -->
+    <div id="mainContainer" class="container" style="display: none;">
+        <div class="header">
+            <h1><i class="fas fa-cog"></i> 系統管理後台</h1>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> 登出
+            </button>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('system')">
+                <i class="fas fa-server"></i> 系統設定
+            </button>
+            <button class="tab" onclick="switchTab('reminders')">
+                <i class="fas fa-bell"></i> 提醒設定
+            </button>
+            <button class="tab" onclick="switchTab('teachers')">
+                <i class="fas fa-users"></i> 講師管理
+            </button>
+            <button class="tab" onclick="switchTab('teacher-list')">
+                <i class="fas fa-list"></i> 講師列表
+            </button>
+            <button class="tab" onclick="switchTab('backup')">
+                <i class="fas fa-database"></i> 備份還原
+            </button>
+        </div>
+
+        <div class="content">
+            <!-- 系統設定 -->
+            <div id="system" class="section active">
+                <h2 style="margin-bottom: 20px;"><i class="fas fa-server"></i> 系統設定</h2>
+                <div id="systemSettings"></div>
+            </div>
+
+            <!-- 提醒設定 -->
+            <div id="reminders" class="section">
+                <h2 style="margin-bottom: 20px;"><i class="fas fa-bell"></i> 提醒設定</h2>
+                <div id="reminderSettings"></div>
+            </div>
+
+            <!-- 講師管理 -->
+            <div id="teachers" class="section">
+                <h2 style="margin-bottom: 20px;"><i class="fas fa-users"></i> 講師資料管理</h2>
+                <div id="teacherData"></div>
+            </div>
+
+            <!-- 講師列表 -->
+            <div id="teacher-list" class="section">
+                <h2 style="margin-bottom: 20px;"><i class="fas fa-list"></i> 講師列表資料</h2>
+                <div id="teacherListData"></div>
+            </div>
+
+            <!-- 備份還原 -->
+            <div id="backup" class="section">
+                <h2 style="margin-bottom: 20px;"><i class="fas fa-database"></i> 備份與還原</h2>
+                <div id="backupData"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        let currentTab = 'system';
+        let adminToken = '';
+
+        // 登入
+        async function login() {
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!password) {
+                showLoginAlert('請輸入密碼');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    adminToken = result.token;
+                    localStorage.setItem('adminToken', adminToken);
+                    document.getElementById('loginContainer').style.display = 'none';
+                    document.getElementById('mainContainer').style.display = 'block';
+                    loadAllData();
+                } else {
+                    showLoginAlert(result.message || '密碼錯誤');
+                }
+            } catch (error) {
+                showLoginAlert('登入失敗：' + error.message);
+            }
+        }
+
+        // 顯示登入錯誤
+        function showLoginAlert(message) {
+            const alert = document.getElementById('loginAlert');
+            alert.textContent = message;
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), 3000);
+        }
+
+        // 登出
+        function logout() {
+            localStorage.removeItem('adminToken');
+            adminToken = '';
+            document.getElementById('mainContainer').style.display = 'none';
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        // 檢查登入狀態
+        function checkAuth() {
+            const token = localStorage.getItem('adminToken');
+            if (token) {
+                adminToken = token;
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('mainContainer').style.display = 'block';
+                loadAllData();
+            }
+        }
+
+        // 切換分頁
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // 更新分頁按鈕
+            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 更新內容區域
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+        }
+
+        // 載入所有資料
+        async function loadAllData() {
+            await loadSystemSettings();
+            await loadReminderSettings();
+            await loadTeacherData();
+            await loadTeacherListData();
+            await loadBackupData();
+        }
+
+        // 載入系統設定
+        async function loadSystemSettings() {
+            try {
+                const response = await fetch('/api/admin/system-settings', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    renderSystemSettings(result.data);
+                }
+            } catch (error) {
+                showAlert('載入系統設定失敗：' + error.message, 'error');
+            }
+        }
+
+        // 渲染系統設定
+        function renderSystemSettings(data) {
+            const container = document.getElementById('systemSettings');
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-clock"></i> 排程設定
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>檢查間隔（分鐘）</label>
+                            <input type="number" id="checkInterval" value="${data.scheduler.checkInterval}">
+                        </div>
+                        <div class="form-group">
+                            <label>超時時間（毫秒）</label>
+                            <input type="number" id="timeout" value="${data.scheduler.timeout}">
+                        </div>
+                        <div class="form-group">
+                            <label>重試延遲（毫秒）</label>
+                            <input type="number" id="retryDelay" value="${data.scheduler.retryDelay}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-globe"></i> 時區設定
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>時區偏移</label>
+                            <input type="number" id="timezoneOffset" value="${data.timezone.offset}">
+                        </div>
+                        <div class="form-group">
+                            <label>時區名稱</label>
+                            <input type="text" id="timezoneName" value="${data.timezone.name}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-bell"></i> 講師提醒設定
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>今日提醒時間（時）</label>
+                            <input type="number" id="todayReminderHour" value="${data.reminders.todayReminderHour}" min="0" max="23">
+                        </div>
+                        <div class="form-group">
+                            <label>今日提醒時間（分）</label>
+                            <input type="number" id="todayReminderMinute" value="${data.reminders.todayReminderMinute}" min="0" max="59">
+                        </div>
+                        <div class="form-group">
+                            <label>明日提醒時間（時）</label>
+                            <input type="number" id="tomorrowReminderHour" value="${data.reminders.tomorrowReminderHour}" min="0" max="23">
+                        </div>
+                        <div class="form-group">
+                            <label>明日提醒時間（分）</label>
+                            <input type="number" id="tomorrowReminderMinute" value="${data.reminders.tomorrowReminderMinute}" min="0" max="59">
+                        </div>
+                        <div class="form-group">
+                            <label>課前提醒（分鐘）</label>
+                            <input type="number" id="beforeClassMinutes" value="${data.reminders.beforeClassMinutes}">
+                        </div>
+                        <div class="form-group">
+                            <label>發送延遲（毫秒）</label>
+                            <input type="number" id="sendDelay" value="${data.reminders.sendDelay}">
+                        </div>
+                        <div class="form-group">
+                            <label>每分鐘最大發送數</label>
+                            <input type="number" id="maxSendPerMinute" value="${data.reminders.maxSendPerMinute}">
+                        </div>
+                        <div class="form-group">
+                            <label>最大重試次數</label>
+                            <input type="number" id="retryMaxAttempts" value="${data.reminders.retryMaxAttempts}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-filter"></i> 跳過關鍵字設定
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="skipKeywordsEnabled" ${data.skipKeywords.enabled ? 'checked' : ''}>
+                            啟用關鍵字過濾
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>關鍵字列表（每行一個）</label>
+                        <textarea id="skipKeywords">${data.skipKeywords.keywords.join('\n')}</textarea>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="saveSystemSettings()">
+                        <i class="fas fa-save"></i> 儲存系統設定
+                    </button>
+                    <button class="btn btn-success" onclick="testReminder()">
+                        <i class="fas fa-paper-plane"></i> 測試提醒發送
+                    </button>
+                </div>
+            `;
+        }
+
+        // 儲存系統設定
+        async function saveSystemSettings() {
+            const data = {
+                scheduler: {
+                    checkInterval: parseInt(document.getElementById('checkInterval').value),
+                    timeout: parseInt(document.getElementById('timeout').value),
+                    retryDelay: parseInt(document.getElementById('retryDelay').value)
+                },
+                timezone: {
+                    offset: parseInt(document.getElementById('timezoneOffset').value),
+                    name: document.getElementById('timezoneName').value
+                },
+                reminders: {
+                    todayReminderHour: parseInt(document.getElementById('todayReminderHour').value),
+                    todayReminderMinute: parseInt(document.getElementById('todayReminderMinute').value),
+                    todayReminderDuration: 10,
+                    tomorrowReminderHour: parseInt(document.getElementById('tomorrowReminderHour').value),
+                    tomorrowReminderMinute: parseInt(document.getElementById('tomorrowReminderMinute').value),
+                    tomorrowReminderDuration: 15,
+                    beforeClassMinutes: parseInt(document.getElementById('beforeClassMinutes').value),
+                    sendDelay: parseInt(document.getElementById('sendDelay').value),
+                    maxSendPerMinute: parseInt(document.getElementById('maxSendPerMinute').value),
+                    retryMaxAttempts: parseInt(document.getElementById('retryMaxAttempts').value),
+                    retryBaseDelay: 5000
+                },
+                studentReminders: {
+                    defaultHour: 19,
+                    defaultMinute: 30,
+                    defaultDuration: 5,
+                    defaultEnabled: true
+                },
+                matching: {
+                    durationTolerance: 30,
+                    timeTolerance: 30
+                },
+                skipKeywords: {
+                    enabled: document.getElementById('skipKeywordsEnabled').checked,
+                    keywords: document.getElementById('skipKeywords').value.split('\n').filter(k => k.trim())
+                },
+                api: {
+                    baseUrl: "https://calendar.funlearnbar.synology.me",
+                    timeout: 60000
+                }
+            };
+
+            try {
+                const response = await fetch('/api/admin/system-settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('系統設定已成功儲存！', 'success');
+                } else {
+                    showAlert('儲存失敗：' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('儲存失敗：' + error.message, 'error');
+            }
+        }
+
+        // 載入提醒設定
+        async function loadReminderSettings() {
+            try {
+                const response = await fetch('/api/admin/student-reminder-settings', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    renderReminderSettings(result.data);
+                }
+            } catch (error) {
+                showAlert('載入提醒設定失敗：' + error.message, 'error');
+            }
+        }
+
+        // 渲染提醒設定
+        function renderReminderSettings(data) {
+            const container = document.getElementById('reminderSettings');
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-user-clock"></i> 學生提醒預設設定
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>提醒時間（時）</label>
+                            <input type="number" id="studentReminderHour" value="${data.hour}" min="0" max="23">
+                        </div>
+                        <div class="form-group">
+                            <label>提醒時間（分）</label>
+                            <input type="number" id="studentReminderMinute" value="${data.minute}" min="0" max="59">
+                        </div>
+                        <div class="form-group">
+                            <label>提醒時長（分鐘）</label>
+                            <input type="number" id="studentReminderDuration" value="${data.duration}">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="studentReminderEnabled" ${data.enabled ? 'checked' : ''}>
+                                預設啟用提醒
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="saveReminderSettings()">
+                        <i class="fas fa-save"></i> 儲存提醒設定
+                    </button>
+                </div>
+            `;
+        }
+
+        // 儲存提醒設定
+        async function saveReminderSettings() {
+            const data = {
+                hour: parseInt(document.getElementById('studentReminderHour').value),
+                minute: parseInt(document.getElementById('studentReminderMinute').value),
+                duration: parseInt(document.getElementById('studentReminderDuration').value),
+                enabled: document.getElementById('studentReminderEnabled').checked
+            };
+
+            try {
+                const response = await fetch('/api/admin/student-reminder-settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('提醒設定已成功儲存！', 'success');
+                } else {
+                    showAlert('儲存失敗：' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('儲存失敗：' + error.message, 'error');
+            }
+        }
+
+        // 載入講師資料
+        async function loadTeacherData() {
+            try {
+                const response = await fetch('/api/admin/teacher-data', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    renderTeacherData(result.data);
+                }
+            } catch (error) {
+                showAlert('載入講師資料失敗：' + error.message, 'error');
+            }
+        }
+
+        // 渲染講師資料
+        function renderTeacherData(data) {
+            const container = document.getElementById('teacherData');
+            let html = `
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-users"></i> 講師 LINE ID 綁定管理
+                        <span class="badge badge-info">${Object.keys(data.teachers).length} 位講師</span>
+                    </div>
+                    <div id="teacherList">
+            `;
+
+            for (const [name, userId] of Object.entries(data.teachers)) {
+                html += `
+                    <div class="teacher-item">
+                        <div class="teacher-info">
+                            <div class="teacher-name">${name}</div>
+                            <div class="teacher-id">${userId}</div>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteTeacher('${name}')">
+                            <i class="fas fa-trash"></i> 刪除
+                        </button>
+                    </div>
+                `;
+            }
+
+            html += `
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-plus"></i> 新增講師綁定
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>講師名稱</label>
+                            <input type="text" id="newTeacherName" placeholder="例如：TIM">
+                        </div>
+                        <div class="form-group">
+                            <label>LINE User ID</label>
+                            <input type="text" id="newTeacherId" placeholder="例如：U1234567890abcdef...">
+                        </div>
+                    </div>
+                    <button class="btn btn-success" onclick="addTeacher()">
+                        <i class="fas fa-plus"></i> 新增講師
+                    </button>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // 新增講師
+        async function addTeacher() {
+            const name = document.getElementById('newTeacherName').value.trim();
+            const userId = document.getElementById('newTeacherId').value.trim();
+
+            if (!name || !userId) {
+                showAlert('請填寫完整的講師資料', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/teacher-data/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ name, userId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('講師新增成功！', 'success');
+                    document.getElementById('newTeacherName').value = '';
+                    document.getElementById('newTeacherId').value = '';
+                    loadTeacherData();
+                } else {
+                    showAlert('新增失敗：' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('新增失敗：' + error.message, 'error');
+            }
+        }
+
+        // 刪除講師
+        async function deleteTeacher(name) {
+            if (!confirm(`確定要刪除講師 "${name}" 的綁定資料嗎？`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/teacher-data/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ name })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('講師刪除成功！', 'success');
+                    loadTeacherData();
+                } else {
+                    showAlert('刪除失敗：' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('刪除失敗：' + error.message, 'error');
+            }
+        }
+
+        // 載入講師列表資料
+        async function loadTeacherListData() {
+            const container = document.getElementById('teacherListData');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>載入中...</p></div>';
+            
+            try {
+                const response = await fetch('/api/admin/teacher-list-data', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    renderTeacherListData(result.data);
+                }
+            } catch (error) {
+                container.innerHTML = '<p style="color: #e74c3c;">載入失敗：' + error.message + '</p>';
+            }
+        }
+
+        // 渲染講師列表資料
+        function renderTeacherListData(data) {
+            const container = document.getElementById('teacherListData');
+            container.innerHTML = `
+                <p style="color: #7f8c8d; margin-bottom: 15px;">
+                    <i class="fas fa-info-circle"></i> 此資料用於 Google Sheets 簽到整合，包含每位講師的 Sheets 連結和 API 設定
+                </p>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>老師</th>
+                                <th>Google Sheets 連結</th>
+                                <th>Web API</th>
+                                <th>讀報表 API</th>
+                                <th>User ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(row => `
+                                <tr>
+                                    <td><strong>${row.name}</strong></td>
+                                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                                        ${row.sheetUrl ? `<a href="${row.sheetUrl}" target="_blank" style="color: #667eea;">查看</a>` : '-'}
+                                    </td>
+                                    <td>${row.webApi ? '<span class="badge badge-success">已設定</span>' : '-'}</td>
+                                    <td>${row.reportApi ? '<span class="badge badge-success">已設定</span>' : '-'}</td>
+                                    <td><code>${row.userId || '-'}</code></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="downloadCSV()">
+                        <i class="fas fa-download"></i> 下載 CSV
+                    </button>
+                    <button class="btn btn-success" onclick="showUploadCSV()">
+                        <i class="fas fa-upload"></i> 上傳 CSV
+                    </button>
+                </div>
+            `;
+        }
+
+        // 載入備份資料
+        async function loadBackupData() {
+            const container = document.getElementById('backupData');
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-save"></i> 建立備份
+                    </div>
+                    <p style="color: #7f8c8d; margin-bottom: 15px;">
+                        備份所有配置文件，包括系統設定、講師資料等
+                    </p>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="createBackup()">
+                            <i class="fas fa-save"></i> 建立完整備份
+                        </button>
+                        <button class="btn btn-success" onclick="downloadBackup()">
+                            <i class="fas fa-download"></i> 下載備份檔案
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-upload"></i> 還原備份
+                    </div>
+                    <p style="color: #7f8c8d; margin-bottom: 15px;">
+                        從備份檔案還原配置（請謹慎操作）
+                    </p>
+                    <div class="form-group">
+                        <input type="file" id="backupFile" accept=".json" style="display: none;" onchange="uploadBackup()">
+                        <button class="btn btn-danger" onclick="document.getElementById('backupFile').click()">
+                            <i class="fas fa-upload"></i> 選擇備份檔案還原
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fas fa-history"></i> 備份歷史
+                    </div>
+                    <div id="backupHistory">
+                        <div class="loading"><div class="spinner"></div><p>載入中...</p></div>
+                    </div>
+                </div>
+            `;
+
+            loadBackupHistory();
+        }
+
+        // 載入備份歷史
+        async function loadBackupHistory() {
+            try {
+                const response = await fetch('/api/admin/backup/history', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const result = await response.json();
+
+                if (result.success && result.backups) {
+                    const container = document.getElementById('backupHistory');
+                    if (result.backups.length === 0) {
+                        container.innerHTML = '<p style="color: #7f8c8d;">尚無備份記錄</p>';
+                    } else {
+                        container.innerHTML = result.backups.map(backup => `
+                            <div class="teacher-item">
+                                <div class="teacher-info">
+                                    <div class="teacher-name">${backup.name}</div>
+                                    <div class="teacher-id">${new Date(backup.date).toLocaleString('zh-TW')}</div>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <button class="btn btn-success" onclick="restoreBackup('${backup.name}')">
+                                        <i class="fas fa-undo"></i> 還原
+                                    </button>
+                                    <button class="btn btn-danger" onclick="deleteBackup('${backup.name}')">
+                                        <i class="fas fa-trash"></i> 刪除
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                document.getElementById('backupHistory').innerHTML = 
+                    '<p style="color: #e74c3c;">載入備份歷史失敗</p>';
+            }
+        }
+
+        // 建立備份
+        async function createBackup() {
+            if (!confirm('確定要建立備份嗎？')) return;
+
+            try {
+                const response = await fetch('/api/admin/backup/create', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('備份建立成功！', 'success');
+                    loadBackupHistory();
+                } else {
+                    showAlert('備份失敗：' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('備份失敗：' + error.message, 'error');
+            }
+        }
+
+        // 還原備份
+        async function restoreBackup(name) {
+            if (!confirm(`確定要還原備份 "${name}" 嗎？此操作將覆蓋現有設定！`)) return;
+
+            try {
+                const response = await fetch('/api/admin/backup/restore', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ name })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('備份還原成功！頁面將重新載入...', 'success');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showAlert('還原失敗：' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('還原失敗：' + error.message, 'error');
+            }
+        }
+
+        // 顯示提示訊息
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            setTimeout(() => alert.classList.remove('show'), 5000);
+        }
+
+        // 測試提醒發送
+        async function testReminder() {
+            if (!confirm('確定要發送測試提醒嗎？')) return;
+
+            try {
+                const response = await fetch('/api/admin/test-reminder', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('測試提醒已發送！', 'success');
+                } else {
+                    showAlert('發送失敗：' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('發送失敗：' + error.message, 'error');
+            }
+        }
+
+        // 頁面載入時檢查登入狀態
+        window.addEventListener('DOMContentLoaded', checkAuth);
+    </script>
+</body>
+</html>
+

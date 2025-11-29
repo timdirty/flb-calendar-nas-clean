@@ -1,0 +1,5137 @@
+{
+  "enabled": true,
+  "specialEventColors": {
+    "停課": "#dc3545",
+    "體驗": "#FFD700",
+    "代課": "#2196F3",
+    "改時間": "#f59e0b"
+  },
+  "templates": {
+    "today": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "📚 當日課程提醒",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold"
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "{headerColor}",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "md",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "{specialEventBadge}",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "{specialEventColor}",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0,
+                "wrap": true
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "📖 查看教案",
+              "uri": "{lessonPlanUrl}"
+            },
+            "color": "#4f46e5",
+            "height": "sm"
+          },
+          {
+            "type": "button",
+            "style": "link",
+            "action": {
+              "type": "uri",
+              "label": "🗺️ 地圖導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "tomorrow": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "🌟 明日課程提醒",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold"
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "{headerColor}",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "md",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "{specialEventBadge}",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "{specialEventColor}",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0,
+                "wrap": true
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "📖 查看教案",
+              "uri": "{lessonPlanUrl}"
+            },
+            "color": "#06b6d4",
+            "height": "sm"
+          },
+          {
+            "type": "button",
+            "style": "link",
+            "action": {
+              "type": "uri",
+              "label": "🗺️ 地圖導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "beforeClass": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "⏰ 課前提醒",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold"
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "{headerColor}",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "即將開始上課！",
+            "size": "md",
+            "weight": "bold",
+            "color": "{headerColor}"
+          },
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "sm",
+            "color": "#555555",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "sm",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "{specialEventBadge}",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "{specialEventColor}",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0,
+                "wrap": true
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⌛",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{timeUntilClass}",
+                    "size": "sm",
+                    "color": "#f59e0b",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "🗺️ 開始導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "color": "#f59e0b",
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "student": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "👋 課程通知",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold"
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#10b981",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{studentName}",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "{courseName}",
+            "size": "sm",
+            "color": "#555555",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "👨‍🏫",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{teacherName} 講師",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "contents": [
+              {
+                "type": "text",
+                "text": "請確認孩子是否出席：",
+                "size": "sm",
+                "color": "#10b981",
+                "weight": "bold"
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "button",
+            "action": {
+              "type": "uri",
+              "label": "🧭 Google Maps 導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "style": "primary",
+            "color": "#FBBC04",
+            "height": "sm"
+          }
+        ],
+        "spacing": "sm",
+        "paddingAll": "15px"
+      }
+    },
+    "studentExperience": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "🌟 體驗課提醒",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold"
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#FFD700",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{studentName}",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "{courseName}",
+            "size": "sm",
+            "color": "#555555",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "⚡️ 這是您的體驗課程",
+            "size": "xs",
+            "color": "#FFD700",
+            "weight": "bold",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "👨‍🏫",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#FFD700"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{teacherName} 講師",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#FFD700"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#FFD700"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#FFD700"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "contents": [
+              {
+                "type": "text",
+                "text": "期待您的蒞臨！",
+                "size": "sm",
+                "color": "#FFD700",
+                "weight": "bold"
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      }
+    },
+    "studentSubstitute": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "📢 課程提醒",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold"
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#2196F3",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{studentName}",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "{courseName}",
+            "size": "sm",
+            "color": "#555555",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "✨ 課程正常進行，請準時上課",
+            "size": "xs",
+            "color": "#2196F3",
+            "weight": "bold",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "👨‍🏫",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#2196F3"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{teacherName} 講師",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#2196F3"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "md",
+                    "flex": 0,
+                    "color": "#2196F3"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "lg",
+                    "color": "#2196F3",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#2196F3"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "contents": [
+              {
+                "type": "text",
+                "text": "請確認孩子是否出席：",
+                "size": "sm",
+                "color": "#2196F3",
+                "weight": "bold"
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      }
+    },
+    "studentTimeChange": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "📢 課程提醒",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold"
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#ef4444",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{studentName}",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "{courseName}",
+            "size": "sm",
+            "color": "#555555",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "⚠️ 請注意時間調整",
+            "size": "xs",
+            "color": "#ef4444",
+            "weight": "bold",
+            "margin": "md"
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "👨‍🏫",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#ef4444"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{teacherName} 講師",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#ef4444"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "md",
+                    "flex": 0,
+                    "color": "#ef4444"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "lg",
+                    "color": "#ef4444",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#ef4444"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "contents": [
+              {
+                "type": "text",
+                "text": "請確認孩子是否出席：",
+                "size": "sm",
+                "color": "#ef4444",
+                "weight": "bold"
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      }
+    },
+    "leaveNotification": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "🏥 學生請假通知",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold"
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#f59e0b",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "👤 學生資訊",
+            "size": "sm",
+            "weight": "bold",
+            "color": "#f59e0b",
+            "margin": "none"
+          },
+          {
+            "type": "text",
+            "text": "{studentName}",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "margin": "sm",
+            "wrap": true
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📖",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseName}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "🏥",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "請假理由：{leaveReason}",
+                    "size": "sm",
+                    "color": "#f59e0b",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏱️",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "回覆時間：{replyTime}",
+                    "size": "xs",
+                    "color": "#999999",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      }
+    },
+    "leaveConfirmation": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "✅ 學生請假確認",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold"
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#10b981",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "📋 已完成請假登記",
+                "size": "sm",
+                "color": "#10b981",
+                "weight": "bold",
+                "margin": "none"
+              },
+              {
+                "type": "text",
+                "text": "請假資訊已記錄在系統中",
+                "size": "xs",
+                "color": "#999999",
+                "margin": "xs"
+              }
+            ],
+            "margin": "none"
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "text",
+            "text": "👤 學生資訊",
+            "size": "sm",
+            "weight": "bold",
+            "color": "#10b981",
+            "margin": "lg"
+          },
+          {
+            "type": "text",
+            "text": "{studentName}",
+            "size": "xl",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "margin": "sm",
+            "wrap": true
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "📚 課程資訊",
+                "size": "sm",
+                "weight": "bold",
+                "color": "#10b981"
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "margin": "md",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "課程",
+                    "size": "sm",
+                    "color": "#aaaaaa",
+                    "flex": 2
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseName}",
+                    "size": "sm",
+                    "color": "#1a1a1a",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "日期",
+                    "size": "sm",
+                    "color": "#aaaaaa",
+                    "flex": 2
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate}",
+                    "size": "sm",
+                    "color": "#1a1a1a",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "星期",
+                    "size": "sm",
+                    "color": "#aaaaaa",
+                    "flex": 2
+                  },
+                  {
+                    "type": "text",
+                    "text": "{weekday}",
+                    "size": "sm",
+                    "color": "#1a1a1a",
+                    "flex": 5,
+                    "weight": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "時間",
+                    "size": "sm",
+                    "color": "#aaaaaa",
+                    "flex": 2
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#1a1a1a",
+                    "flex": 5,
+                    "weight": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "地點",
+                    "size": "sm",
+                    "color": "#aaaaaa",
+                    "flex": 2
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#1a1a1a",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "🏥 請假資訊",
+                "size": "sm",
+                "weight": "bold",
+                "color": "#10b981"
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "margin": "md",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "原因",
+                    "size": "sm",
+                    "color": "#aaaaaa",
+                    "flex": 2
+                  },
+                  {
+                    "type": "text",
+                    "text": "{leaveReason}",
+                    "size": "sm",
+                    "color": "#dc2626",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "登記時間",
+                    "size": "sm",
+                    "color": "#aaaaaa",
+                    "flex": 2
+                  },
+                  {
+                    "type": "text",
+                    "text": "{replyTime}",
+                    "size": "xs",
+                    "color": "#999999",
+                    "flex": 5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "paddingAll": "12px",
+            "backgroundColor": "#f0fdf4",
+            "cornerRadius": "8px",
+            "contents": [
+              {
+                "type": "text",
+                "text": "💡 溫馨提醒",
+                "size": "xs",
+                "color": "#10b981",
+                "weight": "bold",
+                "margin": "none"
+              },
+              {
+                "type": "text",
+                "text": "請假已登記完成，課堂將不計入缺席。如有任何問題，請與我們聯繫。",
+                "size": "xxs",
+                "color": "#666666",
+                "margin": "sm",
+                "wrap": true
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "樂程坊 FunLearnBar",
+            "size": "xs",
+            "color": "#999999",
+            "align": "center"
+          }
+        ],
+        "paddingAll": "12px"
+      }
+    },
+    "pendingNotification": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "⏳ 學生待確認通知",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold"
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#06b6d4",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "👤 學生資訊",
+            "size": "sm",
+            "weight": "bold",
+            "color": "#06b6d4",
+            "margin": "none"
+          },
+          {
+            "type": "text",
+            "text": "{studentName}",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "margin": "sm",
+            "wrap": true
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📖",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseName}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏳",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "狀態：家長尚未確認",
+                    "size": "sm",
+                    "color": "#06b6d4",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏱️",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "回覆時間：{replyTime}",
+                    "size": "xs",
+                    "color": "#999999",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "💡 提醒",
+                "size": "xs",
+                "color": "#999999",
+                "margin": "none"
+              },
+              {
+                "type": "text",
+                "text": "請稍後與家長確認是否出席",
+                "size": "xs",
+                "color": "#999999",
+                "wrap": true,
+                "margin": "xs"
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      }
+    },
+    "todayCancelled": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "⚠️ 停課通知 - 當日",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#dc3545",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "md",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "🔴 停課",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "#dc3545",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "⚠️ 請注意停課",
+                "size": "xs",
+                "color": "#dc3545",
+                "weight": "bold",
+                "margin": "md"
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "text",
+            "text": "本堂課程已停課，如需協助請聯繫教務",
+            "size": "xs",
+            "color": "#999999",
+            "align": "center",
+            "wrap": true
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "tomorrowCancelled": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "⚠️ 停課通知 - 明日",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#dc3545",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "md",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "🔴 停課",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "#dc3545",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "⚠️ 請注意停課",
+                "size": "xs",
+                "color": "#dc3545",
+                "weight": "bold",
+                "margin": "md"
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "text",
+            "text": "本堂課程已停課，如需協助請聯繫教務",
+            "size": "xs",
+            "color": "#999999",
+            "align": "center",
+            "wrap": true
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "beforeClassCancelled": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "⚠️ 停課通知 - 課前提醒",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#dc3545",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "課程已停課！",
+            "size": "md",
+            "weight": "bold",
+            "color": "#dc3545"
+          },
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "sm",
+            "color": "#555555",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "sm",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "🔴 停課",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "#dc3545",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "⚠️ 請注意停課",
+                "size": "xs",
+                "color": "#dc3545",
+                "weight": "bold",
+                "margin": "none"
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "margin": "md",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⌛",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{timeUntilClass}",
+                    "size": "sm",
+                    "color": "#dc3545",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "text",
+            "text": "課程已取消，請勿前往上課",
+            "size": "xs",
+            "color": "#999999",
+            "align": "center",
+            "wrap": true
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "todayExperience": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "⭐ 體驗課通知 - 當日",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#FFD700",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "md",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "🟢 體驗",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "#FFD700",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "📖 查看教案",
+              "uri": "{lessonPlanUrl}"
+            },
+            "color": "#FFD700",
+            "height": "sm"
+          },
+          {
+            "type": "button",
+            "style": "link",
+            "action": {
+              "type": "uri",
+              "label": "🗺️ 地圖導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "tomorrowExperience": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "⭐ 體驗課通知 - 明日",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#FFD700",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "md",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "🟢 體驗",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "#FFD700",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "📖 查看教案",
+              "uri": "{lessonPlanUrl}"
+            },
+            "color": "#FFD700",
+            "height": "sm"
+          },
+          {
+            "type": "button",
+            "style": "link",
+            "action": {
+              "type": "uri",
+              "label": "🗺️ 地圖導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "beforeClassExperience": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "⭐ 體驗課通知 - 課前提醒",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#FFD700",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "體驗課即將開始！",
+            "size": "md",
+            "weight": "bold",
+            "color": "#FFD700"
+          },
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "sm",
+            "color": "#555555",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "sm",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "🟢 體驗",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "#FFD700",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⌛",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{timeUntilClass}",
+                    "size": "sm",
+                    "color": "#FFD700",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "🗺️ 開始導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "color": "#FFD700",
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "todaySubstitute": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "🔄 代課通知 - 當日",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#2196F3",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "md",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "🔵 代課",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "#2196F3",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "⚠️ 請注意代課時間",
+                "size": "xs",
+                "color": "#2196F3",
+                "weight": "bold",
+                "margin": "md"
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "margin": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "md",
+                    "flex": 0,
+                    "color": "#2196F3"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "lg",
+                    "color": "#2196F3",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "📖 查看教案",
+              "uri": "{lessonPlanUrl}"
+            },
+            "color": "#2196F3",
+            "height": "sm"
+          },
+          {
+            "type": "button",
+            "style": "link",
+            "action": {
+              "type": "uri",
+              "label": "🗺️ 地圖導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "tomorrowSubstitute": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "🔄 代課通知 - 明日",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#2196F3",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "md",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "🔵 代課",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "#2196F3",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "⚠️ 請注意代課時間",
+                "size": "xs",
+                "color": "#2196F3",
+                "weight": "bold",
+                "margin": "md"
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "margin": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "md",
+                    "flex": 0,
+                    "color": "#2196F3"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "lg",
+                    "color": "#2196F3",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "📖 查看教案",
+              "uri": "{lessonPlanUrl}"
+            },
+            "color": "#2196F3",
+            "height": "sm"
+          },
+          {
+            "type": "button",
+            "style": "link",
+            "action": {
+              "type": "uri",
+              "label": "🗺️ 地圖導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "beforeClassSubstitute": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "🔄 代課通知 - 課前",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#2196F3",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "代課即將開始！",
+            "size": "md",
+            "weight": "bold",
+            "color": "#2196F3"
+          },
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "sm",
+            "color": "#555555",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "sm",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "🔵 代課",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "#2196F3",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "⚠️ 請注意代課時間",
+                "size": "xs",
+                "color": "#2196F3",
+                "weight": "bold",
+                "margin": "none"
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "margin": "md",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "md",
+                    "flex": 0,
+                    "color": "#2196F3"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "lg",
+                    "color": "#2196F3",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⌛",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{timeUntilClass}",
+                    "size": "sm",
+                    "color": "#2196F3",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "🗺️ 開始導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "color": "#2196F3",
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "todayTimeChange": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "🟠 調課通知 - 當日",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#f59e0b",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "md",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "🟠 改時間",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "#f59e0b",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "⚠️ 請注意時間調整",
+                "size": "xs",
+                "color": "#ef4444",
+                "weight": "bold",
+                "margin": "md"
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "margin": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "md",
+                    "flex": 0,
+                    "color": "#ef4444"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "lg",
+                    "color": "#ef4444",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "📖 查看教案",
+              "uri": "{lessonPlanUrl}"
+            },
+            "color": "#f59e0b",
+            "height": "sm"
+          },
+          {
+            "type": "button",
+            "style": "link",
+            "action": {
+              "type": "uri",
+              "label": "🗺️ 地圖導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "tomorrowTimeChange": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "🟠 調課通知 - 明日",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#f59e0b",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "md",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "🟠 改時間",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "#f59e0b",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "⚠️ 請注意時間調整",
+                "size": "xs",
+                "color": "#ef4444",
+                "weight": "bold",
+                "margin": "md"
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "margin": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "md",
+                    "flex": 0,
+                    "color": "#ef4444"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "lg",
+                    "color": "#ef4444",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "📖 查看教案",
+              "uri": "{lessonPlanUrl}"
+            },
+            "color": "#f59e0b",
+            "height": "sm"
+          },
+          {
+            "type": "button",
+            "style": "link",
+            "action": {
+              "type": "uri",
+              "label": "🗺️ 地圖導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "beforeClassTimeChange": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "🟠 調課通知 - 課前提醒",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#f59e0b",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "調課即將開始！",
+            "size": "md",
+            "weight": "bold",
+            "color": "#f59e0b"
+          },
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "sm",
+            "color": "#555555",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "sm",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "{courseName}",
+                "size": "sm",
+                "color": "#555555",
+                "wrap": true,
+                "flex": 5
+              },
+              {
+                "type": "text",
+                "text": "🟠 改時間",
+                "size": "xxs",
+                "color": "#ffffff",
+                "weight": "bold",
+                "align": "center",
+                "gravity": "center",
+                "backgroundColor": "#f59e0b",
+                "paddingAll": "6px",
+                "cornerRadius": "8px",
+                "flex": 0
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "⚠️ 請注意時間調整",
+                "size": "xs",
+                "color": "#ef4444",
+                "weight": "bold",
+                "margin": "none"
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "margin": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "md",
+                    "flex": 0,
+                    "color": "#ef4444"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "lg",
+                    "color": "#ef4444",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⌛",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{timeUntilClass}",
+                    "size": "sm",
+                    "color": "#f59e0b",
+                    "flex": 5,
+                    "weight": "bold",
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "🗺️ 開始導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "color": "#f59e0b",
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "makeupSuccess": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "📝 補課設定成功",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold"
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#1877f2",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{studentName}",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "{courseName}",
+            "size": "sm",
+            "color": "#555555",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "✏️ 已成功安排補課",
+            "size": "xs",
+            "color": "#1877f2",
+            "weight": "bold",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#1877f2"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#1877f2"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "🔄",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#1877f2"
+                  },
+                  {
+                    "type": "text",
+                    "text": "原本時段: {originalPeriod}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#1877f2"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "💡",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#1877f2"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{note}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "🧭 Google Maps 導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "color": "#1877f2",
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "trialSuccess": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "🌟 體驗課程建立成功",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "image",
+            "url": "https://calendar.funlearnbar.synology.me/logo.jpg",
+            "size": "xxs",
+            "position": "absolute",
+            "offsetTop": "6px",
+            "offsetEnd": "6px",
+            "gravity": "top",
+            "aspectMode": "cover",
+            "aspectRatio": "1:1"
+          }
+        ],
+        "backgroundColor": "#FFD700",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{studentName}",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "{courseName}",
+            "size": "sm",
+            "color": "#555555",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "⚡️ 歡迎來體驗課程！",
+            "size": "xs",
+            "color": "#FFD700",
+            "weight": "bold",
+            "margin": "md",
+            "wrap": true
+          },
+          {
+            "type": "separator",
+            "margin": "lg"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "👨‍🏫",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#FFD700"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{teacherName} 講師",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#FFD700"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#FFD700"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#FFD700"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "💡",
+                    "size": "sm",
+                    "flex": 0,
+                    "color": "#FFD700"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{note}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "uri",
+              "label": "🧭 Google Maps 導航",
+              "uri": "{googleMapsUrl}"
+            },
+            "color": "#FFD700",
+            "height": "sm"
+          }
+        ],
+        "paddingAll": "15px"
+      }
+    },
+    "class_cancelled": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "⚠️ 全班缺席停課通知",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold"
+          }
+        ],
+        "backgroundColor": "#dc3545",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "separator",
+            "margin": "md"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📖",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseName}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{date}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{time}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "separator",
+                "margin": "md"
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "margin": "md",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📊",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "全班 {totalStudents} 位學生皆已請假或缺席",
+                    "size": "sm",
+                    "color": "#dc3545",
+                    "weight": "bold",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "xs",
+            "contents": [
+              {
+                "type": "text",
+                "text": "💡 建議標記為停課",
+                "size": "xs",
+                "color": "#999999",
+                "wrap": true
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      }
+    },
+    "class_resumed": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "✅ 課程恢復上課通知",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold"
+          }
+        ],
+        "backgroundColor": "#28a745",
+        "paddingAll": "15px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "md",
+            "weight": "bold",
+            "color": "#1a1a1a",
+            "wrap": true
+          },
+          {
+            "type": "separator",
+            "margin": "md"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📖",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseName}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{date}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{time}",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "separator",
+                "margin": "md"
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "margin": "md",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "👤",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{studentName} 已取消請假",
+                    "size": "sm",
+                    "color": "#666666",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📊",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "目前出席人數：{attendCount}/{totalStudents}",
+                    "size": "sm",
+                    "color": "#28a745",
+                    "weight": "bold",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "lg",
+            "spacing": "xs",
+            "contents": [
+              {
+                "type": "text",
+                "text": "✅ 課程正常進行",
+                "size": "xs",
+                "color": "#999999",
+                "wrap": true
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      }
+    },
+    "specialEventAlert": {
+      "type": "bubble",
+      "size": "kilo",
+      "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{specialEventBadge} 特殊事件通知",
+            "color": "#ffffff",
+            "size": "lg",
+            "weight": "bold",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "即時同步最新異動",
+            "color": "#ffffff",
+            "size": "xs",
+            "margin": "sm",
+            "wrap": true
+          }
+        ],
+        "backgroundColor": "{specialEventColor}",
+        "paddingAll": "16px"
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "text",
+            "text": "{courseName}",
+            "size": "md",
+            "weight": "bold",
+            "color": "#111827",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "{teacherName} 講師",
+            "size": "sm",
+            "color": "#4b5563",
+            "wrap": true
+          },
+          {
+            "type": "separator",
+            "margin": "md"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "xs",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📅",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseDate} {weekday}",
+                    "size": "sm",
+                    "color": "#6b7280",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "⏰",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{courseTime}",
+                    "size": "sm",
+                    "color": "#6b7280",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "📍",
+                    "size": "sm",
+                    "flex": 0
+                  },
+                  {
+                    "type": "text",
+                    "text": "{location}",
+                    "size": "sm",
+                    "color": "#6b7280",
+                    "flex": 5,
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "sm",
+            "margin": "md",
+            "backgroundColor": "#f9fafb",
+            "paddingAll": "12px",
+            "borderWidth": "1px",
+            "borderColor": "#e5e7eb",
+            "cornerRadius": "10px",
+            "contents": [
+              {
+                "type": "text",
+                "text": "📝 標註原因",
+                "size": "xs",
+                "color": "#6b7280",
+                "weight": "bold"
+              },
+              {
+                "type": "text",
+                "text": "{specialEventNote}",
+                "size": "sm",
+                "color": "#374151",
+                "wrap": true
+              }
+            ]
+          }
+        ],
+        "paddingAll": "20px"
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "如需協助請聯繫教務團隊",
+            "size": "xs",
+            "color": "#9ca3af",
+            "align": "center",
+            "wrap": true
+          }
+        ],
+        "paddingAll": "12px"
+      }
+    }
+  },
+  "quickReply": {
+    "enabled": true,
+    "perType": {
+      "today": false,
+      "tomorrow": false,
+      "beforeClass": false,
+      "student": true
+    },
+    "options": [
+      {
+        "label": "✅ 會出席",
+        "data": "attend"
+      },
+      {
+        "label": "🏥 請假",
+        "data": "leave"
+      },
+      {
+        "label": "⏳ 待確認",
+        "data": "pending"
+      }
+    ],
+    "leaveReasons": [
+      "生病",
+      "家庭因素",
+      "臨時有事",
+      "其他"
+    ]
+  },
+  "carousel": {
+    "maxBubbles": 10
+  }
+}

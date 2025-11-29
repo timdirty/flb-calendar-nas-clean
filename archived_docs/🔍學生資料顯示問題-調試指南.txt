@@ -1,0 +1,131 @@
+🔍 學生資料顯示問題 - 調試指南
+============================================
+
+❌ 問題描述：
+點擊課程後，顯示了所有課程的學生，而不是只顯示該課程的學生
+
+✅ 已添加的調試功能：
+
+1. 前端調試日誌
+   - 🔍 設置課程點擊事件
+   - 🎯 選擇課程
+   - 顯示每個課程的學生數量和名單
+
+2. 後端調試日誌
+   - 📚 課程學生配對
+   - 顯示每個課程匹配到的學生
+
+🧪 調試步驟：
+
+步驟 1: 重啟後端服務
+   如果服務在本機：
+   $ cd /path/to/flb-calendar-nas
+   $ node server.js
+   
+   如果服務在 NAS Docker：
+   在 NAS 上重啟 Docker 容器
+
+步驟 2: 刷新前端頁面
+   - 按 Cmd+Shift+R 強制刷新
+   - 打開開發者工具（F12）
+   - 切換到 Console 標籤
+
+步驟 3: 查看課程列表載入日誌
+   當頁面載入時，Console 應該顯示：
+   
+   ✅ 課程處理完成: {
+     allCoursesCount: 3,
+     sample: [...]
+   }
+   
+   🔍 設置課程點擊事件: {
+     index: 0,
+     courseId: "...",
+     courseTitle: "龍華 製程專題製作",
+     studentsCount: 0  ← 檢查這個數字
+   }
+   
+   🔍 設置課程點擊事件: {
+     index: 1,
+     courseTitle: "SPIKE — 1930-2100 客製化 第6週",
+     studentsCount: 25  ← 應該是 25
+   }
+   
+   🔍 設置課程點擊事件: {
+     index: 2,
+     courseTitle: "SPM — 1930-2030 到府 第6週",
+     studentsCount: 20  ← 應該是 20
+   }
+
+步驟 4: 點擊第一個課程（龍華）
+   Console 應該顯示：
+   
+   🎯 選擇課程: {
+     courseId: "...",
+     courseTitle: "龍華 製程專題製作",
+     studentsCount: 0,  ← 應該是 0
+     students: []  ← 應該是空陣列
+   }
+
+步驟 5: 點擊第二個課程（SPIKE）
+   Console 應該顯示：
+   
+   🎯 選擇課程: {
+     courseTitle: "SPIKE — 1930-2100 客製化 第6週",
+     studentsCount: 25,  ← 應該是 25
+     students: ["張小明", "李小華", ...]  ← 25個學生
+   }
+
+步驟 6: 檢查後端日誌
+   在後端 Console 或 server.log 中查找：
+   
+   📚 課程學生配對: {
+     courseName: "龍華",
+     courseTitle: "龍華 製程專題製作",
+     studentsCount: 0
+   }
+   
+   📚 課程學生配對: {
+     courseName: "SPIKE",
+     courseTitle: "SPIKE — 1930-2100 客製化 第6週",
+     studentsCount: 25,
+     students: ["張小明", "李小華", ...]
+   }
+
+🔍 問題診斷：
+
+情況 A: 所有課程的 studentsCount 都是 45（或其他總數）
+   → 問題：前端沒有正確分配學生給各自的課程
+   → 原因：allCourses 中所有課程共享同一個學生陣列
+   → 解決：檢查前端資料處理邏輯
+
+情況 B: 每個課程的 studentsCount 正確，但點擊後顯示錯誤的學生
+   → 問題：selectCourse 函數接收到錯誤的課程物件
+   → 原因：事件監聽器綁定有問題
+   → 解決：檢查 renderCourseCards 中的事件綁定
+
+情況 C: 後端日誌顯示錯誤的學生數量
+   → 問題：student_data.json 中的課程名稱不匹配
+   → 原因：課程標題的第一個詞與 student.course 不一致
+   → 解決：檢查 student_data.json 和課程標題格式
+
+📝 常見問題：
+
+Q: 課程標題格式是什麼？
+A: "課程名稱 其他資訊"，例如：
+   - "SPIKE — 1930-2100 客製化 第6週"
+   - "SPM — 1930-2030 到府 第6週"
+   - "龍華 製程專題製作"
+
+Q: student_data.json 中的 course 欄位應該是什麼？
+A: 應該是課程標題的第一個詞，例如：
+   - "SPIKE"（匹配 "SPIKE — ..."）
+   - "SPM"（匹配 "SPM — ..."）
+   - "龍華"（匹配 "龍華 ..."）
+
+Q: 如果學生資料還是不對，怎麼辦？
+A: 請提供：
+   1. 前端 Console 的完整日誌
+   2. 後端 Console 的「📚 課程學生配對」日誌
+   3. student_data.json 的內容樣本
+

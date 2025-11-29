@@ -1,0 +1,241 @@
+/**
+ * 媒體儲存管理
+ * - 負責建立學習歷程影片/縮圖/轉碼檔案的資料夾結構
+ * - 提供安全的檔案名稱、相對路徑與完整儲存資訊
+ * - 供 API 與前端查詢使用
+ *
+ * 📁 結構：
+ *   <root>/
+ *     YYYY/
+ *       MM/
+ *         DD/
+ *           <course-slug>/
+ *             overview|students/
+ *               <student-slug or _overview>/
+ *                 origin/
+ *                 transcoded/
+ *                 thumbs/
+ *                 meta.json
+ */
+
+const path = require('path');
+const fs = require('fs').promises;
+const fsSync = require('fs');
+const crypto = require('crypto');
+
+const safeFile = require('../../utils/safe-file-operations');
+
+const MEDIA_ROOT = process.env.LEARNING_MEDIA_ROOT
+    ? path.resolve(process.env.LEARNING_MEDIA_ROOT)
+    : path.join(__dirname, '..', '..', 'data', 'learning-media');
+
+const META_FILENAME = 'meta.json';
+
+function ensureTrailing(value) {
+    if (!value) return value;
+    if (value.endsWith('/') || value.endsWith(path.sep)) {
+        return value;
+    }
+    return `${value}/`;
+}
+
+function safeSlug(input, fallback = 'unknown') {
+    if (!input || typeof input !== 'string') {
+        return fallback;
+    }
+    return input
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9\u4e00-\u9fa5\-\s_]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .toLowerCase() || fallback;
+}
+
+function ensureDateSegments(dateInput) {
+    let dateObj = null;
+    if (!dateInput) {
+        dateObj = new Date();
+    } else if (dateInput instanceof Date) {
+        dateObj = new Date(dateInput);
+    } else if (typeof dateInput === 'number') {
+        dateObj = new Date(dateInput);
+    } else {
+        const parsed = new Date(String(dateInput));
+        dateObj = isNaN(parsed.getTime()) ? new Date() : parsed;
+    }
+
+    const year = String(dateObj.getFullYear());
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return { year, month, day };
+}
+
+function hashForFileName(content) {
+    return crypto.createHash('sha1').update(content).digest('hex').slice(0, 10);
+}
+
+async function ensureDir(target) {
+    await fs.mkdir(target, { recursive: true });
+    return target;
+}
+
+function resolveBucket(metadata = {}) {
+    const { year, month, day } = ensureDateSegments(metadata.date || metadata.dateKey || Date.now());
+
+    const courseSlug = safeSlug(metadata.courseTitle || metadata.courseName || metadata.course || 'course');
+    const instructorSlug = safeSlug(metadata.instructorName || metadata.teacherName || metadata.instructor || 'teacher');
+    const studentSlug = metadata.mode === 'overview'
+        ? '_overview'
+        : safeSlug(metadata.studentName || metadata.studentId || 'student');
+
+    const bucketSegments = [
+        MEDIA_ROOT,
+        year,
+        month,
+        day,
+        courseSlug,
+        metadata.mode === 'overview' ? 'overview' : 'students',
+        studentSlug
+    ];
+
+    const baseDir = path.join(...bucketSegments);
+    const originDir = path.join(baseDir, 'origin');
+    const transcodedDir = path.join(baseDir, 'transcoded');
+    const thumbsDir = path.join(baseDir, 'thumbs');
+    const tempDir = path.join(baseDir, 'tmp');
+    const metaPath = path.join(baseDir, META_FILENAME);
+
+    const relativeBaseRaw = path.relative(MEDIA_ROOT, baseDir);
+    const relativeBase = relativeBaseRaw
+        ? ensureTrailing(relativeBaseRaw.split(path.sep).join(path.posix.sep))
+        : '';
+
+    return {
+        baseDir,
+        originDir,
+        transcodedDir,
+        thumbsDir,
+        tempDir,
+        metaPath,
+        relativeBase,
+        bucketId: hashForFileName(`${courseSlug}|${instructorSlug}|${studentSlug}|${year}${month}${day}`),
+        instructorSlug,
+        courseSlug,
+        studentSlug
+    };
+}
+
+async function ensureBucket(metadata) {
+    const bucket = resolveBucket(metadata);
+    await Promise.all([
+        ensureDir(bucket.baseDir),
+        ensureDir(bucket.originDir),
+        ensureDir(bucket.transcodedDir),
+        ensureDir(bucket.thumbsDir),
+        ensureDir(bucket.tempDir)
+    ]);
+    return bucket;
+}
+
+async function readBucketMeta(bucket) {
+    return safeFile.readJSON(bucket.metaPath, {
+        bucketId: bucket.bucketId,
+        relativeBase: bucket.relativeBase,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        files: []
+    });
+}
+
+async function writeBucketMeta(bucket, updater) {
+    return safeFile.atomicUpdate(
+        bucket.metaPath,
+        async (data) => {
+            const base = Array.isArray(data) || typeof data !== 'object'
+                ? {
+                    bucketId: bucket.bucketId,
+                    relativeBase: bucket.relativeBase,
+                    createdAt: Date.now(),
+                    files: []
+                }
+                : data;
+
+            const updated = await Promise.resolve(updater({
+                ...base,
+                bucketId: bucket.bucketId,
+                relativeBase: bucket.relativeBase
+            }));
+
+            updated.updatedAt = Date.now();
+            return updated;
+        },
+        {
+            bucketId: bucket.bucketId,
+            relativeBase: bucket.relativeBase,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            files: []
+        }
+    );
+}
+
+async function listBuckets() {
+    if (!fsSync.existsSync(MEDIA_ROOT)) {
+        return [];
+    }
+
+    const results = [];
+
+    async function scanDir(dir) {
+        const entries = await fs.readdir(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const entryPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                if (entry.name === 'origin' || entry.name === 'transcoded' || entry.name === 'thumbs' || entry.name === 'tmp') {
+                    continue;
+                }
+                const metaPathCandidate = path.join(entryPath, META_FILENAME);
+                if (fsSync.existsSync(metaPathCandidate)) {
+                    try {
+                        const meta = await safeFile.readJSON(metaPathCandidate, null);
+                        if (meta) {
+                            const bucketInfo = resolveBucket({
+                                date: path.basename(path.dirname(path.dirname(path.dirname(path.dirname(entryPath))))),
+                                courseTitle: meta.courseTitle,
+                                instructorName: meta.instructorName,
+                                studentName: meta.studentName,
+                                mode: meta.mode
+                            });
+                            results.push({
+                                ...meta,
+                                bucketId: meta.bucketId || bucketInfo.bucketId,
+                                relativeBase: meta.relativeBase || path.relative(MEDIA_ROOT, entryPath),
+                                baseDir: entryPath
+                            });
+                        }
+                    } catch (err) {
+                        console.error('⚠️ 讀取桶狀態失敗:', err);
+                    }
+                } else {
+                    await scanDir(entryPath);
+                }
+            }
+        }
+    }
+
+    await scanDir(MEDIA_ROOT);
+    return results;
+}
+
+module.exports = {
+    MEDIA_ROOT,
+    resolveBucket,
+    ensureBucket,
+    readBucketMeta,
+    writeBucketMeta,
+    listBuckets,
+    safeSlug
+};

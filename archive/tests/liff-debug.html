@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIFF 調試工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .log-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .log-success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        
+        .log-error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .log-info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            color: #0c5460;
+        }
+        
+        .log-warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+        
+        .status-card {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .status-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .status-value {
+            color: #666;
+            word-break: break-all;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            🔧 LIFF 調試工具
+        </h1>
+        <p class="subtitle">診斷 LINE Front-end Framework 連接問題</p>
+        
+        <div class="button-group">
+            <button onclick="checkLIFFStatus()">🔍 檢查 LIFF 狀態</button>
+            <button onclick="initializeLIFF()">🚀 初始化 LIFF</button>
+            <button onclick="loginLIFF()" id="loginBtn" disabled>🔑 登入 LIFF</button>
+            <button onclick="getProfile()" id="profileBtn" disabled>👤 取得個人資料</button>
+            <button onclick="clearLogs()">🗑️ 清除日誌</button>
+        </div>
+        
+        <div id="statusCards"></div>
+        
+        <h2 style="margin-top: 30px; color: #333;">📋 日誌</h2>
+        <div class="log-section" id="logs"></div>
+    </div>
+    
+    <!-- LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    
+    <script>
+        const LIFF_ID = '2006585863-p6xEd0WV';
+        let liffInitialized = false;
+        
+        function addLog(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.insertBefore(entry, logs.firstChild);
+        }
+        
+        function updateStatus(label, value, id) {
+            const container = document.getElementById('statusCards');
+            let card = document.getElementById(id);
+            
+            if (!card) {
+                card = document.createElement('div');
+                card.id = id;
+                card.className = 'status-card';
+                container.appendChild(card);
+            }
+            
+            card.innerHTML = `
+                <div class="status-label">${label}</div>
+                <div class="status-value">${value}</div>
+            `;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            addLog('日誌已清除', 'info');
+        }
+        
+        async function checkLIFFStatus() {
+            addLog('🔍 檢查 LIFF 狀態...', 'info');
+            
+            // 檢查 LIFF SDK 是否載入
+            if (typeof liff === 'undefined') {
+                addLog('❌ LIFF SDK 未載入！', 'error');
+                updateStatus('LIFF SDK', '❌ 未載入', 'sdk-status');
+                return;
+            }
+            
+            addLog('✅ LIFF SDK 已載入', 'success');
+            updateStatus('LIFF SDK', '✅ 已載入', 'sdk-status');
+            
+            // 檢查 LIFF 是否初始化
+            try {
+                const isInClient = liff.isInClient();
+                addLog(`📱 執行環境: ${isInClient ? 'LINE 應用程式內' : '外部瀏覽器'}`, 'info');
+                updateStatus('執行環境', isInClient ? '📱 LINE 應用程式' : '🌐 外部瀏覽器', 'env-status');
+            } catch (error) {
+                addLog('⚠️ LIFF 尚未初始化', 'warning');
+                updateStatus('LIFF 狀態', '⚠️ 未初始化', 'liff-status');
+                return;
+            }
+            
+            // 檢查登入狀態
+            try {
+                const isLoggedIn = liff.isLoggedIn();
+                addLog(`🔑 登入狀態: ${isLoggedIn ? '已登入' : '未登入'}`, isLoggedIn ? 'success' : 'warning');
+                updateStatus('登入狀態', isLoggedIn ? '✅ 已登入' : '❌ 未登入', 'login-status');
+                
+                if (isLoggedIn) {
+                    document.getElementById('profileBtn').disabled = false;
+                } else {
+                    document.getElementById('loginBtn').disabled = false;
+                }
+            } catch (error) {
+                addLog(`❌ 檢查登入狀態失敗: ${error.message}`, 'error');
+            }
+        }
+        
+        async function initializeLIFF() {
+            addLog('🚀 開始初始化 LIFF...', 'info');
+            addLog(`🔑 LIFF ID: ${LIFF_ID}`, 'info');
+            
+            if (typeof liff === 'undefined') {
+                addLog('❌ LIFF SDK 未載入！請確認網路連接', 'error');
+                return;
+            }
+            
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                liffInitialized = true;
+                addLog('✅ LIFF 初始化成功！', 'success');
+                updateStatus('LIFF 狀態', '✅ 已初始化', 'liff-status');
+                
+                // 自動檢查狀態
+                setTimeout(() => checkLIFFStatus(), 500);
+                
+            } catch (error) {
+                addLog(`❌ LIFF 初始化失敗: ${error.message}`, 'error');
+                addLog(`錯誤詳情: ${JSON.stringify(error)}`, 'error');
+                updateStatus('LIFF 狀態', '❌ 初始化失敗', 'liff-status');
+            }
+        }
+        
+        async function loginLIFF() {
+            addLog('🔑 嘗試登入 LIFF...', 'info');
+            
+            if (!liffInitialized) {
+                addLog('⚠️ 請先初始化 LIFF', 'warning');
+                return;
+            }
+            
+            try {
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                    addLog('🔄 正在重定向到 LINE 登入頁面...', 'info');
+                } else {
+                    addLog('✅ 已經登入', 'success');
+                }
+            } catch (error) {
+                addLog(`❌ 登入失敗: ${error.message}`, 'error');
+            }
+        }
+        
+        async function getProfile() {
+            addLog('👤 取得使用者資料...', 'info');
+            
+            if (!liffInitialized) {
+                addLog('⚠️ 請先初始化 LIFF', 'warning');
+                return;
+            }
+            
+            if (!liff.isLoggedIn()) {
+                addLog('⚠️ 請先登入', 'warning');
+                return;
+            }
+            
+            try {
+                const profile = await liff.getProfile();
+                addLog('✅ 成功取得使用者資料', 'success');
+                
+                updateStatus('使用者 ID', profile.userId, 'user-id');
+                updateStatus('顯示名稱', profile.displayName, 'user-name');
+                updateStatus('狀態訊息', profile.statusMessage || '(無)', 'user-status');
+                updateStatus('個人圖片', `<img src="${profile.pictureUrl}" style="width:50px;border-radius:50%;">`, 'user-pic');
+                
+                addLog(`📋 User ID: ${profile.userId}`, 'info');
+                addLog(`📋 顯示名稱: ${profile.displayName}`, 'info');
+                addLog(`📋 狀態訊息: ${profile.statusMessage || '(無)'}`, 'info');
+                
+            } catch (error) {
+                addLog(`❌ 取得資料失敗: ${error.message}`, 'error');
+            }
+        }
+        
+        // 頁面載入時自動檢查
+        window.addEventListener('load', () => {
+            addLog('🎉 LIFF 調試工具已載入', 'success');
+            addLog('💡 點擊「檢查 LIFF 狀態」開始診斷', 'info');
+            
+            setTimeout(() => {
+                checkLIFFStatus();
+            }, 1000);
+        });
+        
+        // 捕獲所有錯誤
+        window.addEventListener('error', (event) => {
+            addLog(`❌ 全局錯誤: ${event.message}`, 'error');
+            addLog(`   位置: ${event.filename}:${event.lineno}:${event.colno}`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', (event) => {
+            addLog(`❌ 未處理的 Promise 拒絕: ${event.reason}`, 'error');
+        });
+    </script>
+</body>
+</html>
+

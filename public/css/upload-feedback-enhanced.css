@@ -1,0 +1,438 @@
+/* 🎨 上傳狀態視覺反饋增強系統 - 2025-11-16 */
+
+/* ==================== 上傳中狀態 ==================== */
+
+/* 脈動動畫：強調正在上傳的檔案 */
+.file-preview.uploading {
+    position: relative;
+    animation: upload-pulse 2s ease-in-out infinite;
+    border: 2px solid #3b82f6 !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+@keyframes upload-pulse {
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 1;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    50% { 
+        transform: scale(1.02); 
+        opacity: 0.95;
+        box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.15);
+    }
+}
+
+/* 上傳進度條增強：漸變色 + 流動動畫 */
+.upload-progress-bar,
+.file-uploading-overlay .progress-bar {
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+    background-size: 200% 100%;
+    animation: gradient-flow 2s ease infinite;
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes gradient-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* 進度條光暈效果 */
+.upload-progress-bar::after,
+.file-uploading-overlay .progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* 上傳百分比顯示 */
+.upload-percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(59, 130, 246, 0.95);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    animation: percentage-bounce 0.3s ease;
+}
+
+@keyframes percentage-bounce {
+    0% { transform: translate(-50%, -50%) scale(0.8); }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* ==================== 成功狀態 ==================== */
+
+/* 成功勾選動畫 */
+.file-preview.upload-success {
+    animation: success-flash 1.5s ease;
+    /* 🔥 [刪除 2025-11-23] 移除持續的綠色邊框，只保留動畫閃爍效果 */
+}
+
+@keyframes success-flash {
+    0%, 100% { 
+        background-color: transparent;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+    25% { 
+        background-color: rgba(16, 185, 129, 0.1);
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.2);
+    }
+    50% { 
+        background-color: rgba(16, 185, 129, 0.05);
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.1);
+    }
+}
+
+/* 成功勾選圖示 */
+.success-checkmark {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #10b981;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    z-index: 10;
+    animation: checkmark-pop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+
+@keyframes checkmark-pop {
+    0% { 
+        transform: scale(0) rotate(-180deg); 
+        opacity: 0;
+    }
+    50% { 
+        transform: scale(1.2) rotate(10deg); 
+    }
+    100% { 
+        transform: scale(1) rotate(0deg); 
+        opacity: 1;
+    }
+}
+
+/* 成功勾選在 3 秒後淡出 */
+.success-checkmark.fade-out {
+    animation: fade-out-checkmark 0.5s ease forwards;
+}
+
+@keyframes fade-out-checkmark {
+    to { 
+        opacity: 0; 
+        transform: scale(0.5);
+    }
+}
+
+/* ==================== 錯誤狀態 ==================== */
+
+/* 錯誤震動動畫 */
+.file-preview.upload-error {
+    border: 2px solid #ef4444 !important;
+    animation: error-shake 0.5s ease;
+}
+
+@keyframes error-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    50% { transform: translateX(8px); }
+    75% { transform: translateX(-8px); }
+}
+
+/* 錯誤圖示 */
+.error-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #ef4444;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    z-index: 10;
+    animation: error-pulse 1s ease infinite;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+@keyframes error-pulse {
+    0%, 100% { 
+        transform: scale(1); 
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    50% { 
+        transform: scale(1.05); 
+        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    }
+}
+
+/* ==================== Toast 通知增強 ==================== */
+
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 300px;
+    max-width: 500px;
+    animation: toast-slide-in 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+@keyframes toast-slide-in {
+    to { transform: translateX(-50%) translateY(0); }
+}
+
+.toast-notification.toast-hide {
+    animation: toast-slide-out 0.3s ease forwards;
+}
+
+@keyframes toast-slide-out {
+    to { 
+        transform: translateX(-50%) translateY(-100px); 
+        opacity: 0;
+    }
+}
+
+/* Toast 類型樣式 */
+.toast-notification.success {
+    border-left: 4px solid #10b981;
+}
+
+.toast-notification.error {
+    border-left: 4px solid #ef4444;
+}
+
+.toast-notification.warning {
+    border-left: 4px solid #f59e0b;
+}
+
+.toast-notification.info {
+    border-left: 4px solid #3b82f6;
+}
+
+/* Toast 圖示 */
+.toast-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.toast-notification.success .toast-icon { color: #10b981; }
+.toast-notification.error .toast-icon { color: #ef4444; }
+.toast-notification.warning .toast-icon { color: #f59e0b; }
+.toast-notification.info .toast-icon { color: #3b82f6; }
+
+/* Toast 內容 */
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 4px;
+    color: #1a2a4a;
+}
+
+.toast-message {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+/* Toast 關閉按鈕 */
+.toast-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.toast-close:hover {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* Toast 操作按鈕 */
+.toast-action {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+}
+
+.toast-action-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toast-action-btn:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.toast-action-btn.secondary {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.toast-action-btn.secondary:hover {
+    background: #d1d5db;
+}
+
+/* ==================== 進度指示器增強 ==================== */
+
+/* 圓形進度環 */
+.circular-progress {
+    position: relative;
+    width: 48px;
+    height: 48px;
+}
+
+.circular-progress svg {
+    transform: rotate(-90deg);
+}
+
+.circular-progress-bg {
+    fill: none;
+    stroke: #e5e7eb;
+    stroke-width: 4;
+}
+
+.circular-progress-bar {
+    fill: none;
+    stroke: url(#progressGradient);
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+.circular-progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    font-weight: 700;
+    color: #3b82f6;
+}
+
+/* ==================== 手機端優化 ==================== */
+
+@media (max-width: 640px) {
+    .toast-notification {
+        min-width: calc(100vw - 40px);
+        max-width: calc(100vw - 40px);
+        padding: 12px 16px;
+    }
+    
+    .toast-icon {
+        font-size: 20px;
+    }
+    
+    .toast-title {
+        font-size: 14px;
+    }
+    
+    .toast-message {
+        font-size: 13px;
+    }
+    
+    .success-checkmark,
+    .error-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+    }
+    
+    .upload-percentage {
+        font-size: 12px;
+        padding: 3px 10px;
+    }
+}
+
+/* ==================== 低階裝置優化 ==================== */
+
+body.low-end .file-preview.uploading {
+    animation: none;
+    border: 2px solid #3b82f6 !important;
+}
+
+body.low-end .upload-progress-bar,
+body.low-end .file-uploading-overlay .progress-bar {
+    animation: none;
+    background: #3b82f6;
+}
+
+body.low-end .upload-progress-bar::after,
+body.low-end .file-uploading-overlay .progress-bar::after {
+    display: none;
+}
+
+body.low-end .success-checkmark,
+body.low-end .error-icon {
+    animation: none;
+}
+
+body.low-end .toast-notification {
+    animation: none;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* 減少動畫偏好設定 */
+@media (prefers-reduced-motion: reduce) {
+    .file-preview.uploading,
+    .upload-progress-bar,
+    .success-checkmark,
+    .error-icon,
+    .toast-notification {
+        animation: none !important;
+    }
+}

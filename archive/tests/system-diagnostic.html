@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統診斷工具 - FLB講師行事曆</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .diagnostic-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .diagnostic-item.success {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .diagnostic-item.error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .diagnostic-item.warning {
+            border-color: #ffc107;
+            background: #fff3cd;
+        }
+
+        .status-icon {
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .status-text {
+            flex: 1;
+        }
+
+        .status-text h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.1rem;
+        }
+
+        .status-text p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .refresh-btn {
+            background: #28a745;
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .refresh-btn:hover {
+            background: #218838;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 系統診斷工具</h1>
+            <p>檢查FLB講師行事曆系統的運行狀態</p>
+        </div>
+        
+        <div class="content">
+            <div id="diagnosticResults">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> 正在檢查系統狀態...
+                </div>
+            </div>
+            
+            <button class="btn refresh-btn" onclick="runDiagnostic()">
+                <i class="fas fa-sync-alt"></i> 重新檢查
+            </button>
+            
+            <div class="timestamp" id="lastCheck">
+                最後檢查時間: 載入中...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 診斷項目
+        const diagnosticItems = [
+            {
+                id: 'server-health',
+                name: '服務器健康狀態',
+                description: '檢查服務器是否正常運行',
+                test: async () => {
+                    try {
+                        const response = await fetch('/api/health', { timeout: 5000 });
+                        const data = await response.json();
+                        return data.success ? 'success' : 'error';
+                    } catch (error) {
+                        return 'error';
+                    }
+                }
+            },
+            {
+                id: 'teachers-api',
+                name: '講師資料API',
+                description: '檢查講師資料是否可正常載入',
+                test: async () => {
+                    try {
+                        const response = await fetch('/api/teachers', { timeout: 5000 });
+                        const data = await response.json();
+                        return data.success ? 'success' : 'error';
+                    } catch (error) {
+                        return 'error';
+                    }
+                }
+            },
+            {
+                id: 'reminders-api',
+                name: '提醒管理API',
+                description: '檢查提醒管理功能是否正常',
+                test: async () => {
+                    try {
+                        const response = await fetch('/api/reminders', { timeout: 5000 });
+                        const data = await response.json();
+                        return data.success ? 'success' : 'error';
+                    } catch (error) {
+                        return 'error';
+                    }
+                }
+            },
+            {
+                id: 'scheduler-api',
+                name: '排程器API',
+                description: '檢查自動排程器狀態',
+                test: async () => {
+                    try {
+                        const response = await fetch('/api/reminder-scheduler/status', { timeout: 5000 });
+                        const data = await response.json();
+                        return data.success ? 'success' : 'error';
+                    } catch (error) {
+                        return 'error';
+                    }
+                }
+            },
+            {
+                id: 'caldav-connection',
+                name: 'CalDAV連線',
+                description: '檢查行事曆伺服器連線狀態',
+                test: async () => {
+                    try {
+                        const response = await fetch('/api/events', { timeout: 10000 });
+                        const data = await response.json();
+                        if (data.success) {
+                            return data.data && data.data.length > 0 ? 'success' : 'warning';
+                        }
+                        return 'error';
+                    } catch (error) {
+                        return 'error';
+                    }
+                }
+            }
+        ];
+
+        // 運行診斷
+        async function runDiagnostic() {
+            const container = document.getElementById('diagnosticResults');
+            container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 正在檢查系統狀態...</div>';
+            
+            const results = [];
+            
+            for (const item of diagnosticItems) {
+                try {
+                    const status = await item.test();
+                    results.push({ ...item, status });
+                } catch (error) {
+                    results.push({ ...item, status: 'error', error: error.message });
+                }
+            }
+            
+            displayResults(results);
+            updateTimestamp();
+        }
+
+        // 顯示結果
+        function displayResults(results) {
+            const container = document.getElementById('diagnosticResults');
+            const html = results.map(item => {
+                const statusClass = item.status;
+                const statusIcon = getStatusIcon(item.status);
+                const statusText = getStatusText(item.status);
+                
+                return `
+                    <div class="diagnostic-item ${statusClass}">
+                        <div class="status-icon">${statusIcon}</div>
+                        <div class="status-text">
+                            <h3>${item.name}</h3>
+                            <p>${item.description} - ${statusText}</p>
+                            ${item.error ? `<p style="color: #dc3545; font-size: 0.8rem;">錯誤: ${item.error}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = html;
+        }
+
+        // 獲取狀態圖標
+        function getStatusIcon(status) {
+            switch (status) {
+                case 'success': return '✅';
+                case 'warning': return '⚠️';
+                case 'error': return '❌';
+                default: return '❓';
+            }
+        }
+
+        // 獲取狀態文字
+        function getStatusText(status) {
+            switch (status) {
+                case 'success': return '正常';
+                case 'warning': return '警告';
+                case 'error': return '錯誤';
+                default: return '未知';
+            }
+        }
+
+        // 更新時間戳
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('lastCheck').textContent = 
+                `最後檢查時間: ${now.toLocaleString('zh-TW')}`;
+        }
+
+        // 頁面載入時自動運行診斷
+        document.addEventListener('DOMContentLoaded', runDiagnostic);
+    </script>
+</body>
+</html>

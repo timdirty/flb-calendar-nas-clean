@@ -1,0 +1,48 @@
+====================================
+🔍 查看 CalDAV 初始化狀態
+====================================
+
+請在 NAS SSH 執行以下指令（複製整段）：
+
+# 1. 查看 CalDAV 初始化和登入狀態
+------------------------------------
+sudo docker logs flb-calendar-nas 2>&1 | grep -A 5 -B 5 "CalDAV\|初始化\|login\|登入"
+
+
+# 2. 查看事件抓取過程
+------------------------------------
+sudo docker logs flb-calendar-nas 2>&1 | grep -A 10 "開始更新事件快取\|getAllInstructorEvents\|獲取.*事件"
+
+
+# 3. 查看從容器啟動開始的完整日誌
+------------------------------------
+sudo docker logs flb-calendar-nas | head -100
+
+
+# 4. 手動觸發快取更新並觀察
+------------------------------------
+curl -X POST "https://calendar.funlearnbar.synology.me/api/events/refresh-cache"
+echo ""
+echo "等待 5 秒..."
+sleep 5
+sudo docker logs flb-calendar-nas --tail 30
+
+
+====================================
+🎯 要尋找的關鍵訊息
+====================================
+
+✅ 應該看到：
+  • "✅ Synology Calendar API 客戶端初始化成功"
+  • "✅ Synology Calendar 登入成功"
+  • "✅ 事件快取更新成功，獲取 XX 個事件"
+
+❌ 如果看到錯誤：
+  • "❌ CalDAV 客戶端初始化失敗"
+  • "❌ CalDAV 客戶端登入失敗"
+  • "連線逾時" 或 "timeout"
+  • "認證失敗" 或 "authentication failed"
+
+
+====================================
+

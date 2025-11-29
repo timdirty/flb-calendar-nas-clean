@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>特殊事件 API 測試工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-group textarea {
+            min-height: 120px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .result-box pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #333;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .event-type-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 4px;
+        }
+
+        .event-type-tag.停課 {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 2px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .event-type-tag.體驗 {
+            background: rgba(255, 215, 0, 0.1);
+            color: #d4a000;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .event-type-tag.代課 {
+            background: rgba(33, 150, 243, 0.1);
+            color: #2196F3;
+            border: 2px solid rgba(33, 150, 243, 0.3);
+        }
+
+        .event-type-tag.補課 {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 2px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .keyword-chip {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin: 3px;
+            color: #495057;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .api-info {
+            background: #e7f5ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+            margin-bottom: 15px;
+        }
+
+        .api-info strong {
+            color: #2196F3;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .config-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+
+        .config-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .config-card h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌟 特殊事件 API 測試工具</h1>
+            <p>測試特殊事件偵測 API 的功能，支援單一偵測和批量偵測</p>
+        </div>
+
+        <div class="tab-container">
+            <button class="tab active" onclick="switchTab('config')">📋 配置查詢</button>
+            <button class="tab" onclick="switchTab('single')">🔍 單一偵測</button>
+            <button class="tab" onclick="switchTab('batch')">📦 批量偵測</button>
+            <button class="tab" onclick="switchTab('examples')">📚 使用範例</button>
+        </div>
+
+        <!-- Tab 1: 配置查詢 -->
+        <div id="config" class="tab-content active">
+            <div class="section">
+                <h2>📋 特殊事件類型配置</h2>
+                
+                <div class="api-info">
+                    <strong>API 端點：</strong> GET /api/special-event-types
+                </div>
+
+                <button class="btn" onclick="getEventTypes()">
+                    <span id="loadConfigBtn">🔄 取得配置</span>
+                </button>
+
+                <div id="configResult" class="result-box" style="display: none;">
+                    <div id="configContent"></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🔑 關鍵字列表</h2>
+                
+                <div class="api-info">
+                    <strong>API 端點：</strong> GET /api/special-event-keywords
+                </div>
+
+                <button class="btn" onclick="getKeywords()">
+                    <span id="loadKeywordsBtn">🔄 取得關鍵字</span>
+                </button>
+
+                <div id="keywordsResult" class="result-box" style="display: none;">
+                    <div id="keywordsContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: 單一偵測 -->
+        <div id="single" class="tab-content">
+            <div class="section">
+                <h2>🔍 單一事件偵測</h2>
+                
+                <div class="api-info">
+                    <strong>API 端點：</strong> POST /api/detect-special-event
+                </div>
+
+                <div class="input-group">
+                    <label>課程標題：</label>
+                    <input type="text" id="singleTitle" placeholder="例如：Python 停課通知">
+                </div>
+
+                <button class="btn" onclick="detectSingle()">
+                    <span id="detectSingleBtn">🔍 開始偵測</span>
+                </button>
+
+                <div id="singleResult" class="result-box" style="display: none;">
+                    <pre id="singleContent"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: 批量偵測 -->
+        <div id="batch" class="tab-content">
+            <div class="section">
+                <h2>📦 批量事件偵測</h2>
+                
+                <div class="api-info">
+                    <strong>API 端點：</strong> POST /api/detect-batch-events
+                </div>
+
+                <div class="input-group">
+                    <label>課程標題列表（每行一個）：</label>
+                    <textarea id="batchTitles" placeholder="Python 停課通知&#10;體驗課程 - 機器人&#10;正常課程&#10;代課 - Java"></textarea>
+                </div>
+
+                <button class="btn" onclick="detectBatch()">
+                    <span id="detectBatchBtn">📦 批量偵測</span>
+                </button>
+
+                <div id="batchResult" class="result-box" style="display: none;">
+                    <pre id="batchContent"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: 使用範例 -->
+        <div id="examples" class="tab-content">
+            <div class="section">
+                <h2>📚 JavaScript 使用範例</h2>
+                
+                <div class="result-box">
+                    <pre>// 1. 取得所有特殊事件類型配置
+async function getSpecialEventTypes() {
+    const response = await fetch('/api/special-event-types');
+    const data = await response.json();
+    console.log('特殊事件配置:', data.data);
+    return data.data;
+}
+
+// 2. 偵測單一事件
+async function checkEvent(title) {
+    const response = await fetch('/api/detect-special-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title })
+    });
+    const data = await response.json();
+    console.log(`"${title}" 偵測結果:`, data.specialEventType);
+    return data;
+}
+
+// 3. 批量偵測
+async function checkBatchEvents(titles) {
+    const response = await fetch('/api/detect-batch-events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titles })
+    });
+    const data = await response.json();
+    console.log('批量偵測結果:', data.results);
+    return data;
+}
+
+// 使用範例
+(async () => {
+    // 取得配置
+    const config = await getSpecialEventTypes();
+    
+    // 單一偵測
+    await checkEvent('Python 停課通知');
+    
+    // 批量偵測
+    const titles = ['Python 停課', '體驗課程', '正常課程'];
+    await checkBatchEvents(titles);
+})();</pre>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🐍 Python 使用範例</h2>
+                
+                <div class="result-box">
+                    <pre>import requests
+import json
+
+# API 基礎 URL
+BASE_URL = 'http://your-domain.com'
+
+# 1. 取得特殊事件配置
+def get_special_event_types():
+    response = requests.get(f'{BASE_URL}/api/special-event-types')
+    return response.json()['data']
+
+# 2. 偵測單一事件
+def detect_event(title):
+    response = requests.post(
+        f'{BASE_URL}/api/detect-special-event',
+        json={'title': title}
+    )
+    return response.json()
+
+# 3. 批量偵測
+def detect_batch_events(titles):
+    response = requests.post(
+        f'{BASE_URL}/api/detect-batch-events',
+        json={'titles': titles}
+    )
+    return response.json()
+
+# 使用範例
+if __name__ == '__main__':
+    # 取得配置
+    config = get_special_event_types()
+    print('特殊事件配置:', json.dumps(config, ensure_ascii=False, indent=2))
+    
+    # 單一偵測
+    result = detect_event('Python 停課通知')
+    print(f"偵測結果: {result['specialEventType']}")
+    
+    # 批量偵測
+    titles = ['Python 停課', '體驗課程', '正常課程']
+    batch_result = detect_batch_events(titles)
+    for item in batch_result['results']:
+        print(f"{item['title']}: {item['specialEventType'] or '正常'}")</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab 切換
+        function switchTab(tabName) {
+            // 隱藏所有 tab-content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有 tab 的 active 狀態
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 顯示選中的 tab-content
+            document.getElementById(tabName).classList.add('active');
+            
+            // 添加對應 tab 的 active 狀態
+            event.target.classList.add('active');
+        }
+
+        // 取得特殊事件類型配置
+        async function getEventTypes() {
+            const btn = document.getElementById('loadConfigBtn');
+            btn.innerHTML = '<span class="loading"></span> 載入中...';
+            
+            try {
+                const response = await fetch('/api/special-event-types');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayConfig(data.data);
+                    document.getElementById('configResult').style.display = 'block';
+                } else {
+                    alert('取得配置失敗: ' + data.message);
+                }
+            } catch (error) {
+                alert('API 呼叫失敗: ' + error.message);
+            }
+            
+            btn.innerHTML = '🔄 取得配置';
+        }
+
+        // 顯示配置
+        function displayConfig(config) {
+            const container = document.getElementById('configContent');
+            let html = '<div class="grid">';
+            
+            for (const [eventType, eventConfig] of Object.entries(config)) {
+                html += `
+                    <div class="config-card">
+                        <h3>
+                            <span>${eventConfig.emoji}</span>
+                            <span>${eventType}</span>
+                        </h3>
+                        <div style="margin-bottom: 10px;">
+                            <strong>關鍵字：</strong><br>
+                            ${eventConfig.keywords.map(k => `<span class="keyword-chip">${k}</span>`).join('')}
+                        </div>
+                        <div style="margin-bottom: 5px;">
+                            <strong>顏色：</strong>
+                            <span style="display: inline-block; width: 20px; height: 20px; background: ${eventConfig.color}; border: 1px solid #ccc; border-radius: 4px; vertical-align: middle;"></span>
+                            <code style="font-size: 11px; color: #666;">${eventConfig.color}</code>
+                        </div>
+                        <div>
+                            <strong>外框寬度：</strong> ${eventConfig.borderWidth}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // 取得關鍵字列表
+        async function getKeywords() {
+            const btn = document.getElementById('loadKeywordsBtn');
+            btn.innerHTML = '<span class="loading"></span> 載入中...';
+            
+            try {
+                const response = await fetch('/api/special-event-keywords');
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = '<div>';
+                    for (const [eventType, keywords] of Object.entries(data.data)) {
+                        html += `
+                            <div style="margin-bottom: 15px;">
+                                <div class="event-type-tag ${eventType}">
+                                    ${eventType}
+                                </div>
+                                <div style="margin-top: 8px;">
+                                    ${keywords.map(k => `<span class="keyword-chip">${k}</span>`).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    html += '</div>';
+                    
+                    document.getElementById('keywordsContent').innerHTML = html;
+                    document.getElementById('keywordsResult').style.display = 'block';
+                } else {
+                    alert('取得關鍵字失敗: ' + data.message);
+                }
+            } catch (error) {
+                alert('API 呼叫失敗: ' + error.message);
+            }
+            
+            btn.innerHTML = '🔄 取得關鍵字';
+        }
+
+        // 單一偵測
+        async function detectSingle() {
+            const title = document.getElementById('singleTitle').value.trim();
+            
+            if (!title) {
+                alert('請輸入課程標題');
+                return;
+            }
+            
+            const btn = document.getElementById('detectSingleBtn');
+            btn.innerHTML = '<span class="loading"></span> 偵測中...';
+            
+            try {
+                const response = await fetch('/api/detect-special-event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title })
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('singleContent').textContent = JSON.stringify(data, null, 2);
+                document.getElementById('singleResult').style.display = 'block';
+            } catch (error) {
+                alert('API 呼叫失敗: ' + error.message);
+            }
+            
+            btn.innerHTML = '🔍 開始偵測';
+        }
+
+        // 批量偵測
+        async function detectBatch() {
+            const titlesText = document.getElementById('batchTitles').value.trim();
+            
+            if (!titlesText) {
+                alert('請輸入課程標題列表');
+                return;
+            }
+            
+            const titles = titlesText.split('\n').map(t => t.trim()).filter(t => t);
+            
+            if (titles.length === 0) {
+                alert('請輸入至少一個課程標題');
+                return;
+            }
+            
+            const btn = document.getElementById('detectBatchBtn');
+            btn.innerHTML = '<span class="loading"></span> 偵測中...';
+            
+            try {
+                const response = await fetch('/api/detect-batch-events', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titles })
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('batchContent').textContent = JSON.stringify(data, null, 2);
+                document.getElementById('batchResult').style.display = 'block';
+            } catch (error) {
+                alert('API 呼叫失敗: ' + error.message);
+            }
+            
+            btn.innerHTML = '📦 批量偵測';
+        }
+
+        // 頁面載入時自動取得配置
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 特殊事件 API 測試工具已載入');
+        });
+    </script>
+</body>
+</html>
+
