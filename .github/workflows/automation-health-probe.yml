@@ -1,0 +1,168 @@
+name: Automation production health probe
+
+on:
+  push:
+    branches:
+      - automation-health-probe
+    paths:
+      - '.github/workflows/automation-health-probe.yml'
+      - 'monitoring/probe-trigger.txt'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: automation-health-probe
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: automation-health-probe
+          fetch-depth: 0
+
+      - name: Probe production endpoints
+        shell: bash
+        run: |
+          mkdir -p monitoring
+          python3 - <<'PY'
+          import datetime as dt
+          import json
+          import socket
+          import ssl
+          import time
+          import urllib.error
+          import urllib.request
+          from urllib.parse import urlparse
+
+          endpoints = [
+              {"service": "student", "name": "home", "url": "https://course-viewer.funlearnbar.synology.me/student-manager/", "kind": "html"},
+              {"service": "student", "name": "health", "url": "https://course-viewer.funlearnbar.synology.me/api/student-db/health", "kind": "json"},
+              {"service": "student", "name": "sw", "url": "https://course-viewer.funlearnbar.synology.me/student-manager/sw.js", "kind": "text"},
+              {"service": "student", "name": "offline", "url": "https://course-viewer.funlearnbar.synology.me/student-manager/offline.html", "kind": "html"},
+              {"service": "student", "name": "version", "url": "https://course-viewer.funlearnbar.synology.me/student-manager/version.json", "kind": "json"},
+              {"service": "aibot", "name": "home", "url": "https://aibot.funlearnbar.synology.me/", "kind": "html"},
+              {"service": "aibot", "name": "live", "url": "https://aibot.funlearnbar.synology.me/v2/health/live", "kind": "json"},
+              {"service": "aibot", "name": "ready", "url": "https://aibot.funlearnbar.synology.me/v2/health/ready", "kind": "json"},
+              {"service": "calendar", "name": "home", "url": "https://calendar.funlearnbar.synology.me/perfect-calendar-modular.html", "kind": "html"},
+              {"service": "calendar", "name": "health", "url": "https://calendar.funlearnbar.synology.me/api/health", "kind": "json"},
+          ]
+
+          hosts = sorted({urlparse(item["url"]).hostname for item in endpoints})
+          host_results = {}
+          for host in hosts:
+              info = {"host": host, "dns": [], "dns_ok": False, "tls_ok": False}
+              try:
+                  addresses = sorted({entry[4][0] for entry in socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)})
+                  info["dns"] = addresses
+                  info["dns_ok"] = bool(addresses)
+              except Exception as exc:
+                  info["dns_error"] = f"{type(exc).__name__}: {exc}"
+              try:
+                  context = ssl.create_default_context()
+                  with socket.create_connection((host, 443), timeout=12) as sock:
+                      with context.wrap_socket(sock, server_hostname=host) as tls:
+                          cert = tls.getpeercert()
+                          info["tls_ok"] = True
+                          info["tls_version"] = tls.version()
+                          info["tls_cipher"] = tls.cipher()[0] if tls.cipher() else None
+                          info["cert_not_after"] = cert.get("notAfter")
+                          info["cert_subject"] = dict(x[0] for x in cert.get("subject", []))
+                          info["cert_issuer"] = dict(x[0] for x in cert.get("issuer", []))
+              except Exception as exc:
+                  info["tls_error"] = f"{type(exc).__name__}: {exc}"
+              host_results[host] = info
+
+          results = []
+          opener = urllib.request.build_opener(urllib.request.HTTPRedirectHandler())
+          for item in endpoints:
+              result = dict(item)
+              started = time.monotonic()
+              request = urllib.request.Request(
+                  item["url"],
+                  headers={
+                      "User-Agent": "FunLearnBar-HealthProbe/1.0 (+github-actions)",
+                      "Accept": "application/json,text/html,text/plain,*/*",
+                      "Cache-Control": "no-cache",
+                  },
+              )
+              try:
+                  with opener.open(request, timeout=25) as response:
+                      raw = response.read(300000)
+                      text = raw.decode("utf-8", errors="replace")
+                      result.update({
+                          "ok": 200 <= response.status < 400,
+                          "status": response.status,
+                          "final_url": response.geturl(),
+                          "elapsed_ms": round((time.monotonic() - started) * 1000),
+                          "content_type": response.headers.get("content-type"),
+                          "server": response.headers.get("server"),
+                          "content_length": len(raw),
+                          "body_preview": text[:1200],
+                      })
+                      if item["kind"] == "json":
+                          try:
+                              result["json"] = json.loads(text)
+                              result["json_valid"] = True
+                          except Exception as exc:
+                              result["json_valid"] = False
+                              result["parse_error"] = f"{type(exc).__name__}: {exc}"
+                      lowered = text.lower()
+                      result["contains_bad_gateway"] = "bad gateway" in lowered or "502" in lowered[:300]
+                      result["looks_like_html"] = "<html" in lowered or "<!doctype html" in lowered
+              except urllib.error.HTTPError as exc:
+                  raw = exc.read(300000)
+                  text = raw.decode("utf-8", errors="replace")
+                  result.update({
+                      "ok": False,
+                      "status": exc.code,
+                      "final_url": exc.geturl(),
+                      "elapsed_ms": round((time.monotonic() - started) * 1000),
+                      "content_type": exc.headers.get("content-type") if exc.headers else None,
+                      "server": exc.headers.get("server") if exc.headers else None,
+                      "content_length": len(raw),
+                      "body_preview": text[:1200],
+                      "error": f"HTTPError: {exc.code} {exc.reason}",
+                  })
+              except Exception as exc:
+                  result.update({
+                      "ok": False,
+                      "status": None,
+                      "elapsed_ms": round((time.monotonic() - started) * 1000),
+                      "error": f"{type(exc).__name__}: {exc}",
+                  })
+              results.append(result)
+
+          service_summary = {}
+          for service in sorted({x["service"] for x in endpoints}):
+              service_items = [x for x in results if x["service"] == service]
+              service_summary[service] = {
+                  "ok": all(x.get("ok") for x in service_items),
+                  "failed": [x["name"] for x in service_items if not x.get("ok")],
+                  "statuses": {x["name"]: x.get("status") for x in service_items},
+              }
+
+          payload = {
+              "checked_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+              "runner": "github-actions",
+              "hosts": host_results,
+              "services": service_summary,
+              "endpoints": results,
+          }
+          with open("monitoring/latest-health.json", "w", encoding="utf-8") as handle:
+              json.dump(payload, handle, ensure_ascii=False, indent=2, sort_keys=True)
+              handle.write("\n")
+          PY
+
+      - name: Commit probe result
+        shell: bash
+        run: |
+          git config user.name "funlearnbar-health-probe"
+          git config user.email "health-probe@users.noreply.github.com"
+          git add monitoring/latest-health.json
+          git commit -m "chore(monitor): record production health probe" || exit 0
+          git push origin HEAD:automation-health-probe
