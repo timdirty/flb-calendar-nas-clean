@@ -1,8 +1,8 @@
 {
-  "checked_at": "2026-08-02T23:18:04.443647+00:00",
+  "checked_at": "2026-08-03T00:21:24.772811+00:00",
   "endpoints": [
     {
-      "elapsed_ms": 25122,
+      "elapsed_ms": 25075,
       "error": "URLError: <urlopen error timed out>",
       "kind": "html",
       "name": "home",
@@ -12,7 +12,7 @@
       "url": "https://course-viewer.funlearnbar.synology.me/student-manager/"
     },
     {
-      "elapsed_ms": 25117,
+      "elapsed_ms": 25073,
       "error": "URLError: <urlopen error timed out>",
       "kind": "json",
       "name": "health",
@@ -22,7 +22,7 @@
       "url": "https://course-viewer.funlearnbar.synology.me/api/student-db/health"
     },
     {
-      "elapsed_ms": 25085,
+      "elapsed_ms": 25074,
       "error": "URLError: <urlopen error timed out>",
       "kind": "text",
       "name": "sw",
@@ -32,7 +32,7 @@
       "url": "https://course-viewer.funlearnbar.synology.me/student-manager/sw.js"
     },
     {
-      "elapsed_ms": 25099,
+      "elapsed_ms": 25071,
       "error": "URLError: <urlopen error timed out>",
       "kind": "html",
       "name": "offline",
@@ -42,7 +42,7 @@
       "url": "https://course-viewer.funlearnbar.synology.me/student-manager/offline.html"
     },
     {
-      "elapsed_ms": 25112,
+      "elapsed_ms": 25071,
       "error": "URLError: <urlopen error timed out>",
       "kind": "json",
       "name": "version",
@@ -52,7 +52,7 @@
       "url": "https://course-viewer.funlearnbar.synology.me/student-manager/version.json"
     },
     {
-      "elapsed_ms": 25147,
+      "elapsed_ms": 25020,
       "error": "URLError: <urlopen error timed out>",
       "kind": "html",
       "name": "home",
@@ -62,7 +62,7 @@
       "url": "https://aibot.funlearnbar.synology.me/"
     },
     {
-      "elapsed_ms": 25079,
+      "elapsed_ms": 25071,
       "error": "URLError: <urlopen error timed out>",
       "kind": "json",
       "name": "live",
@@ -72,7 +72,7 @@
       "url": "https://aibot.funlearnbar.synology.me/v2/health/live"
     },
     {
-      "elapsed_ms": 25070,
+      "elapsed_ms": 25033,
       "error": "URLError: <urlopen error timed out>",
       "kind": "json",
       "name": "ready",
@@ -82,7 +82,7 @@
       "url": "https://aibot.funlearnbar.synology.me/v2/health/ready"
     },
     {
-      "elapsed_ms": 25083,
+      "elapsed_ms": 25078,
       "error": "URLError: <urlopen error timed out>",
       "kind": "html",
       "name": "home",
@@ -92,7 +92,7 @@
       "url": "https://calendar.funlearnbar.synology.me/perfect-calendar-modular.html"
     },
     {
-      "elapsed_ms": 25121,
+      "elapsed_ms": 25038,
       "error": "URLError: <urlopen error timed out>",
       "kind": "json",
       "name": "health",
