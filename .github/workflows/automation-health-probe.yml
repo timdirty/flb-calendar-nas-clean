@@ -112,7 +112,7 @@ jobs:
                               result["json_valid"] = False
                               result["parse_error"] = f"{type(exc).__name__}: {exc}"
                       lowered = text.lower()
-                      result["contains_bad_gateway"] = "bad gateway" in lowered or "502" in lowered[:300]
+                      result["contains_bad_gateway"] = response.status == 502 or "bad gateway" in lowered
                       result["looks_like_html"] = "<html" in lowered or "<!doctype html" in lowered
               except urllib.error.HTTPError as exc:
                   raw = exc.read(300000)
