@@ -32,6 +32,7 @@ jobs:
           python3 - <<'PY'
           import datetime as dt
           import json
+          import re
           import socket
           import ssl
           import time
@@ -81,6 +82,8 @@ jobs:
           opener = urllib.request.build_opener(urllib.request.HTTPRedirectHandler())
           for item in endpoints:
               result = dict(item)
+              result["semantic_ok"] = True
+              result["semantic_errors"] = []
               started = time.monotonic()
               request = urllib.request.Request(
                   item["url"],
@@ -114,6 +117,58 @@ jobs:
                       lowered = text.lower()
                       result["contains_bad_gateway"] = response.status == 502 or "bad gateway" in lowered
                       result["looks_like_html"] = "<html" in lowered or "<!doctype html" in lowered
+
+                      if item["service"] == "student" and item["name"] == "sw":
+                          required_markers = [
+                              "LEGACY_CACHE_PREFIXES",
+                              "function isSensitiveApiRequestPath",
+                              "!isSensitiveApiRequest",
+                              "if (isSensitiveApiRequest)",
+                          ]
+                          missing_markers = [marker for marker in required_markers if marker not in text]
+                          result["security_contract"] = {
+                              "name": "student-sw-sensitive-api-cache",
+                              "ok": not missing_markers,
+                              "missing_markers": missing_markers,
+                          }
+                          if missing_markers:
+                              result["semantic_ok"] = False
+                              result["semantic_errors"].append("student_sw_sensitive_cache_guard_missing")
+
+                      if item["service"] == "student" and item["name"] == "version" and result.get("json_valid"):
+                          source_commit = result.get("json", {}).get("source_commit")
+                          result["source_commit"] = source_commit
+                          if not isinstance(source_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", source_commit):
+                              result["source_commit_resolvable"] = False
+                              result["semantic_ok"] = False
+                              result["semantic_errors"].append("student_source_commit_invalid")
+                          else:
+                              commit_url = f"https://api.github.com/repos/timdirty/FLB-COURSE-sys/commits/{source_commit}"
+                              commit_request = urllib.request.Request(
+                                  commit_url,
+                                  headers={
+                                      "User-Agent": "FunLearnBar-HealthProbe/1.0 (+github-actions)",
+                                      "Accept": "application/vnd.github+json",
+                                  },
+                              )
+                              try:
+                                  with opener.open(commit_request, timeout=12) as commit_response:
+                                      result["source_commit_resolvable"] = commit_response.status == 200
+                                      if commit_response.status != 200:
+                                          result["semantic_ok"] = False
+                                          result["semantic_errors"].append("student_source_commit_unresolvable")
+                              except urllib.error.HTTPError as exc:
+                                  result["source_commit_resolvable"] = False
+                                  result["source_commit_error"] = f"HTTPError: {exc.code} {exc.reason}"
+                                  if exc.code in (404, 422):
+                                      result["semantic_ok"] = False
+                                      result["semantic_errors"].append("student_source_commit_unresolvable")
+                                  else:
+                                      result.setdefault("semantic_warnings", []).append("source_commit_check_http_error")
+                              except Exception as exc:
+                                  result["source_commit_resolvable"] = None
+                                  result["source_commit_error"] = f"{type(exc).__name__}: {exc}"
+                                  result.setdefault("semantic_warnings", []).append("source_commit_check_transport_error")
               except urllib.error.HTTPError as exc:
                   raw = exc.read(300000)
                   text = raw.decode("utf-8", errors="replace")
@@ -141,9 +196,18 @@ jobs:
           for service in sorted({x["service"] for x in endpoints}):
               service_items = [x for x in results if x["service"] == service]
               service_summary[service] = {
-                  "ok": all(x.get("ok") for x in service_items),
-                  "failed": [x["name"] for x in service_items if not x.get("ok")],
+                  "ok": all(x.get("ok") and x.get("semantic_ok", True) for x in service_items),
+                  "failed": [
+                      x["name"]
+                      for x in service_items
+                      if not (x.get("ok") and x.get("semantic_ok", True))
+                  ],
                   "statuses": {x["name"]: x.get("status") for x in service_items},
+                  "semantic_errors": {
+                      x["name"]: x.get("semantic_errors", [])
+                      for x in service_items
+                      if x.get("semantic_errors")
+                  },
               }
 
           payload = {
