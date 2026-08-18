@@ -155,15 +155,22 @@ jobs:
                                   with opener.open(commit_request, timeout=12) as commit_response:
                                       result["source_commit_resolvable"] = commit_response.status == 200
                                       if commit_response.status != 200:
-                                          result["semantic_ok"] = False
-                                          result["semantic_errors"].append("student_source_commit_unresolvable")
+                                          result.setdefault("semantic_warnings", []).append("source_commit_check_http_error")
                               except urllib.error.HTTPError as exc:
-                                  result["source_commit_resolvable"] = False
+                                  # FLB-COURSE-sys is private. The workflow token belongs to
+                                  # this probe repository and cannot authenticate to that
+                                  # separate private repository, so GitHub intentionally
+                                  # returns 404 even for a valid commit. Treat 404/422 as
+                                  # indeterminate here; the scheduled monitor verifies the
+                                  # SHA with its authenticated GitHub connector.
                                   result["source_commit_error"] = f"HTTPError: {exc.code} {exc.reason}"
                                   if exc.code in (404, 422):
-                                      result["semantic_ok"] = False
-                                      result["semantic_errors"].append("student_source_commit_unresolvable")
+                                      result["source_commit_resolvable"] = None
+                                      result.setdefault("semantic_warnings", []).append(
+                                          "source_commit_check_requires_authenticated_cross_repo_access"
+                                      )
                                   else:
+                                      result["source_commit_resolvable"] = None
                                       result.setdefault("semantic_warnings", []).append("source_commit_check_http_error")
                               except Exception as exc:
                                   result["source_commit_resolvable"] = None
