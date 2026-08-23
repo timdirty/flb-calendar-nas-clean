@@ -1,12 +1,12 @@
 {
-  "checked_at": "2026-08-23T11:14:34.990205+00:00",
+  "checked_at": "2026-08-23T12:23:19.732196+00:00",
   "endpoints": [
     {
       "body_preview": "<!doctype html>\n<html lang=\"zh-TW\">\n\n<head>\n  <meta charset=\"UTF-8\" />\n  <link rel=\"icon\" type=\"image/jpeg\" href=\"/student-manager/logo.jpg\" />\n  <link rel=\"apple-touch-icon\" href=\"/student-manager/logo.jpg\" />\n  <link rel=\"manifest\" href=\"/student-manager/manifest.json\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <meta name=\"theme-color\" content=\"#2563eb\" />\n  <meta name=\"apple-mobile-web-app-capable\" content=\"yes\" />\n  <meta name=\"apple-mobile-web-app-status-bar-style\" content=\"default\" />\n  <meta name=\"apple-mobile-web-app-title\" content=\"學生管理\" />\n  <!-- 防止瀏覽器快取 -->\n  <meta http-equiv=\"Cache-Control\" content=\"no-cache, no-store, must-revalidate\" />\n  <meta http-equiv=\"Pragma\" content=\"no-cache\" />\n  <meta http-equiv=\"Expires\" content=\"0\" />\n  <title>學生資料庫管理系統 - FLB 樂程坊</title>\n  <!-- Google Fonts - Plus Jakarta Sans + Noto Sans TC -->\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link\n    href=\"https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700&display=swap\"\n    rel=\"stylesheet\"",
       "contains_bad_gateway": false,
       "content_length": 9119,
       "content_type": "text/html; charset=utf-8",
-      "elapsed_ms": 552,
+      "elapsed_ms": 550,
       "final_url": "https://course-viewer.funlearnbar.synology.me/student-manager/",
       "kind": "html",
       "looks_like_html": true,
@@ -20,11 +20,11 @@
       "url": "https://course-viewer.funlearnbar.synology.me/student-manager/"
     },
     {
-      "body_preview": "{\"cache\":{\"cache_size\":0,\"hit_rate\":\"0.00%\",\"hits\":0,\"invalidations\":0,\"misses\":0,\"total_requests\":0},\"database\":{\"connected\":true,\"database\":\"flb_students\",\"error\":null,\"host\":\"funlearnbar-student-db\",\"port\":5432,\"resolved_host\":\"192.168.128.7\"},\"memory\":{\"percent\":0.89,\"used_mb\":177.61},\"rate_limit\":{\"active_clients\":2,\"exempt_paths\":[\"/health\",\"/api/student-db/health\",\"/api/health\"],\"limit\":500,\"window\":60},\"response_time_ms\":0.89,\"service\":\"student-database-api\",\"status\":\"ok\",\"timestamp\":\"2026-08-23T19:14:29.798386\",\"version\":\"1.1.0\"}\n",
+      "body_preview": "{\"cache\":{\"cache_size\":0,\"hit_rate\":\"0.00%\",\"hits\":0,\"invalidations\":0,\"misses\":0,\"total_requests\":0},\"database\":{\"connected\":true,\"database\":\"flb_students\",\"error\":null,\"host\":\"funlearnbar-student-db\",\"port\":5432,\"resolved_host\":\"192.168.128.7\"},\"memory\":{\"percent\":1.24,\"used_mb\":248.23},\"rate_limit\":{\"active_clients\":2,\"exempt_paths\":[\"/api/health\",\"/api/student-db/health\",\"/health\"],\"limit\":500,\"window\":60},\"response_time_ms\":0.89,\"service\":\"student-database-api\",\"status\":\"ok\",\"timestamp\":\"2026-08-23T20:23:14.576668\",\"version\":\"1.1.0\"}\n",
       "contains_bad_gateway": false,
       "content_length": 545,
       "content_type": "application/json",
-      "elapsed_ms": 558,
+      "elapsed_ms": 553,
       "final_url": "https://course-viewer.funlearnbar.synology.me/api/student-db/health",
       "json": {
         "cache": {
@@ -44,15 +44,15 @@
           "resolved_host": "192.168.128.7"
         },
         "memory": {
-          "percent": 0.89,
-          "used_mb": 177.61
+          "percent": 1.24,
+          "used_mb": 248.23
         },
         "rate_limit": {
           "active_clients": 2,
           "exempt_paths": [
-            "/health",
+            "/api/health",
             "/api/student-db/health",
-            "/api/health"
+            "/health"
           ],
           "limit": 500,
           "window": 60
@@ -60,7 +60,7 @@
         "response_time_ms": 0.89,
         "service": "student-database-api",
         "status": "ok",
-        "timestamp": "2026-08-23T19:14:29.798386",
+        "timestamp": "2026-08-23T20:23:14.576668",
         "version": "1.1.0"
       },
       "json_valid": true,
@@ -80,7 +80,7 @@
       "contains_bad_gateway": false,
       "content_length": 15703,
       "content_type": "application/javascript; charset=utf-8",
-      "elapsed_ms": 738,
+      "elapsed_ms": 714,
       "final_url": "https://course-viewer.funlearnbar.synology.me/student-manager/sw.js",
       "kind": "text",
       "looks_like_html": true,
@@ -103,7 +103,7 @@
       "contains_bad_gateway": false,
       "content_length": 7348,
       "content_type": "text/html; charset=utf-8",
-      "elapsed_ms": 509,
+      "elapsed_ms": 568,
       "final_url": "https://course-viewer.funlearnbar.synology.me/student-manager/offline.html",
       "kind": "html",
       "looks_like_html": true,
@@ -121,7 +121,7 @@
       "contains_bad_gateway": false,
       "content_length": 153,
       "content_type": "application/json",
-      "elapsed_ms": 561,
+      "elapsed_ms": 556,
       "final_url": "https://course-viewer.funlearnbar.synology.me/student-manager/version.json",
       "json": {
         "buildDate": "2026-08-23T02:51:36.303Z",
@@ -152,7 +152,7 @@
       "contains_bad_gateway": false,
       "content_length": 5621,
       "content_type": "text/html",
-      "elapsed_ms": 560,
+      "elapsed_ms": 599,
       "final_url": "https://aibot.funlearnbar.synology.me/",
       "kind": "html",
       "looks_like_html": true,
@@ -170,7 +170,7 @@
       "contains_bad_gateway": false,
       "content_length": 15,
       "content_type": "application/json; charset=utf-8",
-      "elapsed_ms": 602,
+      "elapsed_ms": 499,
       "final_url": "https://aibot.funlearnbar.synology.me/v2/health/live",
       "json": {
         "status": "ok"
@@ -188,16 +188,16 @@
       "url": "https://aibot.funlearnbar.synology.me/v2/health/live"
     },
     {
-      "body_preview": "{\"status\":\"ready\",\"db\":\"up\",\"ts\":\"2026-08-23T11:14:33.440Z\"}",
+      "body_preview": "{\"status\":\"ready\",\"db\":\"up\",\"ts\":\"2026-08-23T12:23:18.187Z\"}",
       "contains_bad_gateway": false,
       "content_length": 60,
       "content_type": "application/json; charset=utf-8",
-      "elapsed_ms": 512,
+      "elapsed_ms": 518,
       "final_url": "https://aibot.funlearnbar.synology.me/v2/health/ready",
       "json": {
         "db": "up",
         "status": "ready",
-        "ts": "2026-08-23T11:14:33.440Z"
+        "ts": "2026-08-23T12:23:18.187Z"
       },
       "json_valid": true,
       "kind": "json",
@@ -216,7 +216,7 @@
       "contains_bad_gateway": false,
       "content_length": 78898,
       "content_type": "text/html; charset=utf-8",
-      "elapsed_ms": 897,
+      "elapsed_ms": 907,
       "final_url": "https://calendar.funlearnbar.synology.me/perfect-calendar-modular.html",
       "kind": "html",
       "looks_like_html": true,
@@ -230,19 +230,19 @@
       "url": "https://calendar.funlearnbar.synology.me/perfect-calendar-modular.html"
     },
     {
-      "body_preview": "{\"success\":true,\"status\":\"healthy\",\"timestamp\":\"2026-08-23T11:14:34.899Z\",\"cache_age\":1787483674899,\"environment\":\"production\",\"caldav_configured\":true}",
+      "body_preview": "{\"success\":true,\"status\":\"healthy\",\"timestamp\":\"2026-08-23T12:23:19.648Z\",\"cache_age\":1787487799648,\"environment\":\"production\",\"caldav_configured\":true}",
       "contains_bad_gateway": false,
       "content_length": 152,
       "content_type": "application/json; charset=utf-8",
-      "elapsed_ms": 560,
+      "elapsed_ms": 554,
       "final_url": "https://calendar.funlearnbar.synology.me/api/health",
       "json": {
-        "cache_age": 1787483674899,
+        "cache_age": 1787487799648,
         "caldav_configured": true,
         "environment": "production",
         "status": "healthy",
         "success": true,
-        "timestamp": "2026-08-23T11:14:34.899Z"
+        "timestamp": "2026-08-23T12:23:19.648Z"
       },
       "json_valid": true,
       "kind": "json",
