@@ -1,12 +1,12 @@
 {
-  "checked_at": "2026-09-03T03:14:24.017751+00:00",
+  "checked_at": "2026-09-03T04:23:33.010285+00:00",
   "endpoints": [
     {
       "body_preview": "<!doctype html>\n<html lang=\"zh-TW\">\n\n<head>\n  <meta charset=\"UTF-8\" />\n  <link rel=\"icon\" type=\"image/jpeg\" href=\"/student-manager/logo.jpg\" />\n  <link rel=\"apple-touch-icon\" href=\"/student-manager/logo.jpg\" />\n  <link rel=\"manifest\" href=\"/student-manager/manifest.json\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <meta name=\"theme-color\" content=\"#2563eb\" />\n  <meta name=\"apple-mobile-web-app-capable\" content=\"yes\" />\n  <meta name=\"apple-mobile-web-app-status-bar-style\" content=\"default\" />\n  <meta name=\"apple-mobile-web-app-title\" content=\"學生管理\" />\n  <meta name=\"flb-family-application-invites-build\" content=\"true\" />\n  <!-- 防止瀏覽器快取 -->\n  <meta http-equiv=\"Cache-Control\" content=\"no-cache, no-store, must-revalidate\" />\n  <meta http-equiv=\"Pragma\" content=\"no-cache\" />\n  <meta http-equiv=\"Expires\" content=\"0\" />\n  <title>學生資料庫管理系統 - FLB 樂程坊</title>\n  <!-- Google Fonts - Plus Jakarta Sans + Noto Sans TC -->\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link\n    href=\"https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&famil",
       "contains_bad_gateway": false,
       "content_length": 9189,
       "content_type": "text/html; charset=utf-8",
-      "elapsed_ms": 585,
+      "elapsed_ms": 642,
       "final_url": "https://course-viewer.funlearnbar.synology.me/student-manager/",
       "kind": "html",
       "looks_like_html": true,
@@ -20,11 +20,11 @@
       "url": "https://course-viewer.funlearnbar.synology.me/student-manager/"
     },
     {
-      "body_preview": "{\"cache\":{\"cache_size\":0,\"hit_rate\":\"0.00%\",\"hits\":0,\"invalidations\":0,\"misses\":0,\"total_requests\":0},\"database\":{\"connected\":true,\"database\":\"flb_students\",\"error\":null,\"host\":\"funlearnbar-student-db\",\"port\":5432,\"resolved_host\":\"192.168.128.7\"},\"memory\":{\"percent\":0.91,\"used_mb\":181.02},\"rate_limit\":{\"active_clients\":3,\"exempt_paths\":[\"/api/student-db/health\",\"/health\",\"/api/health\"],\"limit\":500,\"window\":60},\"response_time_ms\":0.94,\"service\":\"student-database-api\",\"status\":\"ok\",\"timestamp\":\"2026-09-03T11:14:18.634127\",\"version\":\"1.1.0\"}\n",
+      "body_preview": "{\"cache\":{\"cache_size\":0,\"hit_rate\":\"0.00%\",\"hits\":0,\"invalidations\":0,\"misses\":0,\"total_requests\":0},\"database\":{\"connected\":true,\"database\":\"flb_students\",\"error\":null,\"host\":\"funlearnbar-student-db\",\"port\":5432,\"resolved_host\":\"192.168.128.7\"},\"memory\":{\"percent\":1.5,\"used_mb\":299.27},\"rate_limit\":{\"active_clients\":2,\"exempt_paths\":[\"/api/student-db/health\",\"/api/health\",\"/health\"],\"limit\":500,\"window\":60},\"response_time_ms\":0.86,\"service\":\"student-database-api\",\"status\":\"ok\",\"timestamp\":\"2026-09-03T12:23:27.242251\",\"version\":\"1.1.0\"}\n",
       "contains_bad_gateway": false,
-      "content_length": 545,
+      "content_length": 544,
       "content_type": "application/json",
-      "elapsed_ms": 540,
+      "elapsed_ms": 629,
       "final_url": "https://course-viewer.funlearnbar.synology.me/api/student-db/health",
       "json": {
         "cache": {
@@ -44,23 +44,23 @@
           "resolved_host": "192.168.128.7"
         },
         "memory": {
-          "percent": 0.91,
-          "used_mb": 181.02
+          "percent": 1.5,
+          "used_mb": 299.27
         },
         "rate_limit": {
-          "active_clients": 3,
+          "active_clients": 2,
           "exempt_paths": [
             "/api/student-db/health",
-            "/health",
-            "/api/health"
+            "/api/health",
+            "/health"
           ],
           "limit": 500,
           "window": 60
         },
-        "response_time_ms": 0.94,
+        "response_time_ms": 0.86,
         "service": "student-database-api",
         "status": "ok",
-        "timestamp": "2026-09-03T11:14:18.634127",
+        "timestamp": "2026-09-03T12:23:27.242251",
         "version": "1.1.0"
       },
       "json_valid": true,
@@ -76,11 +76,11 @@
       "url": "https://course-viewer.funlearnbar.synology.me/api/student-db/health"
     },
     {
-      "body_preview": "/**\n * Service Worker - 學生管理系統 PWA\n * 支援離線快取、背景同步與離線頁面\n * Requirements: 19.2, 19.3\n */\n\n// Bump the namespace as well as the worker script.  Users that were served a\n// legacy cache-first worker must not retain its current-version cache after\n// the replacement worker takes over.\n// v14 also removes the v13 namespace.  Salary correction data is financial\n// and must not remain in CacheStorage from workers released before its route\n// was classified as sensitive.\nconst CACHE_VERSION = '20260903-020752';\nconst STATIC_CACHE = `static-${CACHE_VERSION}`;\nconst API_CACHE = `api-${CACHE_VERSION}`;\nconst IMAGE_CACHE = `images-${CACHE_VERSION}`;\nconst LEGACY_CACHE_PREFIXES = [\n  'flb-student-manager-',\n];\n\n// 靜態資源列表 - 首次訪問時快取\n// 注意：不預快取 index.html / '/'，避免 entry 被釘在舊版（entry 一律 network-only，見 fetch handler）\nconst STATIC_ASSETS = [\n  '/student-manager/offline.html',\n];\n\n// API 端點快取配置\nconst API_CACHE_CONFIG = {\n  // 學生列表 - 快取 5 分鐘\n  '/api/students': { maxAge: 5 * 60 * 1000 },\n  // 課程列表 - 快取 10 分鐘\n  '/api/courses': { maxAge: 10 * 60 * 1000 },\n  // 出缺勤紀錄 - 快取 5 分鐘\n  '/api/attendance': { maxAge: 5 * 60 * 1000 },\n  // 付款紀錄 - 快取 5 分鐘\n  '/api/payments': { maxAge: 5 * 60 * 1000 },\n  // 統計資料 - 快取 10 分",
+      "body_preview": "/**\n * Service Worker - 學生管理系統 PWA\n * 支援離線快取、背景同步與離線頁面\n * Requirements: 19.2, 19.3\n */\n\n// Bump the namespace as well as the worker script.  Users that were served a\n// legacy cache-first worker must not retain its current-version cache after\n// the replacement worker takes over.\n// v14 also removes the v13 namespace.  Salary correction data is financial\n// and must not remain in CacheStorage from workers released before its route\n// was classified as sensitive.\nconst CACHE_VERSION = '20260903-113121';\nconst STATIC_CACHE = `static-${CACHE_VERSION}`;\nconst API_CACHE = `api-${CACHE_VERSION}`;\nconst IMAGE_CACHE = `images-${CACHE_VERSION}`;\nconst LEGACY_CACHE_PREFIXES = [\n  'flb-student-manager-',\n];\n\n// 靜態資源列表 - 首次訪問時快取\n// 注意：不預快取 index.html / '/'，避免 entry 被釘在舊版（entry 一律 network-only，見 fetch handler）\nconst STATIC_ASSETS = [\n  '/student-manager/offline.html',\n];\n\n// API 端點快取配置\nconst API_CACHE_CONFIG = {\n  // 學生列表 - 快取 5 分鐘\n  '/api/students': { maxAge: 5 * 60 * 1000 },\n  // 課程列表 - 快取 10 分鐘\n  '/api/courses': { maxAge: 10 * 60 * 1000 },\n  // 出缺勤紀錄 - 快取 5 分鐘\n  '/api/attendance': { maxAge: 5 * 60 * 1000 },\n  // 付款紀錄 - 快取 5 分鐘\n  '/api/payments': { maxAge: 5 * 60 * 1000 },\n  // 統計資料 - 快取 10 分",
       "contains_bad_gateway": false,
       "content_length": 15703,
       "content_type": "application/javascript; charset=utf-8",
-      "elapsed_ms": 784,
+      "elapsed_ms": 824,
       "final_url": "https://course-viewer.funlearnbar.synology.me/student-manager/sw.js",
       "kind": "text",
       "looks_like_html": true,
@@ -103,7 +103,7 @@
       "contains_bad_gateway": false,
       "content_length": 7348,
       "content_type": "text/html; charset=utf-8",
-      "elapsed_ms": 540,
+      "elapsed_ms": 576,
       "final_url": "https://course-viewer.funlearnbar.synology.me/student-manager/offline.html",
       "kind": "html",
       "looks_like_html": true,
@@ -117,20 +117,20 @@
       "url": "https://course-viewer.funlearnbar.synology.me/student-manager/offline.html"
     },
     {
-      "body_preview": "{\"version\": \"20260903-020752\", \"source_commit\": \"ecbb8baf4a718fa17e3d873a6f4187156e4caace\", \"buildDate\": \"2026-09-02T18:07:52.148Z\", \"env\": \"production\", \"feature_flags\": {\"family_application_invites\": true}}",
+      "body_preview": "{\"version\": \"20260903-113121\", \"source_commit\": \"47f1bc5c900b1c58b396d1ea1836c97e34f6cbd6\", \"buildDate\": \"2026-09-03T03:31:21.888Z\", \"env\": \"production\", \"feature_flags\": {\"family_application_invites\": true}}",
       "contains_bad_gateway": false,
       "content_length": 208,
       "content_type": "application/json",
-      "elapsed_ms": 583,
+      "elapsed_ms": 647,
       "final_url": "https://course-viewer.funlearnbar.synology.me/student-manager/version.json",
       "json": {
-        "buildDate": "2026-09-02T18:07:52.148Z",
+        "buildDate": "2026-09-03T03:31:21.888Z",
         "env": "production",
         "feature_flags": {
           "family_application_invites": true
         },
-        "source_commit": "ecbb8baf4a718fa17e3d873a6f4187156e4caace",
-        "version": "20260903-020752"
+        "source_commit": "47f1bc5c900b1c58b396d1ea1836c97e34f6cbd6",
+        "version": "20260903-113121"
       },
       "json_valid": true,
       "kind": "json",
@@ -144,7 +144,7 @@
       ],
       "server": "FLB",
       "service": "student",
-      "source_commit": "ecbb8baf4a718fa17e3d873a6f4187156e4caace",
+      "source_commit": "47f1bc5c900b1c58b396d1ea1836c97e34f6cbd6",
       "source_commit_error": "HTTPError: 404 Not Found",
       "source_commit_resolvable": null,
       "status": 200,
@@ -155,7 +155,7 @@
       "contains_bad_gateway": false,
       "content_length": 5621,
       "content_type": "text/html",
-      "elapsed_ms": 600,
+      "elapsed_ms": 638,
       "final_url": "https://aibot.funlearnbar.synology.me/",
       "kind": "html",
       "looks_like_html": true,
@@ -173,7 +173,7 @@
       "contains_bad_gateway": false,
       "content_length": 15,
       "content_type": "application/json; charset=utf-8",
-      "elapsed_ms": 534,
+      "elapsed_ms": 640,
       "final_url": "https://aibot.funlearnbar.synology.me/v2/health/live",
       "json": {
         "status": "ok"
@@ -191,16 +191,16 @@
       "url": "https://aibot.funlearnbar.synology.me/v2/health/live"
     },
     {
-      "body_preview": "{\"status\":\"ready\",\"db\":\"up\",\"ts\":\"2026-09-03T03:14:22.424Z\"}",
+      "body_preview": "{\"status\":\"ready\",\"db\":\"up\",\"ts\":\"2026-09-03T04:23:31.292Z\"}",
       "contains_bad_gateway": false,
       "content_length": 60,
       "content_type": "application/json; charset=utf-8",
-      "elapsed_ms": 610,
+      "elapsed_ms": 629,
       "final_url": "https://aibot.funlearnbar.synology.me/v2/health/ready",
       "json": {
         "db": "up",
         "status": "ready",
-        "ts": "2026-09-03T03:14:22.424Z"
+        "ts": "2026-09-03T04:23:31.292Z"
       },
       "json_valid": true,
       "kind": "json",
@@ -219,7 +219,7 @@
       "contains_bad_gateway": false,
       "content_length": 78898,
       "content_type": "text/html; charset=utf-8",
-      "elapsed_ms": 890,
+      "elapsed_ms": 1001,
       "final_url": "https://calendar.funlearnbar.synology.me/perfect-calendar-modular.html",
       "kind": "html",
       "looks_like_html": true,
@@ -233,19 +233,19 @@
       "url": "https://calendar.funlearnbar.synology.me/perfect-calendar-modular.html"
     },
     {
-      "body_preview": "{\"success\":true,\"status\":\"healthy\",\"timestamp\":\"2026-09-03T03:14:23.929Z\",\"cache_age\":1788405263929,\"environment\":\"production\",\"caldav_configured\":true}",
+      "body_preview": "{\"success\":true,\"status\":\"healthy\",\"timestamp\":\"2026-09-03T04:23:32.916Z\",\"cache_age\":1788409412916,\"environment\":\"production\",\"caldav_configured\":true}",
       "contains_bad_gateway": false,
       "content_length": 152,
       "content_type": "application/json; charset=utf-8",
-      "elapsed_ms": 614,
+      "elapsed_ms": 622,
       "final_url": "https://calendar.funlearnbar.synology.me/api/health",
       "json": {
-        "cache_age": 1788405263929,
+        "cache_age": 1788409412916,
         "caldav_configured": true,
         "environment": "production",
         "status": "healthy",
         "success": true,
-        "timestamp": "2026-09-03T03:14:23.929Z"
+        "timestamp": "2026-09-03T04:23:32.916Z"
       },
       "json_valid": true,
       "kind": "json",
