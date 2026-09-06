@@ -119,21 +119,45 @@ jobs:
                       result["looks_like_html"] = "<html" in lowered or "<!doctype html" in lowered
 
                       if item["service"] == "student" and item["name"] == "sw":
-                          required_markers = [
+                          legacy_guard_markers = [
                               "LEGACY_CACHE_PREFIXES",
                               "function isSensitiveApiRequestPath",
                               "!isSensitiveApiRequest",
                               "if (isSensitiveApiRequest)",
                           ]
-                          missing_markers = [marker for marker in required_markers if marker not in text]
+                          network_only_markers = [
+                              "LEGACY_CACHE_PREFIXES",
+                              "name.startsWith('api-')",
+                              "if (isApiRequestPath(url.pathname) && !url.pathname.startsWith('/api/uploads/'))",
+                              "return await fetch(request, { cache: 'no-store' });",
+                              "return createOfflineApiResponse();",
+                          ]
+                          legacy_guard_ok = all(marker in text for marker in legacy_guard_markers)
+                          network_only_ok = (
+                              all(marker in text for marker in network_only_markers)
+                              and "const API_CACHE" not in text
+                              and "caches.open(API_CACHE)" not in text
+                          )
+                          contract_ok = legacy_guard_ok or network_only_ok
+                          mode = (
+                              "legacy-sensitive-guard" if legacy_guard_ok
+                              else "network-only-business-api" if network_only_ok
+                              else None
+                          )
                           result["security_contract"] = {
-                              "name": "student-sw-sensitive-api-cache",
-                              "ok": not missing_markers,
-                              "missing_markers": missing_markers,
+                              "name": "student-sw-business-api-cache-safety",
+                              "ok": contract_ok,
+                              "mode": mode,
+                              "legacy_guard_missing_markers": [
+                                  marker for marker in legacy_guard_markers if marker not in text
+                              ],
+                              "network_only_missing_markers": [
+                                  marker for marker in network_only_markers if marker not in text
+                              ],
                           }
-                          if missing_markers:
+                          if not contract_ok:
                               result["semantic_ok"] = False
-                              result["semantic_errors"].append("student_sw_sensitive_cache_guard_missing")
+                              result["semantic_errors"].append("student_sw_api_cache_safety_contract_missing")
 
                       if item["service"] == "student" and item["name"] == "version" and result.get("json_valid"):
                           source_commit = result.get("json", {}).get("source_commit")
