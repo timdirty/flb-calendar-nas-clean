@@ -129,12 +129,15 @@ jobs:
                               "LEGACY_CACHE_PREFIXES",
                               "name.startsWith('api-')",
                               "if (isApiRequestPath(url.pathname) && !url.pathname.startsWith('/api/uploads/'))",
+                          ]
+                          network_only_fetch_markers = [
                               "return await fetch(request, { cache: 'no-store' });",
-                              "return createOfflineApiResponse();",
+                              "return fetch(request, { cache: 'no-store' });",
                           ]
                           legacy_guard_ok = all(marker in text for marker in legacy_guard_markers)
                           network_only_ok = (
                               all(marker in text for marker in network_only_markers)
+                              and any(marker in text for marker in network_only_fetch_markers)
                               and "const API_CACHE" not in text
                               and "caches.open(API_CACHE)" not in text
                           )
@@ -154,6 +157,9 @@ jobs:
                               "network_only_missing_markers": [
                                   marker for marker in network_only_markers if marker not in text
                               ],
+                              "network_only_fetch_marker_present": any(
+                                  marker in text for marker in network_only_fetch_markers
+                              ),
                           }
                           if not contract_ok:
                               result["semantic_ok"] = False
